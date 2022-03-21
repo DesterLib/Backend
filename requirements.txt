@@ -1,0 +1,12 @@
+fastapi
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+httplib2
+httpx
+iso8601
+oauth2client
+pyjwt
+rfc3339
+ujson
+uvicorn[standard]
