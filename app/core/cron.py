@@ -13,7 +13,6 @@ def fetch_metadata(drive: DriveAPI, tmdb: TMDB, categories: List[str]):
             category_metadata["id"] = category_id
             category_metadata["type"] = category_type
             category_metadata["name"] = category.get("name")
-            category_metadata["include_in_search"] = category.get("include_in_search")
             category_metadata["include_in_homepage"] = category.get("include_in_homepage")
             print(f"{category_type=}")
             data = generate_movie_metadata(tmdb, drive.fetch_movies(category_id)) if category_type == "movies" else generate_series_metadata(tmdb, drive.fetch_series(category_id))

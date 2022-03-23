@@ -1,5 +1,5 @@
 from enum import Enum
 
-class DataType(Enum):
-    movie = 1
-    series = 2
+class DataType(str, Enum):
+    movies = "movies"
+    series = "series"

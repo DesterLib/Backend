@@ -12,7 +12,7 @@ from datetime import datetime, timedelta
 class TMDB:
     def __init__(self, api_key: str):
         if not os.path.exists('./cache/movie_ids.json'):
-            self.export_data(DataType.movie)
+            self.export_data(DataType.movies)
         if not os.path.exists('./cache/tv_series_ids.json'):
             self.export_data(DataType.series)
         self.movie_export_data = json.load(open('./cache/movie_ids.json', 'r', encoding='utf-8'))
@@ -88,18 +88,17 @@ class TMDB:
                 return data[0]['id']
         
         print("API Search Failed!")
-        key_name = 'original_name' if data_type == DataType.series else 'original_title'
-        data = self.movie_export_data if data_type == DataType.movie else self.series_export_data
+        data = self.movie_export_data if data_type == DataType.movies else self.series_export_data
         print("Trying search using key-value search for {}".format(title))
         for each in data:
-            if title == each.get(key_name).lower().strip():
+            if title == each.get('original_title').lower().strip():
                 return each["id"]
         print("Basic key-value search failed.")
         max_ratio, match = 0, None
         matcher = SequenceMatcher(b=title)
         print("Trying search using difflib advanced search for {}".format(title))
         for each in data:
-            matcher.set_seq1(each[key_name].lower().strip())
+            matcher.set_seq1(each['original_title'].lower().strip())
             ratio = matcher.ratio()
             if ratio > 0.99:
                 return each

@@ -11,20 +11,7 @@ router = APIRouter(
     tags=['internals'],
 )
 
-def sort_all(metadata: Dict[str, str] = {}) -> Dict[str, str]:
-    data = {'movies': [], 'series': []}
-    ids = []
-    for category in metadata:
-        meta = category['metadata']
-        for item in meta:
-            item["category"] = {"id": category['id'], "name": category['name']}
-            if not item['id'] in ids:
-                if category['type'] == 'movies':
-                    data['movies'].append(item)
-                else:
-                    data['series'].append(item)
-                ids.append(item['id'])
-    return data
+
 
 
 @router.get("", response_model=Dict[str, Union[str, int, float, bool, None, dict]])
@@ -48,7 +35,7 @@ def home() -> Dict[str, str]:
             category["metadata"] = sorted_data
             categories_data.append(category)
     
-    for data_type, data in sort_all(metadata.frozen_data).items():
+    for data_type, data in deepcopy(metadata.sorted).items():
         carousel_sorted_data = sorted(deepcopy(data), key=lambda k: k["popularity"], reverse=True)
         carousel_sorted_data = carousel_sorted_data[:3]
         for item in carousel_sorted_data:

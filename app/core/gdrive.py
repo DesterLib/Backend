@@ -100,11 +100,10 @@ class DriveAPI:
                     name,\
                     parents,\
                     mimeType,\
-                    modifiedTime, \
-                    videoMediaMetadata, \
-                    contentHints, \
-                    hasThumbnail, \
-                    shortcutDetails\
+                    modifiedTime,\
+                    hasThumbnail,\
+                    shortcutDetails,\
+                    videoMediaMetadata \
                 ), incompleteSearch, nextPageToken",
                 q = f"'{folder_id}' in parents \
                     and trashed = false \
@@ -128,7 +127,6 @@ class DriveAPI:
                         "parents": file["parents"],
                         "modifiedTime": file.get("modifiedTime"),
                         "videoMediaMetadata": file.get("videoMediaMetadata"),
-                        "contentHints": file.get("contentHints"),
                         "hasThumbnail": file.get("hasThumbnail"),
                         
                     }
@@ -187,7 +185,6 @@ class DriveAPI:
                     metadata["parent"] = file["parents"][0]
                     metadata["modifiedTime"] = file["modifiedTime"]
                     metadata["videoMediaMetadata"] = file.get("videoMediaMetadata")
-                    metadata["contentHints"] = file.get("contentHints")
                     metadata["hasThumbnail"] = file.get("hasThumbnail")
                 elif file.get("name", "").endswith(".srt") and file.get("parents", [])[0] != folder_id:
                     file = dict(
@@ -223,7 +220,6 @@ class DriveAPI:
                             name=file["name"],
                             modified_time=file["modifiedTime"],
                             video_metadata=file.get("videoMediaMetadata"),
-                            content_hints=file.get("contentHints"),
                             thumbnail_path=f"{settings.API_V1_STR}/assets/thumbnail/{file['id']}" if file.get("hasThumbnail") else None,
                             subtitles=None
                         ))
@@ -255,7 +251,6 @@ class DriveAPI:
                                         episode_metadata["name"] = episode_file["name"]
                                         episode_metadata["modified_time"] = episode_file["modifiedTime"]
                                         episode_metadata["video_metadata"] = episode_file.get("videoMediaMetadata")
-                                        episode_metadata["content_hints"] = episode_file.get("contentHints")
                                         episode_metadata["thumbnail_path"] = f"{settings.API_V1_STR}/assets/thumbnail/{episode_file['id']}" if episode_file.get("hasThumbnail") else None
                                         metadata["seasons"][season]["episodes"].append(episode_metadata)
                                     
@@ -275,7 +270,6 @@ class DriveAPI:
                                 episode_metadata["name"] = episode_dir["name"]
                                 episode_metadata["modified_time"] = episode_dir["modifiedTime"]
                                 episode_metadata["video_metadata"] = episode_dir.get("videoMediaMetadata")
-                                episode_metadata["content_hints"] = episode_dir.get("contentHints")
                                 episode_metadata["thumbnail_path"] = f"{settings.API_V1_STR}/assets/thumbnail/{episode_dir['id']}" if episode_dir.get("hasThumbnail") else None
                                 metadata["seasons"][season]["episodes"].append(episode_metadata)
                             # for subs in Season 1

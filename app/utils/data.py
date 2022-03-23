@@ -1,14 +1,38 @@
+from copy import deepcopy
 from functools import reduce
 from collections import defaultdict
 import re
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 import ujson as json
-from app.core import TMDB
+# from app.core import TMDB
 from app.models import DataType
 from app.settings import settings
 
 def group_by(key, seq):
     return reduce(lambda grp, val: grp[key(val)].append(val) or grp, seq, defaultdict(list))
+
+def try_int(value: str) -> Optional[int]:
+    try:
+        value = int(value)
+    except ValueError:
+        value = None
+    return value
+
+def sort_by_type(metadata: Dict[str, Any] = {}) -> Dict[str, Any]:
+    data = {'movies': [], 'series': []}
+    ids = deepcopy(data)
+    for category in metadata:
+        meta = category['metadata']
+        for item in meta:
+            item["category"] = {"id": category['id'], "name": category['name']}
+            if category['type'] == 'movies':
+                if not item['tmdb_id'] in ids['movies']:
+                    data['movies'].append(item)
+            elif category['type'] == 'series':
+                if not item['tmdb_id'] in ids['series']:
+                    data['series'].append(item)
+            ids[category.get('type')].append(item['tmdb_id'])
+    return data
 
 def parse_filename(name: str, data_type: DataType):
     reg_exps = [
@@ -70,24 +94,24 @@ def clean_file_name(name: str) -> str:
         name = re.sub(reg, '', name, flags=re.I)
     return name.strip().rstrip(".-_")
 
-def generate_movie_metadata(tmdb: TMDB, data: Dict[str, Any]) -> Dict[str, Any]:
+def generate_movie_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
     metadata = []
     for drive_meta in data:
         original_name = drive_meta["name"] 
         print("original file name: ", original_name)
         cleaned_title = clean_file_name(original_name)
         print(f"{cleaned_title=}")
-        name_year = parse_filename(cleaned_title, DataType.movie)
+        name_year = parse_filename(cleaned_title, DataType.movies)
         name = name_year.get("title")
         year = name_year.get("year")
         print("name: ", name)
-        tmdb_id = tmdb.find_media_id(name, DataType.movie)
+        tmdb_id = tmdb.find_media_id(name, DataType.movies)
         if not tmdb_id:
             print("Could not find movie id for: ", name)
             print("Skipping...")
             continue
         print("Found: ", name, f"({year})", f" ID:{tmdb_id}")
-        movie_info = tmdb.get_details(tmdb_id, DataType.movie)
+        movie_info = tmdb.get_details(tmdb_id, DataType.movies)
         try:
             logo = movie_info.get("images", {}).get("logos", [{}])[0].get("file_path")
         except IndexError:
@@ -105,13 +129,12 @@ def generate_movie_metadata(tmdb: TMDB, data: Dict[str, Any]) -> Dict[str, Any]:
                 logo=logo,
                 modified_time=drive_meta.get("modifiedTime"),
                 video_metadata=drive_meta.get("videoMediaMetadata"),
-                content_hints=drive_meta.get("contentHints"),
                 thumbnail_path=f"{settings.API_V1_STR}/assets/thumbnail/{drive_meta['id']}" if drive_meta.get("hasThumbnail") else None,
                 popularity=movie_info.get("popularity"),
                 revenue=movie_info.get("revenue"),
                 rating=movie_info.get("vote_average"),
                 release_date=movie_info.get("release_date"),
-                year=movie_info.get("release_date", "").split("-")[0] or None,
+                year=try_int(movie_info.get("release_date", "").split("-")[0]) or None,
                 tagline=movie_info.get("tagline"),
                 description=movie_info.get("overview"),
                 cast=movie_info.get("credits", {}).get("cast", []),
@@ -125,7 +148,7 @@ def generate_movie_metadata(tmdb: TMDB, data: Dict[str, Any]) -> Dict[str, Any]:
         )
     return metadata
 
-def generate_series_metadata(tmdb: TMDB, data: Dict[str, Any]) -> Dict[str, Any]:
+def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
     metadata = []
     for drive_meta in data:
         original_name = drive_meta["name"] 
@@ -196,8 +219,9 @@ def generate_series_metadata(tmdb: TMDB, data: Dict[str, Any]) -> Dict[str, Any]
                 popularity=series_info.get("popularity"),
                 revenue=series_info.get("revenue"),
                 rating=series_info.get("vote_average"),
-                year=series_info.get("first_air_date", "").split("-")[0] or None,
+                year=try_int(series_info.get("first_air_date", "").split("-")[0]) or None,
                 first_air_date=series_info.get("first_air_date"),
+                release_date=series_info.get("first_air_date"),
                 last_air_date=series_info.get("last_air_date"),
                 tagline=series_info.get("tagline"),
                 description=series_info.get("overview"),

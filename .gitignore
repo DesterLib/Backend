@@ -154,3 +154,5 @@ cython_debug/
 
 metadata.json
 cache/*
+test.py
+.vscode/*

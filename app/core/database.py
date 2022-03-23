@@ -3,9 +3,12 @@ import ujson as json
 from copy import deepcopy
 from typing import Any, Dict, Optional
 
+from app.utils.data import sort_by_type
+
 class Database:
     def __init__(self, file_path: str):
         self.path = file_path
+        self.sorted = None
         if not os.path.exists(file_path):
             self.data = {}
         else:
@@ -49,6 +52,12 @@ class Database:
             return value
         return None
 
+    # @property
+    # def sorted(self):
+    #     if not self.sorted:
+    #         self.sorted = sort_by_type(self.data)
+    #     return deepcopy(self.sorted)
+    
     def save(self):
         with open(self.path, "w+") as _file:
             json.dump(self.data, _file, indent=4)
@@ -56,3 +65,15 @@ class Database:
     
     def __len__(self):
         return len(self.data)
+    
+class Metadata(Database):
+    def __init__(self, file_path: str):
+        super().__init__(file_path)
+        self.sorted = None
+        self.save()
+    
+    def save(self):
+        self.sorted = sort_by_type(self.data)
+        with open(self.path, "w+") as _file:
+            json.dump(self.data, _file, indent=4)
+            _file.close()

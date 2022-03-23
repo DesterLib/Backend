@@ -6,14 +6,16 @@ from app.api import main_router
 from app.settings import settings
 from app.core.cron import fetch_metadata
 from fastapi.responses import JSONResponse
-from app.core import TMDB, Database, DriveAPI
+from app.core import TMDB, Database, DriveAPI, Metadata
 from starlette.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
+
+from app.utils.data import sort_by_type
 
 
 
 config = Database(file_path="config.json")
-metadata = Database(file_path="metadata.json")
+metadata = Metadata(file_path="metadata.json")
 drive = DriveAPI.initialize_drive(config)
 
 
@@ -42,8 +44,8 @@ def startup():
         print("Initializing core modules...")
         if not len(metadata):
             print("Metadata file is empty. Fetching metadata...")
-            data = fetch_metadata(drive, tmdb, config.get("categories"))
-            json.dump(data, open(metadata.path, "w"), indent=2)
+            metadata.data = fetch_metadata(drive, tmdb, categories)
+            metadata.save()
         else:
             print("Metadata file is not empty. Skipping fetching metadata...")
         print("Done.")
@@ -52,8 +54,8 @@ def startup():
 
 app = FastAPI(
     title="DesterLib", openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    exception_handlers={StarletteHTTPException: lambda req, exc: JSONResponse(status_code=404, content={"message": "Are you lost?"}),
-                        500: lambda req, exc: JSONResponse(status_code=500, content={"message": "Internal server error"})},
+    exception_handlers={StarletteHTTPException: lambda req, exc: JSONResponse(status_code=404, content={"ok": False, "message": "Are you lost?"}),
+                        500: lambda req, exc: JSONResponse(status_code=500, content={"ok": False, "message": "Internal server error"})},
     
 )
 
@@ -71,4 +73,4 @@ app.include_router(main_router, prefix=settings.API_V1_STR)
 
 if __name__ == "__main__":
     startup()
-    uvicorn.run("main:app", host="localhost", port=settings.PORT)
+    uvicorn.run("main:app", host="localhost", port=settings.PORT, reload=True)
