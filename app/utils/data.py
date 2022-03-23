@@ -64,10 +64,11 @@ def clean_file_name(name: str) -> str:
         r'\((?:\D.+?|.+?\D)\)|\[(?:\D.+?|.+?\D)\]', # (2016), [2016], etc
         r'\b(?:mp4|mkv|wmv|m4v|mov|avi|flv|webm|flac|mka|m4a|aac|ogg)\b', # file types
         r'season ?\d+?', # season 1, season 2, etc
+        r'(?:S\d{1,3}|\d+?bit|dsnp|web\-dl|ddp\d+? ? \d|hevc|\-?Vyndros)', # more stuffs
     ]
     for reg in reg_exps:
         name = re.sub(reg, '', name, flags=re.I)
-    return name.strip()
+    return name.strip().rstrip(".-_")
 
 def generate_movie_metadata(tmdb: TMDB, data: Dict[str, Any]) -> Dict[str, Any]:
     metadata = []
