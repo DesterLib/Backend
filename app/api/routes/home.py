@@ -23,7 +23,7 @@ def home() -> Dict[str, str]:
     carousel_data = []
     top_rated_series_data = []
     top_rated_movies_data = []
-    newly_added_moves_data = []
+    newly_added_movies_data = []
     new_episodes_data = []
     unwanted_keys = ["cast", "seasons", "file_name", "subtitles", "external_ids", "collection", "homepage", "last_episode_to_air", "next_episode_to_air"]
     for category in metadata.frozen_data:
@@ -48,11 +48,11 @@ def home() -> Dict[str, str]:
             [item.pop(key, None) for key in unwanted_keys]
         if data_type == 'movies':
             top_rated_movies_data.extend(top_rated_sort_data)
-            new_moves_sort_data = sorted(deepcopy(data), key=lambda k: k["modified_time"], reverse=True)
-            new_moves_sort_data = new_moves_sort_data[:data_cap_limit]
-            for item in new_moves_sort_data:
+            new_movies_sort_data = sorted(deepcopy(data), key=lambda k: k["modified_time"], reverse=True)
+            new_movies_sort_data = new_movies_sort_data[:data_cap_limit]
+            for item in new_movies_sort_data:
                 [item.pop(key, None) for key in unwanted_keys]
-            newly_added_moves_data.extend(new_moves_sort_data)
+            newly_added_movies_data.extend(new_movies_sort_data)
         elif data_type == 'series':
             top_rated_series_data.extend(top_rated_sort_data)
             all_episodes = []
@@ -72,9 +72,9 @@ def home() -> Dict[str, str]:
             "message": "success",
             "data": {"categories": categories_data,
             "carousel": carousel_data,
-            "top_rated_moves": top_rated_movies_data,
+            "top_rated_movies": top_rated_movies_data,
             "top_rated_series": top_rated_series_data,
-            "newly_added_moves": newly_added_moves_data,
+            "newly_added_movies": newly_added_movies_data,
             "new_episodes": new_episodes_data},
             "time_taken": end - start
         }
