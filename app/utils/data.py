@@ -194,7 +194,7 @@ def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
                         "episode_number": episode_number,
                         "overview": None,
                         "still_path": None,
-                        "vote_average": None,
+                        "rating": None,
                         "vote_count": None,
                     }
                 episode_details.pop("id", None)
@@ -203,6 +203,7 @@ def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
                 episode_details.pop("production_code", None)
                 episode_details.pop("season_number", None)
                 episode.update(episode_details)
+                episode['episode_thumbnail'] = episode.pop('still_path', None)
                     
         metadata.append(
             dict(
