@@ -11,7 +11,7 @@ router = APIRouter(
     tags=['internals'],
 )
 
-
+data_cap_limit = 15
 
 
 @router.get("", response_model=Dict[str, Union[str, int, float, bool, None, dict]])
@@ -29,7 +29,7 @@ def home() -> Dict[str, str]:
     for category in metadata.frozen_data:
         if category["include_in_homepage"]:
             sorted_data = sorted(category["metadata"], key=lambda k: k["popularity"], reverse=True)
-            sorted_data = sorted_data[:8]
+            sorted_data = sorted_data[:data_cap_limit]
             for item in sorted_data:
                 [item.pop(key, None) for key in unwanted_keys]
             category["metadata"] = sorted_data
@@ -43,13 +43,13 @@ def home() -> Dict[str, str]:
         carousel_data.extend(carousel_sorted_data)
         
         top_rated_sort_data = sorted(deepcopy(data), key=lambda k: k["rating"], reverse=True)
-        top_rated_sort_data = top_rated_sort_data[:8]
+        top_rated_sort_data = top_rated_sort_data[:data_cap_limit]
         for item in top_rated_sort_data:
             [item.pop(key, None) for key in unwanted_keys]
         if data_type == 'movies':
             top_rated_movies_data.extend(top_rated_sort_data)
             new_moves_sort_data = sorted(deepcopy(data), key=lambda k: k["modified_time"], reverse=True)
-            new_moves_sort_data = new_moves_sort_data[:8]
+            new_moves_sort_data = new_moves_sort_data[:data_cap_limit]
             for item in new_moves_sort_data:
                 [item.pop(key, None) for key in unwanted_keys]
             newly_added_moves_data.extend(new_moves_sort_data)
@@ -64,7 +64,7 @@ def home() -> Dict[str, str]:
                                         "season_name": season['name'], "season_poster": season['poster_path'], "tmdb_id": item['tmdb_id']})
                         all_episodes.append(episode)
             new_episodes_sort_data = sorted(deepcopy(all_episodes), key=lambda k: k["air_date"], reverse=True)
-            new_episodes_data = new_episodes_sort_data[:5]
+            new_episodes_data = new_episodes_sort_data[:data_cap_limit]
     random.shuffle(carousel_data)
     end = time.perf_counter()
     return {
