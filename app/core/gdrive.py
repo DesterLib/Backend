@@ -22,13 +22,13 @@ class DriveAPI:
         self.token_uri = "https://accounts.google.com/o/oauth2/token"
         self.scopes = ["https://www.googleapis.com/auth/drive"]
         
-        if not isinstance(account_credentials, Optional[GoogleCredentials]):
+        if account_credentials and not isinstance(account_credentials, GoogleCredentials):
             account_credentials = GoogleCredentials(client_id=account_credentials['gdrive_client_id'],
                                                     access_token=account_credentials['gdrive_access_token'],
                                                     client_secret=account_credentials['gdrive_client_secret'],
                                                     refresh_token=account_credentials['gdrive_refresh_token'],
                                                     token_uri=self.token_uri, token_expiry=None, user_agent=None)
-        if not isinstance(service_account_credentials, Optional[ServiceAccountCredentials]):
+        if service_account_credentials and not isinstance(service_account_credentials, ServiceAccountCredentials):
             service_account_credentials = ServiceAccountCredentials.from_json_keyfile_dict(keyfile_dict=service_account_credentials, 
                                                                                            token_uri=self.token_uri,
                                                                                            scopes=self.scopes)
