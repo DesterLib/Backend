@@ -2,6 +2,7 @@ import gzip
 import httpx
 import os.path
 import ujson as json
+from app import logger
 from app.models import DataType
 from difflib import SequenceMatcher
 from typing import Any, Dict, Optional
@@ -59,7 +60,13 @@ class TMDB:
         response = self.client.get(url)
         return response.json() if response.status_code == 200 else {}
     
-    def find_media_id(self, title: str, data_type: DataType, year: Optional[int] = None, adult: bool = False) -> Optional[int]:
+    def find_media_id(self, 
+                      title: str,
+                      data_type: DataType,
+                      use_api: bool = True,
+                      year: Optional[int] = None,
+                      adult: bool = False
+                    ) -> Optional[int]:
         """The legacy way to get TMDB ID for a title
         it consumes a bit more memory and it's slower
         but the result is more accurate
@@ -67,47 +74,53 @@ class TMDB:
         Args:
             title (str): The title of the movie / series
             data_type (DataType): The type of the title
+            use_api (bool): Use API calls to get info
+            year (int): Release Year of the media
+            adult (bool): If the media is under adult category or not
 
         Returns:
-            None
+            Optional[int]
         """
         from app.utils.data import clean_file_name
         title = title.lower().strip()
         original_title = title
         title = clean_file_name(title)
         if not title:
-            print(f"The parsed title returned an empty string. Skipping...")
-            print(f"Original Title: {original_title}")
+            logger.debug(f"The parsed title returned an empty string. Skipping...")
+            logger.debug(f"Original Title: {original_title}")
             return None
-        print("Trying search using API for {}".format(title))
-        type_name = 'tv' if data_type == DataType.series else 'movie'
-        resp = self.client.get(f"https://api.themoviedb.org/3/search/{type_name}", params={'query': title, 'primary_release_year': year,
-                                                                                           'include_adult': adult, 'page': 1, 'language': 'en-US'})
-        if resp.status_code == 200:
-            if data := resp.json()['results']:
-                return data[0]['id']
-        
-        print("API Search Failed!")
-        data = self.movie_export_data if data_type == DataType.movies else self.series_export_data
-        print("Trying search using key-value search for {}".format(title))
-        for each in data:
-            if title == each.get('original_title').lower().strip():
-                return each["id"]
-        print("Basic key-value search failed.")
-        max_ratio, match = 0, None
-        matcher = SequenceMatcher(b=title)
-        print("Trying search using difflib advanced search for {}".format(title))
-        for each in data:
-            matcher.set_seq1(each['original_title'].lower().strip())
-            ratio = matcher.ratio()
-            if ratio > 0.99:
-                return each
-            if ratio > max_ratio and ratio >= 0.85:
-                max_ratio = ratio
-                match = each
-        if match:
-            return match["id"]
-        print("Advanced difflib search failed.")
+        if use_api:
+            logger.debug(f"Trying search using API for '{title}'")
+            type_name = 'tv' if data_type == DataType.series else 'movie'
+            resp = self.client.get(f"https://api.themoviedb.org/3/search/{type_name}", params={'query': title, 'primary_release_year': year,
+                                                                                                'include_adult': adult, 'page': 1, 'language': 'en-US'})
+            if resp.status_code == 200:
+                if data := resp.json()['results']:
+                    return data[0]['id']
+            else:
+                logger.warning(f"API search failed for '{title}' - The API said '{resp.json()['errors']}' with status code {resp.status_code}")
+                return
+        else:
+            data = self.movie_export_data if data_type == DataType.movies else self.series_export_data
+            logger.debug(f"Trying search using key-value search for '{title}'")
+            for each in data:
+                if title == each.get('original_title', '').lower().strip():
+                    return each["id"]
+            logger.debug(f"Basic key-value search failed for '{title}'")
+            print(f"Trying search using difflib advanced search for '{title}'")
+            max_ratio, match = 0, None
+            matcher = SequenceMatcher(b=title)
+            for each in data:
+                matcher.set_seq1(each.get('original_title', '').lower().strip())
+                ratio = matcher.ratio()
+                if ratio > 0.99:
+                    return each
+                if ratio > max_ratio and ratio >= 0.85:
+                    max_ratio = ratio
+                    match = each
+            if match:
+                return match["id"]
+            logger.debug(f"Advanced difflib search failed for '{title}'")
     
     def get_details(self, tmdb_id: int, data_type: DataType) -> Dict[str, Any]:
         """Get the details of a movie / series from the API

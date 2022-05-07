@@ -1,14 +1,15 @@
 import re
+import random
 import httplib2
 from .. import logger
-import random
 from itertools import groupby
+from app.settings import settings
 from googleapiclient.errors import HttpError
 from oauth2client.client import GoogleCredentials
 from typing import Any, Dict, List, Optional, Union
 from googleapiclient.discovery import build, Resource
 from oauth2client.service_account import ServiceAccountCredentials
-from app.settings import settings
+
 class GdriveNotInitialized(Exception):
     pass
 
@@ -202,7 +203,7 @@ class DriveAPI:
         dirs = self.get_files(folder_id)
         data = []
         for dir in dirs:
-            print(f"Digging into '{dir.get('name')}'")
+            logger.debug(f"Digging into '{dir.get('name')}'")
             # Loki
             metadata = {}
             # check if 'Loki' is a folder

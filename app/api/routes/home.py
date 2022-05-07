@@ -24,7 +24,7 @@ def home() -> Dict[str, str]:
     top_rated_series_data = []
     top_rated_movies_data = []
     newly_added_movies_data = []
-    new_episodes_data = []
+    newly_added_episodes_data = []
     unwanted_keys = ["cast", "seasons", "file_name", "subtitles", "external_ids", "collection", "homepage", "last_episode_to_air", "next_episode_to_air"]
     for category in metadata.frozen_data:
         if category["include_in_homepage"]:
@@ -59,12 +59,12 @@ def home() -> Dict[str, str]:
             for item in data:
                 for season in item['seasons']:
                     for episode in season['episodes']:
-                        episode.update({"season": season['season_number'], "series_id": item['id'],
+                        episode.update({"season_number": season['season_number'], "series_id": item['id'],
                                         "series_name": item['title'], "series_poster": item['poster_url'],
                                         "season_name": season['name'], "season_poster": season['poster_path'], "tmdb_id": item['tmdb_id']})
                         all_episodes.append(episode)
-            new_episodes_sort_data = sorted(deepcopy(all_episodes), key=lambda k: k["air_date"], reverse=True)
-            new_episodes_data = new_episodes_sort_data[:data_cap_limit]
+            newly_added_episodes_sort_data = sorted(deepcopy(all_episodes), key=lambda k: k["air_date"], reverse=True)
+            newly_added_episodes_data = newly_added_episodes_sort_data[:data_cap_limit]
     random.shuffle(carousel_data)
     end = time.perf_counter()
     return {
@@ -75,6 +75,6 @@ def home() -> Dict[str, str]:
             "top_rated_movies": top_rated_movies_data,
             "top_rated_series": top_rated_series_data,
             "newly_added_movies": newly_added_movies_data,
-            "new_episodes": new_episodes_data},
+            "newly_added_episodes": newly_added_episodes_data},
             "time_taken": end - start
         }
