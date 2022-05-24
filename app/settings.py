@@ -15,6 +15,7 @@ class _Settings(BaseSettings):
     ]
     ON_HEROKU: bool = getenv("DYNO") is not None
     PORT: int = int(getenv("PORT", "35500"))
+    DEVELOPMENT: bool = getenv("DESTER_DEV", "").lower() == "true"
     GDRIVE_CLIENT_ID: Optional[str] = getenv("GDRIVE_CLIENT_ID")
     GDRIVE_CLIENT_SECRET: Optional[str] = getenv("GDRIVE_CLIENT_SECRET")
     GDRIVE_ACCESS_TOKEN: Optional[str] = getenv("GDRIVE_ACCESS_TOKEN")
