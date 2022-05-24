@@ -5,16 +5,16 @@ from pydantic import BaseSettings
 
 load_dotenv()
 
+
 class _Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     TMDB_API_KEY: Optional[str] = getenv("TMDB_API_KEY")
     CORS_ORIGINS = [
         "http://localhost",
-        "http://localhost:3000",
+        "http://localhost:35510",
     ]
     ON_HEROKU: bool = getenv("DYNO") is not None
-    PORT: int = int(getenv("PORT", "3000"))
-    
+    PORT: int = int(getenv("PORT", "35500"))
     GDRIVE_CLIENT_ID: Optional[str] = getenv("GDRIVE_CLIENT_ID")
     GDRIVE_CLIENT_SECRET: Optional[str] = getenv("GDRIVE_CLIENT_SECRET")
     GDRIVE_ACCESS_TOKEN: Optional[str] = getenv("GDRIVE_ACCESS_TOKEN")
@@ -25,5 +25,6 @@ class _Settings(BaseSettings):
     AUTH0_GLOBAL_CLIENT_SECRET: str = getenv("AUTH0_GLOBAL_CLIENT_SECRET")
     AUTH0_DOMAIN: str = getenv("AUTH0_DOMAIN")
     LOGO_URL: str = getenv("LOGO_URL")
+
 
 settings = _Settings()

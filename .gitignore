@@ -156,3 +156,4 @@ metadata.json
 cache/*
 test.py
 .vscode/*
+config.json
