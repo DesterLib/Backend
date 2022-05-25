@@ -1,6 +1,6 @@
 from typing import List
 
-from app.core import TMDB, fetch_movies, fetch_series
+from app.core import TMDB, RCloneAPI
 from app.utils import generate_movie_metadata, generate_series_metadata
 
 
@@ -19,10 +19,11 @@ def fetch_metadata(tmdb: TMDB, categories: List[str]):
                 "include_in_homepage"
             )
             print(f"{category_type=}")
+            from main import rclone
             data = (
-                generate_movie_metadata(tmdb, fetch_movies(category_id + ":"))
+                generate_movie_metadata(tmdb, rclone[category_id].fetch_movies())
                 if category_type == "movies"
-                else generate_series_metadata(tmdb, fetch_series(category_id + ":"))
+                else generate_series_metadata(tmdb, rclone[category_id].fetch_series())
             )
             category_metadata["metadata"] = data
             metadata.append(category_metadata)

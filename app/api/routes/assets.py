@@ -37,11 +37,8 @@ async def image_path(
 async def image_path(
     file_id: str = Path(title := "File ID of the thumbnail that needs to be generated"),
 ):
-    from main import drive
+    from main import rclone
 
-    if not drive:
-        return {"ok": False, "message": "Drive is not initialized"}
-    start = time.perf_counter()
     thumb_url = drive.get_thumbnail_url(file_id)
     if not thumb_url:
         return {"ok": False, "message": "Thumbnail not found"}

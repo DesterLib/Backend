@@ -1,4 +1,4 @@
-from subprocess import CREATE_NO_WINDOW, DEVNULL, STDOUT, Popen, run
+from subprocess import DEVNULL, STDOUT, Popen, run
 from sys import platform
 
 import ujson as json
@@ -9,7 +9,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api import main_router
-from app.core import TMDB, Database, DriveAPI, Metadata
+from app.core import TMDB, Database, DriveAPI, RCloneAPI, Metadata
 from app.core.cron import fetch_metadata
 from app.settings import settings
 from app.utils.data import sort_by_type
@@ -17,6 +17,7 @@ from app.utils.data import sort_by_type
 config = Database(file_path="config.json")
 metadata = Metadata(file_path="metadata.json")
 drive = DriveAPI.initialize_drive(config)
+rclone = {}
 
 
 def startup():
@@ -49,27 +50,35 @@ def startup():
         id = category["id"]
         drive_id = category["drive_id"]
         rclone_conf += f"[{id}]\ntype = drive\nclient_id = {client_id}\nclient_secret = {client_secret}\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\nteam_drive = {drive_id}\n"
+        rclone[id] = RCloneAPI(id + ":")
     with open("rclone.conf", "w+") as w:
         w.write(rclone_conf)
     if platform in ["win32", "cygwin", "msys"]:
         run(
-            "powershell.exe Stop-Process -Id (Get-NetTCPConnection -LocalPort 5572).OwningProcess -Force",
+            "powershell.exe Stop-Process -Id (Get-NetTCPConnection -LocalPort 35530).OwningProcess -Force",
             stdout=DEVNULL,
             stderr=STDOUT,
-            creationflags=CREATE_NO_WINDOW,
         )
         Popen(
             "scripts/rclone.exe rcd --rc-no-auth --rc-addr localhost:35530 --config rclone.conf"
         )
     elif platform in ["linux", "linux2"]:
         run(
-            "bash kill $(lsof -t -i:8080)",
+            "bash kill $(lsof -t -i:35530)",
             stdout=DEVNULL,
             stderr=STDOUT,
-            creationflags=CREATE_NO_WINDOW,
         )
         Popen(
             "scripts/rclone rcd --rc-no-auth --rc-addr localhost:35530 --config rclone.conf"
+        )
+    elif platform in ["darwin"]:
+        run(
+            "zsh kill -9 $(lsof -ti:35530)",
+            stdout=DEVNULL,
+            stderr=STDOUT,
+        )
+        Popen(
+            "zsh scripts/rclone rcd --rc-no-auth --rc-addr localhost:35530 --config rclone.conf"
         )
 
     fully_initialized = True
