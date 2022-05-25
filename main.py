@@ -43,7 +43,7 @@ def startup():
             "access_token": config.get_from_col("gdrive", "access_token"),
             "token_type": "Bearer",
             "refresh_token": config.get_from_col("gdrive", "refresh_token"),
-            "expiry": "2022-01-01T00:00:00.0000000+00:00",
+            "expiry": "2022-03-27T00:00:00.000+00:00",
         },
         escape_forward_slashes=False,
     )
@@ -51,21 +51,24 @@ def startup():
         id = category["id"]
         drive_id = category["drive_id"]
         rclone_conf += f"[{id}]\ntype = drive\nclient_id = {client_id}\nclient_secret = {client_secret}\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\nteam_drive = {drive_id}\n"
-        rclone[id] = RCloneAPI(id + ":")
     with open("rclone.conf", "w+") as w:
         w.write(rclone_conf)
     if platform in ["win32", "cygwin", "msys"]:
         run(
-            "powershell.exe Stop-Process -Id (Get-NetTCPConnection -LocalPort 35530).OwningProcess -Force",
+            shlex.split(
+                "powershell.exe Stop-Process -Id (Get-NetTCPConnection -LocalPort 35530).OwningProcess -Force"
+            ),
             stdout=DEVNULL,
             stderr=STDOUT,
         )
         Popen(
-            "scripts/rclone.exe rcd --rc-no-auth --rc-addr localhost:35530 --config rclone.conf"
+            shlex.split(
+                "scripts/rclone.exe rcd --rc-no-auth --rc-addr localhost:35530 --config rclone.conf"
+            )
         )
     elif platform in ["linux", "linux2"]:
         run(
-            "bash kill $(lsof -t -i:35530)",
+            shlex.split("bash kill $(lsof -t -i:35530)"),
             stdout=DEVNULL,
             stderr=STDOUT,
         )
@@ -84,23 +87,21 @@ def startup():
             )
         )
 
-    fully_initialized = True
-
     categories = config.get("categories")
+    for category in categories:
+        rclone[id] = RCloneAPI(id)
+
     tmdb_api_key = config.get("tmdb_api_key")
 
-    if fully_initialized:
-        tmdb = TMDB(api_key=tmdb_api_key)
-        print("Initializing core modules...")
-        if not len(metadata):
-            print("Metadata file is empty. Fetching metadata...")
-            metadata.data = fetch_metadata(tmdb, categories)
-            metadata.save()
-        else:
-            print("Metadata file is not empty. Skipping fetching metadata...")
-        print("Done.")
+    tmdb = TMDB(api_key=tmdb_api_key)
+    print("Initializing core modules...")
+    if not len(metadata):
+        print("Metadata file is empty. Fetching metadata...")
+        metadata.data = fetch_metadata(tmdb, categories)
+        metadata.save()
     else:
-        print("Not fully initialized. Skipping core modules...")
+        print("Metadata file is not empty. Skipping fetching metadata...")
+    print("Done.")
 
 
 app = FastAPI(
@@ -135,4 +136,4 @@ app.include_router(main_router, prefix=settings.API_V1_STR)
 
 startup()
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="localhost", port=settings.PORT, reload=False)
+    uvicorn.run("main:app", host="localhost", port=settings.PORT, reload=True)

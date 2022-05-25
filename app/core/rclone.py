@@ -1,13 +1,19 @@
 import json
 import re
-from typing import Any, Dict, List, Optional
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Union
 
 import requests
+from dateutil.parser import parse
+from httplib2 import Http
+from oauth2client.client import GoogleCredentials
+from pytz import UTC
 
 
 class RCloneAPI:
-    def __init__(self, fs):
-        self.fs = fs
+    def __init__(self, id):
+        self.id = id
+        self.fs = id + ":"
         self.RCLONE_RC_URL = "http://localhost:35530"
         self.RCLONE = {
             "mkdir": "operations/mkdir",
@@ -45,6 +51,8 @@ class RCloneAPI:
             "statsDelete": "core/stats-delete",
             "statsReset": "core/stats-reset",
         }
+        self.fs_conf = self.rc_conf()
+        self.fs_conf["token"] = json.loads(self.fs_conf["token"])
 
     def rc_ls(self, options: Optional[dict] = {}) -> List[Dict[str, Any]]:
         rc_data = {
@@ -58,6 +66,15 @@ class RCloneAPI:
             headers={"Content-Type": "application/json"},
         ).json()
         return result["list"]
+
+    def rc_conf(self) -> Dict:
+        rc_data = {"name": self.id}
+        result = requests.post(
+            "%s/%s" % (self.RCLONE_RC_URL, self.RCLONE["getConfigForRemote"]),
+            data=json.dumps(rc_data),
+            headers={"Content-Type": "application/json"},
+        ).json()
+        return result
 
     def fetch_movies(self) -> List[Dict[str, Any]]:
         rc_ls_result = self.rc_ls({"recurse": True, "filesOnly": False})
@@ -81,7 +98,7 @@ class RCloneAPI:
                         "subtitles": None,
                     }
                 )
-            elif item["isDir"] == True:
+            elif item["IsDir"] == True:
                 dirs[item["Path"]] = {
                     "id": item["ID"],
                     "name": item["Name"],
@@ -164,5 +181,33 @@ class RCloneAPI:
                     )
         return metadata
 
-    def fetch_thumbnail(self, id) -> str:
-        return ""
+    def refresh(self) -> Dict:
+        creds = GoogleCredentials(
+            client_id=self.fs_conf["client_id"],
+            client_secret=self.fs_conf["client_secret"],
+            access_token=self.fs_conf["token"]["access_token"],
+            refresh_token=self.fs_conf["token"]["refresh_token"],
+            token_uri="https://accounts.google.com/o/oauth2/token",
+            token_expiry=None,
+            user_agent=None,
+        )
+        creds.refresh(creds.authorize(Http()))
+        result = {
+            "access_token": creds.access_token,
+            "token_type": "Bearer",
+            "refresh_token": creds.refresh_token,
+            "expiry": creds.token_expiry,
+        }
+        return result
+
+    def thumbnail(self, id) -> Union[str, None]:
+        if parse(self.fs_conf["token"]["expiry"]) <= UTC.localize(datetime.now()):
+            self.fs_conf["token"] = self.refresh()
+        result = requests.get(
+            f"https://www.googleapis.com/drive/v3/files/{id}?supportsAllDrives=true&fields=thumbnailLink",
+            headers={
+                "Authorization": "Bearer %s" % self.fs_conf["token"]["access_token"]
+            },
+        ).json()
+        if thumb := result.get("thumbnailLink"):
+            return re.sub(r"=s\d+$", "", thumb)

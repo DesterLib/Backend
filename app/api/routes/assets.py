@@ -39,7 +39,9 @@ async def image_path(
 ):
     from main import rclone
 
-    thumb_url = drive.get_thumbnail_url(file_id)
+    # need to add a way to identify the correct remote
+    # for now, I'll be using index 0
+    thumb_url = rclone[list(rclone.keys())[0]].thumbnail(file_id)
     if not thumb_url:
         return {"ok": False, "message": "Thumbnail not found"}
     print(f"Thumbnail URL: {thumb_url}")
