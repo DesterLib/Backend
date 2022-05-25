@@ -6,6 +6,12 @@ __pycache__/
 # C extensions
 *.so
 
+# rclone
+scripts/rclone
+scripts/rclone.exe
+scripts/gclone
+scripts/gclone.exe
+
 # Distribution / packaging
 .Python
 build/

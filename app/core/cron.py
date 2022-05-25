@@ -1,8 +1,8 @@
 from typing import List
-from app.core import DriveAPI, TMDB
+from app.core import TMDB, fetch_movies, fetch_series
 from app.utils import generate_movie_metadata, generate_series_metadata
 
-def fetch_metadata(drive: DriveAPI, tmdb: TMDB, categories: List[str]):
+def fetch_metadata(tmdb: TMDB, categories: List[str]):
     print("Generating metadata...")
     metadata = []
     if categories:
@@ -15,7 +15,7 @@ def fetch_metadata(drive: DriveAPI, tmdb: TMDB, categories: List[str]):
             category_metadata["name"] = category.get("name")
             category_metadata["include_in_homepage"] = category.get("include_in_homepage")
             print(f"{category_type=}")
-            data = generate_movie_metadata(tmdb, drive.fetch_movies(category_id)) if category_type == "movies" else generate_series_metadata(tmdb, drive.fetch_series(category_id))
+            data = generate_movie_metadata(tmdb, fetch_movies(category["fs"])) if category_type == "movies" else generate_series_metadata(tmdb, fetch_series(category["fs"]))
             category_metadata["metadata"] = data
             metadata.append(category_metadata)
     return metadata

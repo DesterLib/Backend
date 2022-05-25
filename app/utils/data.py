@@ -216,6 +216,8 @@ def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
                 continue
         print("TMDB ID: ", tmdb_id)
         series_info = tmdb.get_details(tmdb_id, DataType.series)
+        if series_info.get("first_air_date") == None:
+            series_info["first_air_date"] = ""
         seasons=series_info.get("seasons", [])
         print("Seasons: ", len(seasons))
         
