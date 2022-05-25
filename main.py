@@ -41,7 +41,7 @@ def startup():
             "access_token": config.get_from_col("gdrive", "access_token"),
             "token_type": "Bearer",
             "refresh_token": config.get_from_col("gdrive", "refresh_token"),
-            "expiry": None,
+            "expiry": "2022-01-01T00:00:00.0000000+00:00",
         },
         escape_forward_slashes=False,
     )

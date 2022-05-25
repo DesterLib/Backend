@@ -6,6 +6,7 @@ from typing import Any, Dict, Optional
 
 import ujson as json
 from app import logger
+
 # from app.core import TMDB
 from app.models import DataType
 from app.settings import settings
@@ -255,17 +256,18 @@ def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
                 print("        " + episode["name"])
                 parsed_data = parse_episode_filename(episode["name"])
                 episode_number = parsed_data.get("episode")
-                season_number = parsed_data.get("season")
+                season_number = parsed_data.get("season", season.get("season_number"))
                 if season_number != season.get("season_number"):
                     print(
                         f"            Season number mismatch: {season_number} != {season.get('season_number')}"
                     )
                 if not episode_number:
-                    episode_number = count + 1
-                episode_details = tmdb.get_episode_details(
-                    tmdb_id, episode_number, season_number
-                )
-                if not episode_details:
+                    episode_number = len(season["episodes"]) - count
+                try:
+                    episode_details = series_info[f"season/{season_number}"][
+                        "episodes"
+                    ][episode_number - 1]
+                except IndexError:
                     episode_details = {
                         "name": None,
                         "air_date": f"{year}-01-01" if year else None,

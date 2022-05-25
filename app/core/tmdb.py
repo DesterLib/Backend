@@ -5,6 +5,7 @@ from difflib import SequenceMatcher
 from typing import Any, Dict, Optional
 
 import httpx
+from math import ceil
 import ujson as json
 from app import logger
 from app.models import DataType
@@ -162,11 +163,37 @@ class TMDB:
         """
         type_name = "tv" if data_type == DataType.series else "movie"
         url = f"https://api.themoviedb.org/3/{type_name}/{tmdb_id}"
-        response = self.client.get(
-            url,
-            params={
-                "include_image_language": "en",
-                "append_to_response": "credits,images,episode_groups,recommendations,similar,external_ids",
-            },
-        )
-        return response.json()
+        params = {
+            "include_image_language": "en",
+            "append_to_response": "credits,images,external_ids",
+        }
+        response = self.client.get(url, params=params).json()
+        length = len(response.get("seasons", []))
+        append_seasons = []
+        n_of_appends = ceil(length / 20)
+        x = 0
+        while x < n_of_appends:
+            append_seasons.append("")
+            for n in range((x * 20), ((x + 1) * 20)):
+                append_seasons[x] = append_seasons[x] + "season/" + str(n) + ","
+            append_seasons[x] = append_seasons[x][:-1]
+            x += 1
+        if type_name == "tv":
+            for n, append_season in enumerate(append_seasons):
+                params = {"append_to_response": append_season}
+                tmp_response = self.client.get(url, params=params).json()
+                season_keys = [k for k in tmp_response.keys() if "season/" in k]
+                for k in season_keys:
+                    response[k] = tmp_response[k]
+        else:
+            response = self.client.get(
+                url,
+                params={
+                    "include_image_language": "en",
+                    "append_to_response": "credits,images,external_ids",
+                },
+            ).json()
+        # This limits the number of seasons to 17 seasons
+        # More requests need to be made in the event of additional seasons
+        # The data from those requests need to then be merged and returned
+        return response
