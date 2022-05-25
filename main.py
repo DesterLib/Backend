@@ -73,12 +73,12 @@ def startup():
         )
     elif platform in ["darwin"]:
         run(
-            "zsh kill -9 $(lsof -ti:35530)",
+            "bash -c kill $(lsof -t -i:35530)",
             stdout=DEVNULL,
             stderr=STDOUT,
         )
         Popen(
-            "zsh scripts/rclone rcd --rc-no-auth --rc-addr localhost:35530 --config rclone.conf"
+            "bash scripts/rclone rcd --rc-no-auth --rc-addr localhost:35530 --config rclone.conf"
         )
 
     fully_initialized = True
