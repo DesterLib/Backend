@@ -20,9 +20,9 @@ def fetch_metadata(tmdb: TMDB, categories: List[str]):
             )
             print(f"{category_type=}")
             data = (
-                generate_movie_metadata(tmdb, fetch_movies(category["fs"]))
+                generate_movie_metadata(tmdb, fetch_movies(category_id + ":"))
                 if category_type == "movies"
-                else generate_series_metadata(tmdb, fetch_series(category["fs"]))
+                else generate_series_metadata(tmdb, fetch_series(category_id + ":"))
             )
             category_metadata["metadata"] = data
             metadata.append(category_metadata)

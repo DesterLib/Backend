@@ -33,6 +33,24 @@ def startup():
     if not config.get("tmdb_api_key"):
         config.set("tmdb_api_key", settings.TMDB_API_KEY)
 
+    rclone_conf = ""
+    client_id = config.get("gdrive_client_id")
+    client_secret = config.get("gdrive_client_secret")
+    token = json.dumps(
+        {
+            "access_token": config.get("gdrive_access_token"),
+            "token_type": "Bearer",
+            "refresh_token": config.get("gdrive_refresh_token"),
+            "expiry": None,
+        },
+        escape_forward_slashes=False,
+    )
+    for category in config.get("categories"):
+        id = category["id"]
+        drive_id = category["drive_id"]
+        rclone_conf += f"[{id}]\ntype = drive\nclient_id = {client_id}\nclient_secret = {client_secret}\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\nteam_drive = {drive_id}\n"
+    with open("rclone.conf", "w+") as w:
+        w.write(rclone_conf)
     if platform in ["win32", "cygwin", "msys"]:
         run(
             "powershell.exe Stop-Process -Id (Get-NetTCPConnection -LocalPort 5572).OwningProcess -Force",
@@ -40,7 +58,9 @@ def startup():
             stderr=STDOUT,
             creationflags=CREATE_NO_WINDOW,
         )
-        Popen("scripts/rclone.exe rcd --rc-no-auth --rc-addr localhost:35530")
+        Popen(
+            "scripts/rclone.exe rcd --rc-no-auth --rc-addr localhost:35530 --config rclone.conf"
+        )
     elif platform in ["linux", "linux2"]:
         run(
             "bash kill $(lsof -t -i:8080)",
@@ -48,7 +68,9 @@ def startup():
             stderr=STDOUT,
             creationflags=CREATE_NO_WINDOW,
         )
-        Popen("scripts/rclone rcd --rc-no-auth --rc-addr localhost:35530")
+        Popen(
+            "scripts/rclone rcd --rc-no-auth --rc-addr localhost:35530 --config rclone.conf"
+        )
 
     fully_initialized = True
 
