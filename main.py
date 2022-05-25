@@ -10,14 +10,13 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api import main_router
-from app.core import TMDB, Database, DriveAPI, Metadata, RCloneAPI
+from app.core import TMDB, Database, Metadata, RCloneAPI
 from app.core.cron import fetch_metadata
 from app.settings import settings
 from app.utils.data import sort_by_type
 
 config = Database(file_path="config.json")
 metadata = Metadata(file_path="metadata.json")
-drive = DriveAPI.initialize_drive(config)
 rclone = {}
 
 
