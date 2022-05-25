@@ -20,11 +20,11 @@ class _Settings(BaseSettings):
     GDRIVE_CLIENT_ID: Optional[str] = getenv("GDRIVE_CLIENT_ID")
     GDRIVE_CLIENT_SECRET: Optional[str] = getenv("GDRIVE_CLIENT_SECRET")
     GDRIVE_ACCESS_TOKEN: Optional[str] = getenv("GDRIVE_ACCESS_TOKEN")
-    GDRIVE_REFRESH_TOKEN: Optional[str] = getenv("GDRIVE_REFRESH_TOKEN")
-    GDRIVE_SERVICE_ACCOUNT_JSON: Optional[str] = getenv("GDRIVE_SERVICE_ACCOUNT_JSON")
+    GDRIVE_REFRESH_TOKEN: Optional[str] = getenv("GOOGLE_REFRESH_TOKEN")
+    GDRIVE_SERVICE_ACCOUNTS: Optional[str] = getenv("GDRIVE_SERVICE_ACCOUNTS")
 
-    AUTH0_GLOBAL_CLIENT_ID: str = getenv("AUTH0_GLOBAL_CLIENT_ID")
-    AUTH0_GLOBAL_CLIENT_SECRET: str = getenv("AUTH0_GLOBAL_CLIENT_SECRET")
+    AUTH0_CLIENT_ID: str = getenv("AUTH0_CLIENT_ID")
+    AUTH0_CLIENT_SECRET: str = getenv("AUTH0_CLIENT_SECRET")
     AUTH0_DOMAIN: str = getenv("AUTH0_DOMAIN")
     LOGO_URL: str = getenv("LOGO_URL")
 

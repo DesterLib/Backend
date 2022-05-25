@@ -30,10 +30,10 @@ class DriveAPI:
             account_credentials, GoogleCredentials
         ):
             account_credentials = GoogleCredentials(
-                client_id=account_credentials["gdrive_client_id"],
-                access_token=account_credentials["gdrive_access_token"],
-                client_secret=account_credentials["gdrive_client_secret"],
-                refresh_token=account_credentials["gdrive_refresh_token"],
+                client_id=account_credentials["client_id"],
+                access_token=account_credentials["access_token"],
+                client_secret=account_credentials["client_secret"],
+                refresh_token=account_credentials["refresh_token"],
                 token_uri=self.token_uri,
                 token_expiry=None,
                 user_agent=None,
@@ -170,27 +170,25 @@ class DriveAPI:
 
     @classmethod
     def initialize_drive(cls, config) -> "DriveAPI":
-        if not config.get("gdrive_client_id"):
-            config.set("gdrive_client_id", settings.GDRIVE_CLIENT_ID)
-        if not config.get("gdrive_client_secret"):
-            config.set("gdrive_client_secret", settings.GDRIVE_CLIENT_SECRET)
-        if not config.get("gdrive_refresh_token"):
-            config.set("gdrive_refresh_token", settings.GDRIVE_REFRESH_TOKEN)
-        if not config.get("gdrive_access_token"):
-            config.set("gdrive_access_token", settings.GDRIVE_ACCESS_TOKEN)
-        if not config.get("gdrive_service_accounts_json"):
-            config.set(
-                "gdrive_service_accounts_json", settings.GDRIVE_SERVICE_ACCOUNT_JSON
-            )
+        if not config.get_from_col("gdrive", "client_id"):
+            config.add_to_col("gdrive", {"client_id": settings.GDRIVE_CLIENT_ID})
+        if not config.get_from_col("gdrive", "client_secret"):
+            config.add_to_col("gdrive", {"client_secret": settings.GDRIVE_CLIENT_SECRET})
+        if not config.get_from_col("gdrive", "refresh_token"):
+            config.add_to_col("gdrive", {"refresh_token": settings.GDRIVE_REFRESH_TOKEN})
+        if not config.get_from_col("gdrive", "access_token"):
+            config.add_to_col("gdrive", {"access_token": settings.GDRIVE_ACCESS_TOKEN})
+        if not config.get_from_col("gdrive", "service_accounts"):
+            config.add_to_col("gdrive", {"service_accounts": settings.GDRIVE_SERVICE_ACCOUNTS})
 
-        gdrive_service_accounts_json = config.get("gdrive_service_accounts_json")
-        gdrive_service_accounts_json = False
-        gdrive_client_id = config.get("gdrive_client_id")
-        gdrive_client_secret = config.get("gdrive_client_secret")
-        gdrive_refresh_token = config.get("gdrive_refresh_token")
-        gdrive_access_token = config.get("gdrive_access_token")
+        gdrive_client_id = config.get_from_col("gdrive", "client_id")
+        gdrive_client_secret = config.get_from_col("gdrive", "client_secret")
+        gdrive_refresh_token = config.get_from_col("gdrive", "refresh_token")
+        gdrive_access_token = config.get_from_col("gdrive", "access_token")
+        gdrive_service_accounts = config.get_from_col("gdrive", "service_accounts")
 
-        if sa_json := gdrive_service_accounts_json:
+        gdrive_service_accounts = False
+        if sa_json := gdrive_service_accounts:
             print("Using service account json...")
             drive = cls.from_sa_json(random.choice(sa_json))
         elif (
@@ -200,7 +198,7 @@ class DriveAPI:
             and gdrive_access_token
         ):
             print("Using client credentials...")
-            drive = cls.from_gac_json(config.data)
+            drive = cls.from_gac_json(config.get("gdrive"))
         else:
             drive = cls()
         return drive

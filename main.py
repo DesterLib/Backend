@@ -21,12 +21,12 @@ drive = DriveAPI.initialize_drive(config)
 
 def startup():
     print("Starting up...")
-    if not config.get("auth0_domain"):
-        config.set("auth0_domain", settings.AUTH0_DOMAIN)
-    if not config.get("auth0_global_client_id"):
-        config.set("auth0_global_client_id", settings.AUTH0_GLOBAL_CLIENT_ID)
-    if not config.get("auth0_global_client_secret"):
-        config.set("auth0_global_client_secret", settings.AUTH0_GLOBAL_CLIENT_ID)
+    if not config.get_from_col("auth0", "domain"):
+        config.add_to_col("auth0", {"domain": settings.AUTH0_DOMAIN})
+    if not config.get_from_col("auth0", "client_id"):
+        config.add_to_col("auth0", {"client_id": settings.AUTH0_CLIENT_ID})
+    if not config.get_from_col("auth0", "client_secret"):
+        config.add_to_col("auth0", {"client_secret": settings.AUTH0_CLIENT_SECRET})
 
     if not config.get("categories"):
         config.set("categories", None)
@@ -34,13 +34,13 @@ def startup():
         config.set("tmdb_api_key", settings.TMDB_API_KEY)
 
     rclone_conf = ""
-    client_id = config.get("gdrive_client_id")
-    client_secret = config.get("gdrive_client_secret")
+    client_id = config.get_from_col("gdrive", "client_id")
+    client_secret = config.get_from_col("gdrive", "client_secret")
     token = json.dumps(
         {
-            "access_token": config.get("gdrive_access_token"),
+            "access_token": config.get_from_col("gdrive", "access_token"),
             "token_type": "Bearer",
-            "refresh_token": config.get("gdrive_refresh_token"),
+            "refresh_token": config.get_from_col("gdrive", "refresh_token"),
             "expiry": None,
         },
         escape_forward_slashes=False,

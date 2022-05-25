@@ -41,7 +41,7 @@ class Database:
         self.save()
 
     def get_from_col(
-        self, col_name: str, key: str, pop: bool = True
+        self, col_name: str, key: str, pop: bool = False
     ) -> Optional[Dict[Any, Any]]:
         if self.data.get(col_name) and self.data[col_name].get(key):
             if not pop:
