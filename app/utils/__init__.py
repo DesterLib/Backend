@@ -1,1 +1,7 @@
-from .data import parse_filename, parse_episode_filename, generate_series_metadata, generate_movie_metadata, clean_file_name
+from .data import (
+    clean_file_name,
+    generate_movie_metadata,
+    generate_series_metadata,
+    parse_episode_filename,
+    parse_filename,
+)

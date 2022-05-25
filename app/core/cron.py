@@ -1,6 +1,8 @@
 from typing import List
+
 from app.core import TMDB, fetch_movies, fetch_series
 from app.utils import generate_movie_metadata, generate_series_metadata
+
 
 def fetch_metadata(tmdb: TMDB, categories: List[str]):
     print("Generating metadata...")
@@ -13,9 +15,15 @@ def fetch_metadata(tmdb: TMDB, categories: List[str]):
             category_metadata["id"] = category_id
             category_metadata["type"] = category_type
             category_metadata["name"] = category.get("name")
-            category_metadata["include_in_homepage"] = category.get("include_in_homepage")
+            category_metadata["include_in_homepage"] = category.get(
+                "include_in_homepage"
+            )
             print(f"{category_type=}")
-            data = generate_movie_metadata(tmdb, fetch_movies(category["fs"])) if category_type == "movies" else generate_series_metadata(tmdb, fetch_series(category["fs"]))
+            data = (
+                generate_movie_metadata(tmdb, fetch_movies(category["fs"]))
+                if category_type == "movies"
+                else generate_series_metadata(tmdb, fetch_series(category["fs"]))
+            )
             category_metadata["metadata"] = data
             metadata.append(category_metadata)
     return metadata

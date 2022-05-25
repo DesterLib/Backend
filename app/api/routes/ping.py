@@ -1,10 +1,10 @@
-from fastapi import APIRouter
 from typing import Dict, Union
 
+from fastapi import APIRouter
 
 router = APIRouter(
     prefix="/ping",
-    tags=['misc'],
+    tags=["misc"],
 )
 
 

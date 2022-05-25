@@ -1,5 +1,5 @@
-import os
 import logging
+import os
 import os.path
 from datetime import datetime
 
@@ -12,11 +12,15 @@ if not os.path.isdir("cache"):
 
 logging.basicConfig(
     level=logging.DEBUG,
-    datefmt="%Y/%m/%d %H:%M:%S", 
+    datefmt="%Y/%m/%d %H:%M:%S",
     format="[%(asctime)s][%(levelname)s] ==> %(message)s",
-    handlers=[logging.StreamHandler(),
-              logging.FileHandler("logs/{}.log".format(datetime.now().strftime("%Y-%m-%d_%H%M%S")), mode="w")],
-    )
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(
+            "logs/{}.log".format(datetime.now().strftime("%Y-%m-%d_%H%M%S")), mode="w"
+        ),
+    ],
+)
 logging.getLogger("oauth2client").setLevel(logging.WARNING)
 logging.getLogger("googleapiclient").setLevel(logging.WARNING)
 logging.getLogger("waitress").setLevel(logging.WARNING)

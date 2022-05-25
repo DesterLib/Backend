@@ -1,10 +1,11 @@
-import re
 import random
+import re
+from typing import Any, Dict, List, Optional, Union
+
 import httplib2
 from app.settings import settings
+from googleapiclient.discovery import Resource, build
 from oauth2client.client import GoogleCredentials
-from typing import Any, Dict, List, Optional, Union
-from googleapiclient.discovery import build, Resource
 from oauth2client.service_account import ServiceAccountCredentials
 
 

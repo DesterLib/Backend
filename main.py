@@ -1,22 +1,23 @@
-import uvicorn
-import ujson as json
+from subprocess import CREATE_NO_WINDOW, DEVNULL, STDOUT, Popen, run
 from sys import platform
-from subprocess import Popen, run, STDOUT, DEVNULL, CREATE_NO_WINDOW
+
+import ujson as json
+import uvicorn
 from fastapi import FastAPI
-from app.api import main_router
-from app.settings import settings
-from app.core.cron import fetch_metadata
 from fastapi.responses import JSONResponse
-from app.core import TMDB, Database, DriveAPI, Metadata
-from starlette.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.cors import CORSMiddleware
 
+from app.api import main_router
+from app.core import TMDB, Database, DriveAPI, Metadata
+from app.core.cron import fetch_metadata
+from app.settings import settings
 from app.utils.data import sort_by_type
-
 
 config = Database(file_path="config.json")
 metadata = Metadata(file_path="metadata.json")
 drive = DriveAPI.initialize_drive(config)
+
 
 def startup():
     print("Starting up...")

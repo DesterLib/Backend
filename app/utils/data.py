@@ -1,16 +1,21 @@
+import re
+from collections import defaultdict
 from copy import deepcopy
 from functools import reduce
-from collections import defaultdict
-import re
 from typing import Any, Dict, Optional
+
 import ujson as json
 from app import logger
 # from app.core import TMDB
 from app.models import DataType
 from app.settings import settings
 
+
 def group_by(key, seq):
-    return reduce(lambda grp, val: grp[key(val)].append(val) or grp, seq, defaultdict(list))
+    return reduce(
+        lambda grp, val: grp[key(val)].append(val) or grp, seq, defaultdict(list)
+    )
+
 
 def try_int(value: str) -> Optional[int]:
     try:
@@ -19,44 +24,49 @@ def try_int(value: str) -> Optional[int]:
         value = None
     return value
 
+
 def sort_by_type(metadata: Dict[str, Any] = {}) -> Dict[str, Any]:
-    data = {'movies': [], 'series': []}
+    data = {"movies": [], "series": []}
     ids = deepcopy(data)
     for category in metadata:
-        meta = category['metadata']
+        meta = category["metadata"]
         for item in meta:
-            item["category"] = {"id": category['id'], "name": category['name']}
-            if category['type'] == 'movies':
-                if not item['tmdb_id'] in ids['movies']:
-                    data['movies'].append(item)
-            elif category['type'] == 'series':
-                if not item['tmdb_id'] in ids['series']:
-                    data['series'].append(item)
-            ids[category.get('type')].append(item['tmdb_id'])
+            item["category"] = {"id": category["id"], "name": category["name"]}
+            if category["type"] == "movies":
+                if not item["tmdb_id"] in ids["movies"]:
+                    data["movies"].append(item)
+            elif category["type"] == "series":
+                if not item["tmdb_id"] in ids["series"]:
+                    data["series"].append(item)
+            ids[category.get("type")].append(item["tmdb_id"])
     return data
 
+
 def parse_filename(name: str, data_type: DataType):
-    reg_exps = [
-        # (2019) The Mandalorian
-        r"^[\(\[\{](?P<year>\d{4})[\)\]\}]\s(?P<title>[^.]+).*$",
-        # The Mandalorian (2019)
-        r"^(?P<title>.*)\s[\(\[\{](?P<year>\d{4})[\)\]\}].*$",
-        # The.Mandalorian.2019.1080p.WEBRip
-        r"^(?P<title>(?:(?!\.\d{4}).)*)\.(?P<year>\d{4}).*$",
-        # The Mandalorian
-        r"^(?P<year>)(?P<title>.*)$" ,
-        
-    ] if data_type == DataType.series else [
-        # (2008) Iron Man.mkv
-        r"^[\(\[\{](?P<year>\d{4})[\)\]\}]\s(?P<title>[^.]+).*(?P<extention>\..*)?$",
-        # Iron Man (2008).mkv
-        r"^(?P<title>.*)\s[\(\[\{](?P<year>\d{4})[\)\]\}].*(?P<extention>\..*)?$",
-        # Iron.Man.2008.1080p.WEBRip.DDP5.1.Atmos.x264.mkv
-        # r"^(?P<title>(?:(?!\.\d{4}).)*)\.(?P<year>\d{4}).*(?P<extention>\..*)?$",
-        r"^(?P<title>(?:(?!\.\d{4}).)*)\.(?P<year>\d{4}).*?(?P<extention>\.\w+)?$",
-        # Iron Man.mkv
-        r"^(?P<year>)(?P<title>.*).*(?P<extention>\..*?)?"
-    ]
+    reg_exps = (
+        [
+            # (2019) The Mandalorian
+            r"^[\(\[\{](?P<year>\d{4})[\)\]\}]\s(?P<title>[^.]+).*$",
+            # The Mandalorian (2019)
+            r"^(?P<title>.*)\s[\(\[\{](?P<year>\d{4})[\)\]\}].*$",
+            # The.Mandalorian.2019.1080p.WEBRip
+            r"^(?P<title>(?:(?!\.\d{4}).)*)\.(?P<year>\d{4}).*$",
+            # The Mandalorian
+            r"^(?P<year>)(?P<title>.*)$",
+        ]
+        if data_type == DataType.series
+        else [
+            # (2008) Iron Man.mkv
+            r"^[\(\[\{](?P<year>\d{4})[\)\]\}]\s(?P<title>[^.]+).*(?P<extention>\..*)?$",
+            # Iron Man (2008).mkv
+            r"^(?P<title>.*)\s[\(\[\{](?P<year>\d{4})[\)\]\}].*(?P<extention>\..*)?$",
+            # Iron.Man.2008.1080p.WEBRip.DDP5.1.Atmos.x264.mkv
+            # r"^(?P<title>(?:(?!\.\d{4}).)*)\.(?P<year>\d{4}).*(?P<extention>\..*)?$",
+            r"^(?P<title>(?:(?!\.\d{4}).)*)\.(?P<year>\d{4}).*?(?P<extention>\.\w+)?$",
+            # Iron Man.mkv
+            r"^(?P<year>)(?P<title>.*).*(?P<extention>\..*?)?",
+        ]
+    )
     for exp in reg_exps:
         if match := re.match(exp, name):
             data = match.groupdict()
@@ -64,6 +74,7 @@ def parse_filename(name: str, data_type: DataType):
             return data
     else:
         return {}
+
 
 def parse_episode_filename(name: str):
     reg_exps = [
@@ -83,23 +94,25 @@ def parse_episode_filename(name: str):
     else:
         return {}
 
+
 def clean_file_name(name: str) -> str:
     reg_exps = [
-        r'\((?:\D.+?|.+?\D)\)|\[(?:\D.+?|.+?\D)\]', # (2016), [2016], etc
-        r'\(?(?:240|360|480|720|1080|1440|2160)p?\)?', # 1080p, 720p, etc
-        r'\b(?:mp4|mkv|wmv|m4v|mov|avi|flv|webm|flac|mka|m4a|aac|ogg)\b', # file types
-        r'season ?\d+?', # season 1, season 2, etc
-        r'(?:S\d{1,3}|\d+?bit|dsnp|web\-dl|ddp\d+? ? \d|hevc|\-?Vyndros)', # more stuffs
+        r"\((?:\D.+?|.+?\D)\)|\[(?:\D.+?|.+?\D)\]",  # (2016), [2016], etc
+        r"\(?(?:240|360|480|720|1080|1440|2160)p?\)?",  # 1080p, 720p, etc
+        r"\b(?:mp4|mkv|wmv|m4v|mov|avi|flv|webm|flac|mka|m4a|aac|ogg)\b",  # file types
+        r"season ?\d+?",  # season 1, season 2, etc
+        r"(?:S\d{1,3}|\d+?bit|dsnp|web\-dl|ddp\d+? ? \d|hevc|\-?Vyndros)",  # more stuffs
     ]
     for reg in reg_exps:
-        name = re.sub(reg, '', name, flags=re.I)
+        name = re.sub(reg, "", name, flags=re.I)
     return name.strip().rstrip(".-_")
+
 
 def generate_movie_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
     metadata = []
     advanced_search_list = []
     for drive_meta in data:
-        original_name = drive_meta["name"] 
+        original_name = drive_meta["name"]
         logger.debug(f"original file name: {original_name}")
         cleaned_title = clean_file_name(original_name)
         logger.debug(f"{cleaned_title=}")
@@ -132,7 +145,9 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
                 logo=logo,
                 modified_time=drive_meta.get("modifiedTime"),
                 video_metadata=drive_meta.get("videoMediaMetadata"),
-                thumbnail_path=f"{settings.API_V1_STR}/assets/thumbnail/{drive_meta['id']}" if drive_meta.get("hasThumbnail") else None,
+                thumbnail_path=f"{settings.API_V1_STR}/assets/thumbnail/{drive_meta['id']}"
+                if drive_meta.get("hasThumbnail")
+                else None,
                 popularity=movie_info.get("popularity"),
                 revenue=movie_info.get("revenue"),
                 rating=movie_info.get("vote_average"),
@@ -175,7 +190,9 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
                 logo=logo,
                 modified_time=drive_meta.get("modifiedTime"),
                 video_metadata=drive_meta.get("videoMediaMetadata"),
-                thumbnail_path=f"{settings.API_V1_STR}/assets/thumbnail/{drive_meta['id']}" if drive_meta.get("hasThumbnail") else None,
+                thumbnail_path=f"{settings.API_V1_STR}/assets/thumbnail/{drive_meta['id']}"
+                if drive_meta.get("hasThumbnail")
+                else None,
                 popularity=movie_info.get("popularity"),
                 revenue=movie_info.get("revenue"),
                 rating=movie_info.get("vote_average"),
@@ -195,11 +212,12 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
 
     return metadata
 
+
 def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
     metadata = []
     advanced_search_list = []
     for drive_meta in data:
-        original_name = drive_meta["name"] 
+        original_name = drive_meta["name"]
         print("original file name: ", original_name)
         cleaned_title = clean_file_name(original_name)
         print(f"{cleaned_title=}")
@@ -218,27 +236,35 @@ def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
         series_info = tmdb.get_details(tmdb_id, DataType.series)
         if series_info.get("first_air_date") == None:
             series_info["first_air_date"] = ""
-        seasons=series_info.get("seasons", [])
+        seasons = series_info.get("seasons", [])
         print("Seasons: ", len(seasons))
-        
+
         try:
             logo = series_info.get("images", {}).get("logos", [{}])[0].get("file_path")
         except:
             logo = None
-        
+
         for season in seasons:
-            season["episodes"] = drive_meta.get("seasons", {}).get(str(season.get('season_number')), {}).get("episodes", [])
+            season["episodes"] = (
+                drive_meta.get("seasons", {})
+                .get(str(season.get("season_number")), {})
+                .get("episodes", [])
+            )
             print(f"    Episodes in {season.get('name')} = ", len(season["episodes"]))
             for count, episode in enumerate(season["episodes"]):
-                print("        "+episode["name"])
+                print("        " + episode["name"])
                 parsed_data = parse_episode_filename(episode["name"])
                 episode_number = parsed_data.get("episode")
                 season_number = parsed_data.get("season")
                 if season_number != season.get("season_number"):
-                    print(f"            Season number mismatch: {season_number} != {season.get('season_number')}")
+                    print(
+                        f"            Season number mismatch: {season_number} != {season.get('season_number')}"
+                    )
                 if not episode_number:
                     episode_number = count + 1
-                episode_details = tmdb.get_episode_details(tmdb_id, episode_number, season_number)
+                episode_details = tmdb.get_episode_details(
+                    tmdb_id, episode_number, season_number
+                )
                 if not episode_details:
                     episode_details = {
                         "name": None,
@@ -255,8 +281,8 @@ def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
                 episode_details.pop("production_code", None)
                 episode_details.pop("season_number", None)
                 episode.update(episode_details)
-                episode['episode_thumbnail'] = episode.pop('still_path', None)
-                    
+                episode["episode_thumbnail"] = episode.pop("still_path", None)
+
         metadata.append(
             dict(
                 id=drive_meta.get("id"),
@@ -272,7 +298,8 @@ def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
                 popularity=series_info.get("popularity"),
                 revenue=series_info.get("revenue"),
                 rating=series_info.get("vote_average"),
-                year=try_int(series_info.get("first_air_date", "").split("-")[0]) or None,
+                year=try_int(series_info.get("first_air_date", "").split("-")[0])
+                or None,
                 first_air_date=series_info.get("first_air_date"),
                 release_date=series_info.get("first_air_date"),
                 last_air_date=series_info.get("last_air_date"),
