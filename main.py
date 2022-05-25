@@ -1,3 +1,4 @@
+import shlex
 from subprocess import DEVNULL, STDOUT, Popen, run
 from sys import platform
 
@@ -9,7 +10,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api import main_router
-from app.core import TMDB, Database, DriveAPI, RCloneAPI, Metadata
+from app.core import TMDB, Database, DriveAPI, Metadata, RCloneAPI
 from app.core.cron import fetch_metadata
 from app.settings import settings
 from app.utils.data import sort_by_type
@@ -73,12 +74,14 @@ def startup():
         )
     elif platform in ["darwin"]:
         run(
-            "bash -c kill $(lsof -t -i:35530)",
+            shlex.split("kill $(lsof -t -i:35530)"),
             stdout=DEVNULL,
             stderr=STDOUT,
         )
         Popen(
-            "bash scripts/rclone rcd --rc-no-auth --rc-addr localhost:35530 --config rclone.conf"
+            shlex.split(
+                "scripts/rclone rcd --rc-no-auth --rc-addr localhost:35530 --config rclone.conf"
+            )
         )
 
     fully_initialized = True
