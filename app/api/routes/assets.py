@@ -44,7 +44,6 @@ async def image_path(
     thumb_url = rclone[list(rclone.keys())[0]].thumbnail(file_id)
     if not thumb_url:
         return {"ok": False, "message": "Thumbnail not found"}
-    print(f"Thumbnail URL: {thumb_url}")
     req = client.build_request("GET", thumb_url)
     r = await client.send(req, stream=True)
     return StreamingResponse(

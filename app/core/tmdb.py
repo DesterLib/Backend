@@ -39,7 +39,6 @@ class TMDB:
 
     @staticmethod
     def export_data(data_type: DataType):
-        print(f"Exporting {data_type} data")
         date_str = (datetime.now() - timedelta(days=1)).strftime("%m_%d_%Y")
         type_name = "tv_series" if data_type == DataType.series else "movie"
         export_url = (
@@ -136,7 +135,6 @@ class TMDB:
                 if title == each.get("original_title", "").lower().strip():
                     return each["id"]
             logger.debug(f"Basic key-value search failed for '{title}'")
-            print(f"Trying search using difflib advanced search for '{title}'")
             max_ratio, match = 0, None
             matcher = SequenceMatcher(b=title)
             for each in data:

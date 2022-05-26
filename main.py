@@ -21,7 +21,7 @@ rclone = {}
 
 
 def startup():
-    print("Starting up...")
+    logger.info("Starting up...")
     if not config.get_from_col("auth0", "domain"):
         config.add_to_col("auth0", {"domain": settings.AUTH0_DOMAIN})
     if not config.get_from_col("auth0", "client_id"):
@@ -93,14 +93,14 @@ def startup():
     tmdb_api_key = config.get("tmdb_api_key")
 
     tmdb = TMDB(api_key=tmdb_api_key)
-    print("Initializing core modules...")
+    logger.debug("Initializing core modules...")
     if not len(metadata):
-        print("Metadata file is empty. Fetching metadata...")
+        logger.debug("Metadata file is empty. Fetching metadata...")
         metadata.data = fetch_metadata(tmdb, categories)
         metadata.save()
     else:
-        print("Metadata file is not empty. Skipping fetching metadata...")
-    print("Done.")
+        logger.debug("Metadata file is not empty. Skipping fetching metadata...")
+    logger.debug("Done.")
 
 
 app = FastAPI(

@@ -3,9 +3,10 @@ from typing import List
 from app.core import TMDB, RCloneAPI
 from app.utils import generate_movie_metadata, generate_series_metadata
 
+from .. import logger
+
 
 def fetch_metadata(tmdb: TMDB, categories: List[str]):
-    print("Generating metadata...")
     metadata = []
     if categories:
         for category in categories:
@@ -18,7 +19,8 @@ def fetch_metadata(tmdb: TMDB, categories: List[str]):
             category_metadata["include_in_homepage"] = category.get(
                 "include_in_homepage"
             )
-            print(f"{category_type=}")
+            logger.info(f"Generating metadata: {category_name}")
+            logger.debug(f"Category type: {category_type}")
             from main import rclone
             data = (
                 generate_movie_metadata(tmdb, rclone[category_id].fetch_movies())

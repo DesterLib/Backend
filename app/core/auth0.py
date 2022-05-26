@@ -5,14 +5,15 @@ from dataclasses import dataclass
 from functools import wraps
 from json import JSONDecodeError
 from time import time
-# from ..models.token import Token
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 import httpx
 import ujson as json
 from fastapi import status
 from fastapi.responses import JSONResponse
 from httpx import HTTPError, InvalidURL, RequestError
+
+from .. import logger
 
 
 @dataclass
@@ -28,7 +29,7 @@ class Token:
         return self.__dict__()
 
     def __dict__(self):
-        return dict(access_token=self.access_token, token_expiry=self.token_expiry)
+        return {"access_token": self.access_token, "token_expiry": self.token_expiry}
 
 
 class Auth0Manager:
@@ -60,10 +61,10 @@ class Auth0Manager:
         )
 
     def request_access_token(self) -> Token:
-        print("Requesting access token...")
+        logger.debug("Requesting access token...")
         for c in range(4):
             if not c == 0:
-                print(f"Retrying ({c}) ...")
+                logger.debug(f"Retrying ({c}) ...")
             try:
                 data = {
                     "grant_type": self.grant_type,
@@ -72,8 +73,6 @@ class Auth0Manager:
                     "audience": self.audience,
                 }
                 response = self.httpx.post(f"{self.base_url}/oauth/token", data=data)
-                print(data)
-                print(f"{response.text=}")
                 res = response.json()
             except (HTTPError, RequestError, InvalidURL) as e:
                 raise e
@@ -202,18 +201,18 @@ class Auth0Manager:
             )
         for grant in self.client_grants:
             if grant["client_id"] == self.mtm_client_id:
-                print("Found the grant")
+                logger.debug("Found the grant")
                 if not set(grant["scope"]) == set(required_scopes):
-                    print("Insufficient scopes, updating..")
+                    logger.debug("Insufficient scopes, updating..")
                     resp = self.update_client_grant(
                         grant["id"], {"scope": required_scopes}
                     )
                     if "error" in resp:
-                        print(resp)
+                        logger.debug(resp)
                         exit("Error while updating the client grant")
                 break
         else:
-            print("No grants found, creating one..")
+            logger.debug("No grants found, creating one..")
             self.create_client_grant(
                 {
                     "client_id": self.mtm_client_id,
@@ -234,16 +233,16 @@ class Auth0Manager:
                 api.get("name") == "Dester"
                 and api.get("identifier") == self.api_identifier
             ):
-                print("Found the api")
+                logger.debug("Found the api")
                 if not api.get("signing_alg") == "RS256":
-                    print("Signing algorithm is incorrect, updating..")
+                    logger.debug("Signing algorithm is incorrect, updating..")
                     api = self.update_resource_server(
                         api["id"], {"signing_alg": "RS256"}
                     )
                 if not set([obj.get("value") for obj in api.get("scopes", [])]) == set(
                     required_scopes
                 ):
-                    print("Insufficient scopes, updating..")
+                    logger.debug("Insufficient scopes, updating..")
                     api = self.update_resource_server(
                         api["id"],
                         {
@@ -257,12 +256,12 @@ class Auth0Manager:
                         },
                     )
                 if not api.get("enforce_policies"):
-                    print("Enforcing policies is disabled, updating..")
+                    logger.debug("Enforcing policies is disabled, updating..")
                     api = self.update_resource_server(
                         api["id"], {"enforce_policies": True}
                     )
                 if not api.get("skip_consent_for_verifiable_first_party_clients"):
-                    print(
+                    logger.debug(
                         "Consent for verifiable first party clients is disabled, updating.."
                     )
                     api = self.update_resource_server(
@@ -270,13 +269,13 @@ class Auth0Manager:
                         {"skip_consent_for_verifiable_first_party_clients": True},
                     )
                 if not api.get("enforce_policies"):
-                    print("Enforcing policies is disabled, updating..")
+                    logger.debug("Enforcing policies is disabled, updating..")
                     api = self.update_resource_server(
                         api["id"], {"enforce_policies": True}
                     )
                 break
         else:
-            print("No api found, creating one..")
+            logger.debug("No api found, creating one..")
             api = self.create_resource_server(
                 {
                     "name": "Dester",
@@ -296,27 +295,27 @@ class Auth0Manager:
                 client.get("app_type") == "non_interactive"
                 and client.get("name") == "Dester [API]"
             ):
-                print("Found the mtm client")
+                logger.debug("Found the mtm client")
                 mtm_client_id = client["client_id"]
                 if not client.get("token_endpoint_auth_method") == "client_secret_post":
-                    print("Updating auth method..")
+                    logger.debug("Updating auth method..")
                     client = self.update_client(
                         mtm_client_id,
                         {"token_endpoint_auth_method": "client_secret_post"},
                     )
                 if not client.get("oidc_conformant"):
-                    print("Updating oidc conformant..")
+                    logger.debug("Updating oidc conformant..")
                     client = self.update_client(
                         mtm_client_id, {"oidc_conformant": True}
                     )
                 if not client.get("grant_types") == ["client_credentials"]:
-                    print("Updating grant types..")
+                    logger.debug("Updating grant types..")
                     client = self.update_client(
                         mtm_client_id, {"grant_types": ["client_credentials"]}
                     )
                 break
         else:
-            print(
+            logger.debug(
                 f"No machine-to-machine APP found for API '{api.get('name')}', creating one.."
             )
             client = self.create_client(
@@ -342,26 +341,26 @@ class Auth0Manager:
         self.initialize_global_client_grants()
         for client in self.clients:
             if client.get("app_type") == "spa":
-                print("Found the client")
+                logger.debug("Found the client")
                 spa_client_id = client["client_id"]
                 if client.get("callbacks") != [self.api_identifier]:
-                    print("Updating callbacks..")
+                    logger.debug("Updating callbacks..")
                     client = self.update_client(
                         spa_client_id, {"callbacks": [self.api_identifier]}
                     )
                 if client.get("web_origins") != [self.api_identifier]:
-                    print("Updating web origins..")
+                    logger.debug("Updating web origins..")
                     client = self.update_client(
                         spa_client_id, {"web_origins": [self.api_identifier]}
                     )
                 if client.get("allowed_logout_urls") != [self.api_identifier]:
-                    print("Updating allowed logout urls..")
+                    logger.debug("Updating allowed logout urls..")
                     client = self.update_client(
                         spa_client_id, {"allowed_logout_urls": [self.api_identifier]}
                     )
                 break
         else:
-            print("No single page app client found, creating one..")
+            logger.debug("No single page app client found, creating one..")
             client = self.create_client(
                 {
                     "app_type": "spa",
@@ -398,8 +397,8 @@ if __name__ == "__main__":
 
     api = mg.initialize_api()
     app = mg.get_spa_client()
-    print(json.dumps(api, indent=2))
-    print(json.dumps(app, indent=2))
+    logger.debug(json.dumps(api, indent=2))
+    logger.debug(json.dumps(app, indent=2))
 
 from http import HTTPStatus
 
