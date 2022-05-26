@@ -25,7 +25,6 @@ def build_config(config) -> str:
                     "refresh_token": config.get_from_col("gdrive", "refresh_token"),
                     "expiry": "2022-03-27T00:00:00.000+00:00",
                 },
-                escape_forward_slashes=False,
             )
             id = category["id"]
             drive_id = category["drive_id"]
@@ -38,7 +37,6 @@ def build_config(config) -> str:
                     "refresh_token": config.get_from_col("onedrive", "refresh_token"),
                     "expiry": "2022-03-27T00:00:00.000+00:00",
                 },
-                escape_forward_slashes=False,
             )
             id = category["id"]
             drive_id = category["drive_id"]
@@ -64,9 +62,10 @@ def build_config(config) -> str:
 
 
 class RCloneAPI:
-    def __init__(self, id):
+    def __init__(self, id, provider):
         self.id = id
         self.fs = "".join(c for c in id if c.isalnum()) + ":"
+        self.provider = provider
         self.RCLONE_RC_URL = "http://localhost:35530"
         self.RCLONE = {
             "mkdir": "operations/mkdir",

@@ -76,7 +76,8 @@ def startup():
     categories = config.get("categories")
     for category in categories:
         id = category.get("id") or category.get("drive_id")
-        rclone[id] = RCloneAPI(id)
+        provider = category.get("provider") or "gdrive"
+        rclone[id] = RCloneAPI(id, provider)
 
     tmdb_api_key = config.get("tmdb_api_key")
 
