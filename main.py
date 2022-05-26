@@ -1,6 +1,8 @@
 import shlex
+from asyncio.log import logger
 from subprocess import DEVNULL, STDOUT, Popen, run
 from sys import platform
+import time
 
 import ujson as json
 import uvicorn
@@ -10,7 +12,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api import main_router
-from app.core import TMDB, Database, Metadata, RCloneAPI
+from app.core import TMDB, Database, Metadata, RCloneAPI, build_config
 from app.core.cron import fetch_metadata
 from app.settings import settings
 from app.utils.data import sort_by_type
@@ -34,22 +36,7 @@ def startup():
     if not config.get("tmdb_api_key"):
         config.set("tmdb_api_key", settings.TMDB_API_KEY)
 
-    rclone_conf = ""
-    client_id = config.get_from_col("gdrive", "client_id")
-    client_secret = config.get_from_col("gdrive", "client_secret")
-    token = json.dumps(
-        {
-            "access_token": config.get_from_col("gdrive", "access_token"),
-            "token_type": "Bearer",
-            "refresh_token": config.get_from_col("gdrive", "refresh_token"),
-            "expiry": "2022-03-27T00:00:00.000+00:00",
-        },
-        escape_forward_slashes=False,
-    )
-    for category in config.get("categories"):
-        id = category["id"]
-        drive_id = category["drive_id"]
-        rclone_conf += f"[{id}]\ntype = drive\nclient_id = {client_id}\nclient_secret = {client_secret}\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\nteam_drive = {drive_id}\n"
+    rclone_conf = build_config(config)
     with open("rclone.conf", "w+") as w:
         w.write(rclone_conf)
     if platform in ["win32", "cygwin", "msys"]:
@@ -88,6 +75,7 @@ def startup():
 
     categories = config.get("categories")
     for category in categories:
+        id = category.get("id") or category.get("drive_id")
         rclone[id] = RCloneAPI(id)
 
     tmdb_api_key = config.get("tmdb_api_key")
@@ -98,6 +86,7 @@ def startup():
         logger.debug("Metadata file is empty. Fetching metadata...")
         metadata.data = fetch_metadata(tmdb, categories)
         metadata.save()
+        time.sleep(2)
     else:
         logger.debug("Metadata file is not empty. Skipping fetching metadata...")
     logger.debug("Done.")

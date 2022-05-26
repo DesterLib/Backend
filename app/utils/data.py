@@ -33,7 +33,7 @@ def sort_by_type(metadata: Dict[str, Any] = {}) -> Dict[str, Any]:
     for category in metadata:
         meta = category["metadata"]
         for item in meta:
-            item["category"] = {"id": category["id"], "name": category["name"]}
+            item["category"] = {"id": category.get("id") or category.get("drive_id"), "name": category["name"]}
             if category["type"] == "movies":
                 if not item["tmdb_id"] in ids["movies"]:
                     data["movies"].append(item)
@@ -135,36 +135,35 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
         except IndexError:
             logo = None
         metadata.append(
-            dict(
-                id=drive_meta.get("id"),
-                tmdb_id=movie_info.get("id"),
-                imdb_id=movie_info.get("imdb_id"),
-                file_name=drive_meta.get("name"),
-                original_title=movie_info.get("original_title"),
-                title=movie_info.get("title"),
-                status=movie_info.get("status"),
-                homepage=movie_info.get("homepage"),
-                logo=logo,
-                modified_time=drive_meta.get("modifiedTime"),
-                video_metadata=drive_meta.get("videoMediaMetadata"),
-                thumbnail_path=f"{settings.API_V1_STR}/assets/thumbnail/{drive_meta['id']}"
-                if drive_meta.get("hasThumbnail")
-                else None,
-                popularity=movie_info.get("popularity"),
-                revenue=movie_info.get("revenue"),
-                rating=movie_info.get("vote_average"),
-                release_date=movie_info.get("release_date"),
-                year=try_int(movie_info.get("release_date", "").split("-")[0]) or None,
-                tagline=movie_info.get("tagline"),
-                description=movie_info.get("overview"),
-                cast=movie_info.get("credits", {}).get("cast", []),
-                backdrop_url=movie_info.get("backdrop_path"),
-                collection=movie_info.get("belongs_to_collection"),
-                poster_url=movie_info.get("poster_path"),
-                genres=movie_info.get("genres"),
-                subtitles=drive_meta.get("subtitles"),
-                external_ids=movie_info.get("external_ids"),
-            )
+            {
+                "id": drive_meta["id"],
+                "tmdb_id": movie_info["id"],
+                "imdb_id": movie_info.get("imdb_id"),
+                "file_name": drive_meta["name"],
+                "original_title": movie_info.get("original_title"),
+                "title": movie_info.get("title"),
+                "status": movie_info.get("status"),
+                "homepage": movie_info.get("homepage"),
+                "logo": logo,
+                "modified_time": drive_meta["modifiedTime"],
+                "video_metadata": drive_meta.get("videoMediaMetadata"),
+                "thumbnail_path": f"{settings.API_V1_STR}/assets/thumbnail/{drive_meta['id']}",
+                "popularity": movie_info.get("popularity"),
+                "revenue": movie_info.get("revenue"),
+                "rating": movie_info.get("vote_average"),
+                "release_date": movie_info.get("release_date"),
+                "year": try_int(movie_info.get("release_date", "").split("-")[0])
+                or None,
+                "tagline": movie_info.get("tagline"),
+                "description": movie_info.get("overview"),
+                "cast": movie_info.get("credits", {}).get("cast", []),
+                "backdrop_url": movie_info.get("backdrop_path"),
+                "collection": movie_info.get("belongs_to_collection"),
+                "poster_url": movie_info.get("poster_path"),
+                "genres": movie_info.get("genres"),
+                "subtitles": drive_meta["subtitles"],
+                "external_ids": movie_info.get("external_ids"),
+            }
         )
     logger.debug(f"Using advanced search for {len(advanced_search_list)} titles.")
     for name, year in advanced_search_list:
@@ -183,36 +182,35 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
         except IndexError:
             logo = None
         metadata.append(
-            dict(
-                id=drive_meta.get("id"),
-                tmdb_id=movie_info.get("id"),
-                imdb_id=movie_info.get("imdb_id"),
-                file_name=drive_meta.get("name"),
-                original_title=movie_info.get("original_title"),
-                title=movie_info.get("title"),
-                status=movie_info.get("status"),
-                homepage=movie_info.get("homepage"),
-                logo=logo,
-                modified_time=drive_meta.get("modifiedTime"),
-                video_metadata=drive_meta.get("videoMediaMetadata"),
-                thumbnail_path=f"{settings.API_V1_STR}/assets/thumbnail/{drive_meta['id']}"
-                if drive_meta.get("hasThumbnail")
-                else None,
-                popularity=movie_info.get("popularity"),
-                revenue=movie_info.get("revenue"),
-                rating=movie_info.get("vote_average"),
-                release_date=movie_info.get("release_date"),
-                year=try_int(movie_info.get("release_date", "").split("-")[0]) or None,
-                tagline=movie_info.get("tagline"),
-                description=movie_info.get("overview"),
-                cast=movie_info.get("credits", {}).get("cast", []),
-                backdrop_url=movie_info.get("backdrop_path"),
-                collection=movie_info.get("belongs_to_collection"),
-                poster_url=movie_info.get("poster_path"),
-                genres=movie_info.get("genres"),
-                subtitles=drive_meta.get("subtitles"),
-                external_ids=movie_info.get("external_ids"),
-            )
+            {
+                "id": drive_meta["id"],
+                "tmdb_id": movie_info["id"],
+                "imdb_id": movie_info.get("imdb_id"),
+                "file_name": drive_meta["name"],
+                "original_title": movie_info.get("original_title"),
+                "title": movie_info.get("title"),
+                "status": movie_info.get("status"),
+                "homepage": movie_info.get("homepage"),
+                "logo": logo,
+                "modified_time": drive_meta["modifiedTime"],
+                "video_metadata": drive_meta.get("videoMediaMetadata"),
+                "thumbnail_path": f"{settings.API_V1_STR}/assets/thumbnail/{drive_meta['id']}",
+                "popularity": movie_info.get("popularity"),
+                "revenue": movie_info.get("revenue"),
+                "rating": movie_info.get("vote_average"),
+                "release_date": movie_info.get("release_date"),
+                "year": try_int(movie_info.get("release_date", "").split("-")[0])
+                or None,
+                "tagline": movie_info.get("tagline"),
+                "description": movie_info.get("overview"),
+                "cast": movie_info.get("credits", {}).get("cast", []),
+                "backdrop_url": movie_info.get("backdrop_path"),
+                "collection": movie_info.get("belongs_to_collection"),
+                "poster_url": movie_info.get("poster_path"),
+                "genres": movie_info.get("genres"),
+                "subtitles": drive_meta["subtitles"],
+                "external_ids": movie_info.get("external_ids"),
+            }
         )
 
     return metadata

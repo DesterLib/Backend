@@ -10,10 +10,63 @@ from oauth2client.client import GoogleCredentials
 from pytz import UTC
 
 
+def build_config(config) -> str:
+    rclone_conf = ""
+    for category in config.get("categories"):
+        provider = category.get("provider", "gdrive")
+        if provider == "gdrive":
+            provider = "drive"
+            client_id = config.get_from_col("gdrive", "client_id")
+            client_secret = config.get_from_col("gdrive", "client_secret")
+            token = json.dumps(
+                {
+                    "access_token": config.get_from_col("gdrive", "access_token"),
+                    "token_type": "Bearer",
+                    "refresh_token": config.get_from_col("gdrive", "refresh_token"),
+                    "expiry": "2022-03-27T00:00:00.000+00:00",
+                },
+                escape_forward_slashes=False,
+            )
+            id = category["id"]
+            drive_id = category["drive_id"]
+            rclone_conf += f"[{id}]\ntype = drive\nclient_id = {client_id}\nclient_secret = {client_secret}\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\nteam_drive = {drive_id}\n"
+        elif provider == "onedrive":
+            token = json.dumps(
+                {
+                    "access_token": config.get_from_col("onedrive", "access_token"),
+                    "token_type": "Bearer",
+                    "refresh_token": config.get_from_col("onedrive", "refresh_token"),
+                    "expiry": "2022-03-27T00:00:00.000+00:00",
+                },
+                escape_forward_slashes=False,
+            )
+            id = category["id"]
+            drive_id = category["drive_id"]
+            rclone_conf += f"[{id}]\ntype = onedrive\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = personal"
+        elif provider == "sharepoint":
+            token = json.dumps(
+                {
+                    "access_token": config.get_from_col("sharepoint", "access_token"),
+                    "token_type": "Bearer",
+                    "refresh_token": config.get_from_col("sharepoint", "refresh_token"),
+                    "expiry": "2022-03-27T00:00:00.000+00:00",
+                },
+            )
+            id = category.get("id")
+            drive_id = category.get("drive_id")
+            if id is not None and drive_id is not None:
+                safe_fs = "".join(c for c in id if c.isalnum())
+                rclone_conf += f"[{safe_fs}]\ntype = onedrive\nroot_folder_id = {id}\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = documentLibrary"
+            elif drive_id is not None:
+                safe_fs = "".join(c for c in drive_id if c.isalnum())
+                rclone_conf += f"[{safe_fs}]\ntype = onedrive\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = documentLibrary"
+    return rclone_conf
+
+
 class RCloneAPI:
     def __init__(self, id):
         self.id = id
-        self.fs = id + ":"
+        self.fs = "".join(c for c in id if c.isalnum()) + ":"
         self.RCLONE_RC_URL = "http://localhost:35530"
         self.RCLONE = {
             "mkdir": "operations/mkdir",
@@ -68,7 +121,7 @@ class RCloneAPI:
         return result["list"]
 
     def rc_conf(self) -> Dict:
-        rc_data = {"name": self.id}
+        rc_data = {"name": self.fs[:-1]}
         result = requests.post(
             "%s/%s" % (self.RCLONE_RC_URL, self.RCLONE["getConfigForRemote"]),
             data=json.dumps(rc_data),
@@ -81,7 +134,12 @@ class RCloneAPI:
         metadata = []
         dirs = {}
         for item in rc_ls_result:
-            if item["IsDir"] == False and "video" in item["MimeType"]:
+            if item["IsDir"] is False and (
+                "video" in item["MimeType"]
+                or item["Name"]
+                .lower()
+                .endswith((".mp4", ".mkv", ".avi", ".mov", ".webm", ".flv"))
+            ):
                 parent_path = item["Path"].replace("/" + item["Name"], "")
                 parent = dirs[parent_path]
                 metadata.append(
@@ -94,17 +152,16 @@ class RCloneAPI:
                         "mimeType": item["MimeType"],
                         "modifiedTime": item["ModTime"],
                         "videoMediaMetadata": {},
-                        "hasThumbnail": False,
                         "subtitles": None,
                     }
                 )
-            elif item["IsDir"] == True:
+            elif item["IsDir"] is True:
                 dirs[item["Path"]] = {
                     "id": item["ID"],
                     "name": item["Name"],
                     "path": item["Path"],
                 }
-            elif item["IsDir"] == False and item["Name"].endswith((".srt", ".vtt")):
+            elif item["IsDir"] is False and item["Name"].endswith((".srt", ".vtt")):
                 # Subtitle management
                 pass
         return metadata
@@ -125,7 +182,7 @@ class RCloneAPI:
             else:
                 parent_path = item["Path"].replace("/" + item["Name"], "")
             parent = parent_dirs[parent_path]
-            if item["IsDir"] == False:
+            if item["IsDir"] is False:
                 if parent["depth"] == 2:
                     season_metadata = eval("metadata" + parent["json_path"])
                     season_metadata["episodes"].append(
