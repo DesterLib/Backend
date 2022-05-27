@@ -8,10 +8,10 @@ __pycache__/
 
 # rclone
 rclone.conf
-scripts/rclone
-scripts/rclone.exe
-scripts/gclone
-scripts/gclone.exe
+bin/rclone
+bin/rclone.exe
+bin/gclone
+bin/gclone.exe
 
 # Distribution / packaging
 .Python

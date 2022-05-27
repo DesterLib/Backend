@@ -35,7 +35,6 @@ def startup():
         config.set("categories", None)
     if not config.get("tmdb_api_key"):
         config.set("tmdb_api_key", settings.TMDB_API_KEY)
-
     rclone_conf = build_config(config)
     with open("rclone.conf", "w+") as w:
         w.write(rclone_conf)
@@ -47,19 +46,11 @@ def startup():
             stdout=DEVNULL,
             stderr=STDOUT,
         )
-        Popen(
-            shlex.split(
-                "scripts/rclone.exe rcd --rc-no-auth --rc-addr localhost:35530 --config rclone.conf"
-            )
-        )
     elif platform in ["linux", "linux2"]:
         run(
             shlex.split("bash kill $(lsof -t -i:35530)"),
             stdout=DEVNULL,
             stderr=STDOUT,
-        )
-        Popen(
-            "scripts/rclone rcd --rc-no-auth --rc-addr localhost:35530 --config rclone.conf"
         )
     elif platform in ["darwin"]:
         run(
@@ -67,11 +58,17 @@ def startup():
             stdout=DEVNULL,
             stderr=STDOUT,
         )
-        Popen(
-            shlex.split(
-                "scripts/rclone rcd --rc-no-auth --rc-addr localhost:35530 --config rclone.conf"
-            )
+    else:
+        exit("Unsupported platform")
+    from shutil import which
+    rclone_bin = which("rclone")
+    if not rclone_bin:
+        Popen(shlex.split("rclone --version")).wait()
+    Popen(
+        shlex.split(
+            f"bin/rclone{'.exe' if platform in ['win32', 'cygwin', 'msys'] else ''} rcd --rc-no-auth --rc-addr localhost:35530 --config rclone.conf"
         )
+    )
 
     categories = config.get("categories")
     for category in categories:
