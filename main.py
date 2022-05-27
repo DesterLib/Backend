@@ -32,15 +32,13 @@ def startup():
         config.add_to_col("auth0", {"client_secret": settings.AUTH0_CLIENT_SECRET})
 
     if not config.get_from_col("rclone", "listen_port"):
-        config.add_to_col("rclone", {"listen_port": settings.RCLONE_LISTEN_PORT})
-    if not config.get_from_col("rclone", "config"): 
-        config.add_to_col("rclone", {"config": build_config(config)})   
+        config.add_to_col("rclone", {"listen_port": settings.RCLONE_LISTEN_PORT}) 
     
     if not config.get("categories"):
         config.set("categories", None)
     if not config.get("tmdb_api_key"):
         config.set("tmdb_api_key", settings.TMDB_API_KEY)
-    rclone_conf = config.get_from_col("rclone", "config")
+    rclone_conf = build_config(config)
     rclone_port = config.get_from_col("rclone", "listen_port")
     with open("rclone.conf", "w+") as w:
         w.write(rclone_conf)
