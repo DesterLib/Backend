@@ -1,12 +1,9 @@
-import time
 from typing import Any, Dict
 
 from fastapi import APIRouter, Path
 from fastapi.responses import StreamingResponse
 from httpx import AsyncClient
 from starlette.background import BackgroundTask
-
-from ... import logger
 
 router = APIRouter(
     prefix="/assets",
