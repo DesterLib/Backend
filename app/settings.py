@@ -27,6 +27,7 @@ class _Settings(BaseSettings):
     AUTH0_CLIENT_SECRET: str = getenv("AUTH0_CLIENT_SECRET")
     AUTH0_DOMAIN: str = getenv("AUTH0_DOMAIN")
     LOGO_URL: str = getenv("LOGO_URL")
+    RCLONE_LISTEN_PORT: int = int(getenv("RCLONE_LISTEN_PORT", "35530"))
 
 
 settings = _Settings()
