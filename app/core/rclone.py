@@ -27,8 +27,9 @@ def build_config(config) -> str:
                 },
             )
             id = category["id"]
+            safe_fs = "".join(c for c in id if c.isalnum())
             drive_id = category["drive_id"]
-            rclone_conf += f"[{id}]\ntype = drive\nclient_id = {client_id}\nclient_secret = {client_secret}\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\nteam_drive = {drive_id}\n"
+            rclone_conf += f"[{safe_fs}]\ntype = drive\nclient_id = {client_id}\nclient_secret = {client_secret}\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\nteam_drive = {drive_id}\n"
         elif provider == "onedrive":
             token = json.dumps(
                 {
@@ -39,8 +40,9 @@ def build_config(config) -> str:
                 },
             )
             id = category["id"]
+            safe_fs = "".join(c for c in id if c.isalnum())
             drive_id = category["drive_id"]
-            rclone_conf += f"[{id}]\ntype = onedrive\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = personal"
+            rclone_conf += f"[{safe_fs}]\ntype = onedrive\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = personal"
         elif provider == "sharepoint":
             token = json.dumps(
                 {
