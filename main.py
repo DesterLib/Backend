@@ -68,9 +68,10 @@ def startup():
         exit("Unsupported platform")
     from shutil import which
     rclone_bin = which("rclone")
+    rclone_bin_name = "rclone.exe" if platform in ["win32", "cygwin", "msys"] else "rclone"
     if not rclone_bin:
-        if os.path.exists("bin/rclone.exe"):
-            rclone_bin = "bin/rclone.exe"
+        if os.path.exists(f"bin/{rclone_bin_name}"):
+            rclone_bin = f"bin/{rclone_bin_name}"
         else:
             from scripts.install_rclone import download_rclone
             rclone_bin = download_rclone()
