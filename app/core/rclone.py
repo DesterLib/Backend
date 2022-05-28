@@ -1,13 +1,12 @@
-import json
 import re
-from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
-
+import json
 import requests
-from dateutil.parser import parse
-from httplib2 import Http
-from oauth2client.client import GoogleCredentials
 from pytz import UTC
+from httplib2 import Http
+from datetime import datetime
+from dateutil.parser import parse
+from typing import Any, Dict, List, Optional
+from oauth2client.client import GoogleCredentials
 
 
 def build_config(config) -> str:
@@ -211,12 +210,10 @@ class RCloneAPI:
                             "parent": parent,
                             "modified_time": item["ModTime"],
                             "seasons": {},
-                            "json_path": "[%s]" % str(len(metadata)),
+                            "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]]["json_path"] = "[%s]" % str(
-                        len(metadata) - 1
-                    )
+                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(
@@ -232,10 +229,10 @@ class RCloneAPI:
                         "parent": parent,
                         "modified_time": item["ModTime"],
                         "episodes": [],
-                        "json_path": parent["json_path"] + '["%s"]' % season,
+                        "json_path": parent["json_path"] + f'["{season}"]',
                     }
                     parent_dirs[item["Path"]]["json_path"] = (
-                        parent["json_path"] + '["seasons"]["%s"]' % season
+                        parent["json_path"] + f'["seasons"]["{season}"]'
                     )
         return metadata
 
@@ -258,7 +255,7 @@ class RCloneAPI:
         }
         return result
 
-    def thumbnail(self, id) -> Union[str, None]:
+    def thumbnail(self, id) -> Optional[str]:
         if parse(self.fs_conf["token"]["expiry"]) <= UTC.localize(datetime.now()):
             self.fs_conf["token"] = self.refresh()
         result = requests.get(
