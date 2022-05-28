@@ -142,7 +142,7 @@ class RCloneAPI:
                 .endswith((".mp4", ".mkv", ".avi", ".mov", ".webm", ".flv"))
             ):
                 parent_path = item["Path"].replace("/" + item["Name"], "")
-                parent = dirs[parent_path]
+                parent = dirs.get(parent_path)
                 metadata.append(
                     {
                         "id": item["ID"],
