@@ -108,7 +108,7 @@ app = FastAPI(
             status_code=404, content={"ok": False, "message": "Are you lost?"}
         ),
         500: lambda req, exc: JSONResponse(
-            status_code=500, content={"ok": False, "message": "Internal server error"}
+            status_code=500, content={"ok": False, "message": "Internal server error", "error_msg": str(exc)}
         ),
     },
 )
