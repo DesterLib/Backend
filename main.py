@@ -10,17 +10,19 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
-
+from app import  __version__
 from app.api import main_router
 from app.core import TMDB, Database, Metadata, RCloneAPI, build_config
 from app.core.cron import fetch_metadata
 from app.settings import settings
 from app.utils.data import sort_by_type
+import time
+from app.utils import time_formatter
 
+start_time = time.time()
 config = Database(file_path="config.json")
 metadata = Metadata(file_path="metadata.json")
 rclone = {}
-
 
 def startup():
     logger.info("Starting up...")
@@ -127,6 +129,9 @@ app.add_middleware(
 )
 
 app.include_router(main_router, prefix=settings.API_V1_STR)
+app.add_api_route("/", lambda: 
+    {"ok": True, "message": "Backend is working.", "version": __version__, "uptime": time_formatter(time.time() - start_time)}
+)
 
 startup()
 if __name__ == "__main__":

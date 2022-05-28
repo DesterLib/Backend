@@ -1,9 +1,17 @@
+__license__ = "MIT"
+__status__ = "Development"
+__version__ = "1.0.0"
+__email__ = "contact@dester.gq"
+__copyright__ = "Copyright 2022, DesterLib"
+__authors__ = ["Elias Benbourenane", "EverythingSuckz"]
+__credits__ = ["EverythingSuckz", "Elias Benbourenane", "AlkenD"]
+
+
 import logging
 import os
 import os.path
 from datetime import datetime
 
-__author__ = "wrench"
 
 if not os.path.isdir("logs"):
     os.makedirs("logs")
