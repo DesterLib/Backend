@@ -123,11 +123,11 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
         tmdb_id = tmdb.find_media_id(name, DataType.movies)
         if not tmdb_id:
             advanced_search_list.append((name, year))
-            logger.info("Could not identify: ", name)
+            logger.info(f"Could not identify: {name}")
             logger.debug("Skipping and adding to the advanced search list...")
             continue
         logger.info(
-            "Successfully identified: %s (%s)    ID: %s" % (name, year, tmdb_id)
+            f"Successfully identified: {name} {f'({year})' if year else ''}    ID: {tmdb_id}"
         )
         movie_info = tmdb.get_details(tmdb_id, DataType.movies)
         try:
@@ -170,11 +170,10 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
         logger.debug(f"Advanced search identifying: {cleaned_title}")
         tmdb_id = tmdb.find_media_id(name, DataType.movies)
         if not tmdb_id:
-            logger.info("Advanced search ould not identify: ", name)
+            logger.info(f"Advanced search could not identify: '{name}'")
             continue
         logger.info(
-            "Advanced search successfully identified: %s (%s)    ID: %s"
-            % (name, year, tmdb_id)
+            f"Advanced search successfully identified: {name} {f'({year})' if year else ''}    ID: {tmdb_id}"
         )
         movie_info = tmdb.get_details(tmdb_id, DataType.movies, use_api=False)
         try:
@@ -229,16 +228,16 @@ def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
         if not tmdb_id:
             tmdb_id = tmdb.find_media_id(name, DataType.series, use_api=False)
             if not tmdb_id:
-                logger.info("Could not identify: ", name)
+                logger.info(f"Could not identify: '{name}'")
                 continue
         logger.info(
-            "Successfully identified: %s (%s)    ID: %s" % (name, year, tmdb_id)
+            f"Successfully identified: {name} {f'({year})' if year else ''}    ID: {tmdb_id}"
         )
         series_info = tmdb.get_details(tmdb_id, DataType.series)
         if series_info.get("first_air_date") == None:
             series_info["first_air_date"] = ""
         seasons = series_info.get("seasons", [])
-        logger.info("Number of seasons: %s" % str(len(seasons)))
+        logger.info(f"Number of seasons: {len(seasons)}")
 
         try:
             logo = series_info.get("images", {}).get("logos", [{}])[0].get("file_path")
@@ -252,10 +251,10 @@ def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
                 .get("episodes", [])
             )
             logger.info(
-                "   %s: %s episodes" % (season.get("name"), len(season["episodes"]))
+                f"   {season.get('name')}: {len(season.get('episodes', 0))} episodes"
             )
             for count, episode in enumerate(season["episodes"]):
-                logger.debug("     " + episode["name"])
+                logger.debug(f"     {episode['name']}")
                 parsed_data = parse_episode_filename(episode["name"])
                 episode_number = parsed_data.get("episode")
                 season_number = parsed_data.get("season", season.get("season_number"))
