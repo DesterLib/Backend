@@ -3,6 +3,7 @@ import os.path
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from typing import Any, Dict, Optional
+from xmlrpc.client import boolean
 
 import httpx
 from math import ceil
@@ -44,16 +45,15 @@ class TMDB:
         export_url = (
             f"http://files.tmdb.org/p/exports/{type_name}_ids_{date_str}.json.gz"
         )
-        movie_json = gzip.decompress(httpx.get(export_url).content).decode("utf-8")
-        data = [json.loads(line) for line in movie_json.split("\n") if line]
-        data = sorted(data, key=lambda x: x["id"])
-        json.dump(
-            data,
-            open(f"./cache/{type_name}_ids.json", "w", encoding="utf-8"),
-            indent=2,
-            ensure_ascii=False,
-            sort_keys=True,
-        )
+        movie_lines = gzip.decompress(httpx.get(export_url).content).decode("utf-8").splitlines()
+        length = len(movie_lines)
+        with open(f"./cache/{type_name}_ids.json", "w+", encoding="utf-8") as w:
+            w.write("[")
+            for n, line in enumerate(movie_lines, 1):
+                if (n == length):
+                    w.write(line + "]")
+                else:
+                    w.write(line + ",")
 
     def get_episode_details(
         self, tmdb_id: int, episode_number: int, season_number: int = 1
