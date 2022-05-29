@@ -13,8 +13,8 @@ from app.core.cron import fetch_metadata
 from fastapi.responses import UJSONResponse
 from subprocess import STDOUT, DEVNULL, Popen, run
 from starlette.middleware.cors import CORSMiddleware
-from app.core import TMDB, LocalJsonDatabase, Metadata, RCloneAPI, build_config
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from app.core import TMDB, Metadata, RCloneAPI, LocalJsonDatabase, build_config
 
 
 start_time = time.time()
