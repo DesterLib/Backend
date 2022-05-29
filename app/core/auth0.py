@@ -10,7 +10,7 @@ from typing import Any, Dict, Optional
 import httpx
 import ujson as json
 from fastapi import status
-from fastapi.responses import JSONResponse
+from fastapi.responses import UJSONResponse
 from httpx import HTTPError, InvalidURL, RequestError
 
 from .. import logger
@@ -425,7 +425,7 @@ class Auth0Service:
 
             return jwks_client.get_signing_key_from_jwt(token).key
         except Exception as error:
-            return JSONResponse(
+            return UJSONResponse(
                 content={
                     "error": "signing_key_unavailable",
                     "error_description": error.__str__(),
@@ -446,7 +446,7 @@ class Auth0Service:
                 issuer=self.issuer_url,
             )
         except Exception as error:
-            return JSONResponse(
+            return UJSONResponse(
                 content={
                     "error": "invalid_token",
                     "error_description": error.__str__(),

@@ -7,7 +7,7 @@ import os
 import ujson as json
 import uvicorn
 from fastapi import FastAPI
-from fastapi.responses import JSONResponse
+from fastapi.responses import UJSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 from app import  __version__
@@ -105,10 +105,10 @@ app = FastAPI(
     title="DesterLib",
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     exception_handlers={
-        StarletteHTTPException: lambda req, exc: JSONResponse(
+        StarletteHTTPException: lambda req, exc: UJSONResponse(
             status_code=404, content={"ok": False, "message": "Are you lost?"}
         ),
-        500: lambda req, exc: JSONResponse(
+        500: lambda req, exc: UJSONResponse(
             status_code=500, content={"ok": False, "message": "Internal server error", "error_msg": str(exc)}
         ),
     },

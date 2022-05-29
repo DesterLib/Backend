@@ -158,6 +158,8 @@ cython_debug/
 #  option (not recommended) you can uncomment the following to ignore the entire idea folder.
 #.idea/
 
+# Memray debug files
+memray-*
 
 metadata.json
 cache/*
