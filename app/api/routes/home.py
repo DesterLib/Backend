@@ -1,9 +1,9 @@
-import random
 import time
+import random
 from copy import deepcopy
+from fastapi import APIRouter
 from typing import Dict, Union
 
-from fastapi import APIRouter
 
 router = APIRouter(
     # dependencies=[Depends(get_token_header)],
@@ -92,7 +92,9 @@ def home() -> Dict[str, str]:
                         )
                         all_episodes.append(episode)
             newly_added_episodes_sort_data = sorted(
-                deepcopy(all_episodes), key=lambda k: k.get("air_date") or "", reverse=True
+                deepcopy(all_episodes),
+                key=lambda k: k.get("air_date") or "",
+                reverse=True,
             )
             newly_added_episodes_data = newly_added_episodes_sort_data[:data_cap_limit]
     random.shuffle(carousel_data)

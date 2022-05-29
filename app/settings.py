@@ -1,8 +1,8 @@
 from os import getenv
 from typing import Optional
-
 from dotenv import load_dotenv
 from pydantic import BaseSettings
+
 
 load_dotenv()
 

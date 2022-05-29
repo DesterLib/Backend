@@ -1,19 +1,17 @@
-import asyncio
-import os.path
 import re
-from dataclasses import dataclass
+import jwt
+import httpx
+import os.path
+import ujson as json
+from .. import logger
+from time import time
+from fastapi import status
 from functools import wraps
 from json import JSONDecodeError
-from time import time
+from dataclasses import dataclass
 from typing import Any, Dict, Optional
-
-import httpx
-import ujson as json
-from fastapi import status
 from fastapi.responses import UJSONResponse
 from httpx import HTTPError, InvalidURL, RequestError
-
-from .. import logger
 
 
 @dataclass
@@ -399,10 +397,6 @@ if __name__ == "__main__":
     app = mg.get_spa_client()
     logger.debug(json.dumps(api, indent=2))
     logger.debug(json.dumps(app, indent=2))
-
-from http import HTTPStatus
-
-import jwt
 
 
 class Auth0Service:

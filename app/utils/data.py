@@ -1,16 +1,13 @@
 import re
-from collections import defaultdict
+from .. import logger
+from app import logger
 from copy import deepcopy
 from functools import reduce
-from typing import Any, Dict, Optional
-from .. import logger
-
-import ujson as json
-from app import logger
-
 # from app.core import TMDB
 from app.models import DataType
 from app.settings import settings
+from collections import defaultdict
+from typing import Any, Dict, Optional
 
 
 def group_by(key, seq):
@@ -33,7 +30,10 @@ def sort_by_type(metadata: Dict[str, Any] = {}) -> Dict[str, Any]:
     for category in metadata:
         meta = category["metadata"]
         for item in meta:
-            item["category"] = {"id": category.get("id") or category.get("drive_id"), "name": category["name"]}
+            item["category"] = {
+                "id": category.get("id") or category.get("drive_id"),
+                "name": category["name"],
+            }
             if category["type"] == "movies":
                 if not item["tmdb_id"] in ids["movies"]:
                     data["movies"].append(item)
@@ -103,8 +103,10 @@ def clean_file_name(name: str) -> str:
         r"\(?(?:240|360|480|720|1080|1440|2160)p?\)?",  # 1080p, 720p, etc
         r"\b(?:mp4|mkv|wmv|m4v|mov|avi|flv|webm|flac|mka|m4a|aac|ogg)\b",  # file types
         r"season ?\d+?",  # season 1, season 2, etc
-        r"(?:S\d{1,3}|\d+?bit|dsnp|web\-dl|ddp\d+? ? \d|hevc|hdrip|\-?Vyndros)",  # more stuffs
-        r'^(?:https?:\/\/)?(?:www.)?[a-z0-9]+\.[a-z]+(?:\/[a-zA-Z0-9#]+\/?)*$',  # URLs in filenames
+        # more stuffs
+        r"(?:S\d{1,3}|\d+?bit|dsnp|web\-dl|ddp\d+? ? \d|hevc|hdrip|\-?Vyndros)",
+        # URLs in filenames
+        r"^(?:https?:\/\/)?(?:www.)?[a-z0-9]+\.[a-z]+(?:\/[a-zA-Z0-9#]+\/?)*$",
     ]
     for reg in reg_exps:
         name = re.sub(reg, "", name, flags=re.I)
@@ -235,14 +237,14 @@ def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
             f"Successfully identified: {name} {f'({year})' if year else ''}    ID: {tmdb_id}"
         )
         series_info = tmdb.get_details(tmdb_id, DataType.series)
-        if series_info.get("first_air_date") == None:
+        if series_info.get("first_air_date") is None:
             series_info["first_air_date"] = ""
         seasons = series_info.get("seasons", [])
         logger.info(f"Number of seasons: {len(seasons)}")
 
         try:
             logo = series_info.get("images", {}).get("logos", [{}])[0].get("file_path")
-        except:
+        except BaseException:
             logo = None
 
         for season in seasons:

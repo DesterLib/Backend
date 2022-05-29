@@ -1,8 +1,7 @@
 import os
+import ujson as json
 from copy import deepcopy
 from typing import Any, Dict, Optional
-
-import ujson as json
 from app.utils.data import sort_by_type
 
 

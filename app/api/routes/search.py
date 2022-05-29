@@ -1,11 +1,11 @@
 import re
 import time
-from copy import deepcopy
 from enum import Enum
+from copy import deepcopy
+from fastapi import APIRouter
+from app.models import DataType
 from typing import Any, Dict, Optional
 
-from app.models import DataType
-from fastapi import APIRouter
 
 router = APIRouter(
     # dependencies=[Depends(get_token_header)],
@@ -58,7 +58,10 @@ def query(
             return r.match(data["title"])
 
     else:
-        match = lambda _: True
+
+        def match(_):
+            return True
+
     movies_match = []
     series_match = []
     for data_type, data in deepcopy(metadata.sorted).items():

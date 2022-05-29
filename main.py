@@ -1,28 +1,27 @@
-import shlex
-from asyncio.log import logger
-from subprocess import DEVNULL, STDOUT, Popen, run
-from sys import platform
-import time
 import os
-import ujson as json
-import uvicorn
-from fastapi import FastAPI
-from fastapi.responses import UJSONResponse
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.middleware.cors import CORSMiddleware
-from app import  __version__
-from app.api import main_router
-from app.core import TMDB, Database, Metadata, RCloneAPI, build_config
-from app.core.cron import fetch_metadata
-from app.settings import settings
-from app.utils.data import sort_by_type
 import time
+import shlex
+import uvicorn
+from sys import platform
+from app import __version__
+from fastapi import FastAPI
+from asyncio.log import logger
+from app.api import main_router
+from app.settings import settings
 from app.utils import time_formatter
+from app.core.cron import fetch_metadata
+from fastapi.responses import UJSONResponse
+from subprocess import STDOUT, DEVNULL, Popen, run
+from starlette.middleware.cors import CORSMiddleware
+from app.core import TMDB, Database, Metadata, RCloneAPI, build_config
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
 
 start_time = time.time()
 config = Database(file_path="config.json")
 metadata = Metadata(file_path="metadata.json")
 rclone = {}
+
 
 def startup():
     logger.info("Starting up...")
@@ -34,8 +33,8 @@ def startup():
         config.add_to_col("auth0", {"client_secret": settings.AUTH0_CLIENT_SECRET})
 
     if not config.get_from_col("rclone", "listen_port"):
-        config.add_to_col("rclone", {"listen_port": settings.RCLONE_LISTEN_PORT}) 
-    
+        config.add_to_col("rclone", {"listen_port": settings.RCLONE_LISTEN_PORT})
+
     if not config.get("categories"):
         config.set("categories", None)
     if not config.get("tmdb_api_key"):
@@ -67,13 +66,17 @@ def startup():
     else:
         exit("Unsupported platform")
     from shutil import which
+
     rclone_bin = which("rclone")
-    rclone_bin_name = "rclone.exe" if platform in ["win32", "cygwin", "msys"] else "rclone"
+    rclone_bin_name = (
+        "rclone.exe" if platform in ["win32", "cygwin", "msys"] else "rclone"
+    )
     if not rclone_bin:
         if os.path.exists(f"bin/{rclone_bin_name}"):
             rclone_bin = f"bin/{rclone_bin_name}"
         else:
             from scripts.install_rclone import download_rclone
+
             rclone_bin = download_rclone()
     Popen(
         shlex.split(
@@ -109,7 +112,12 @@ app = FastAPI(
             status_code=404, content={"ok": False, "message": "Are you lost?"}
         ),
         500: lambda req, exc: UJSONResponse(
-            status_code=500, content={"ok": False, "message": "Internal server error", "error_msg": str(exc)}
+            status_code=500,
+            content={
+                "ok": False,
+                "message": "Internal server error",
+                "error_msg": str(exc),
+            },
         ),
     },
 )
@@ -130,8 +138,14 @@ app.add_middleware(
 )
 
 app.include_router(main_router, prefix=settings.API_V1_STR)
-app.add_api_route("/", lambda: 
-    {"ok": True, "message": "Backend is working.", "version": __version__, "uptime": time_formatter(time.time() - start_time)}
+app.add_api_route(
+    "/",
+    lambda: {
+        "ok": True,
+        "message": "Backend is working.",
+        "version": __version__,
+        "uptime": time_formatter(time.time() - start_time),
+    },
 )
 
 startup()

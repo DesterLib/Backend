@@ -7,8 +7,8 @@ __authors__ = ["Elias Benbourenane", "EverythingSuckz"]
 __credits__ = ["EverythingSuckz", "Elias Benbourenane", "AlkenD"]
 
 
-import logging
 import os
+import logging
 import os.path
 from datetime import datetime
 

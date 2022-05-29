@@ -2,10 +2,9 @@ __all__ = ["main_router"]
 
 import os.path
 import pkgutil
-
+from .. import logger
 from fastapi import APIRouter
 
-from .. import logger
 
 func = "router"
 module = "app.api.routes.{}"

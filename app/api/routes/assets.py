@@ -1,9 +1,9 @@
 from typing import Any, Dict
-
-from fastapi import APIRouter, Path
-from fastapi.responses import StreamingResponse
 from httpx import AsyncClient
+from fastapi import Path, APIRouter
+from fastapi.responses import StreamingResponse
 from starlette.background import BackgroundTask
+
 
 router = APIRouter(
     prefix="/assets",

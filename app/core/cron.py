@@ -1,9 +1,7 @@
+from .. import logger
 from typing import List
-
 from app.core import TMDB
 from app.utils import generate_movie_metadata, generate_series_metadata
-
-from .. import logger
 
 
 def fetch_metadata(tmdb: TMDB, categories: List[str]):

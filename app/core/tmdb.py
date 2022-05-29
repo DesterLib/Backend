@@ -1,15 +1,13 @@
 import gzip
-import os.path
-from datetime import datetime, timedelta
-from difflib import SequenceMatcher
-from typing import Any, Dict, Optional
-from xmlrpc.client import boolean
-
 import httpx
-from math import ceil
+import os.path
 import ujson as json
+from math import ceil
 from app import logger
 from app.models import DataType
+from difflib import SequenceMatcher
+from typing import Any, Dict, Optional
+from datetime import datetime, timedelta
 
 
 class TMDB:
@@ -45,12 +43,14 @@ class TMDB:
         export_url = (
             f"http://files.tmdb.org/p/exports/{type_name}_ids_{date_str}.json.gz"
         )
-        movie_lines = gzip.decompress(httpx.get(export_url).content).decode("utf-8").splitlines()
+        movie_lines = (
+            gzip.decompress(httpx.get(export_url).content).decode("utf-8").splitlines()
+        )
         length = len(movie_lines)
         with open(f"./cache/{type_name}_ids.json", "w+", encoding="utf-8") as w:
             w.write("[")
             for n, line in enumerate(movie_lines, 1):
-                if (n == length):
+                if n == length:
                     w.write(line + "]")
                 else:
                     w.write(line + ",")

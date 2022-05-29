@@ -1,7 +1,7 @@
 from typing import Any, Dict
-
 from fastapi import APIRouter
 from httpx import AsyncClient
+
 
 router = APIRouter(
     prefix="/auth",
