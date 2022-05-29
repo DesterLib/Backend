@@ -1,9 +1,10 @@
 import time
 import random
 from copy import deepcopy
+from diskcache import Cache
 from fastapi import APIRouter
 from typing import Dict, Union
-from diskcache import Cache
+
 
 router = APIRouter(
     # dependencies=[Depends(get_token_header)],
@@ -44,7 +45,9 @@ def home() -> Dict[str, str]:
             for category in metadata.frozen_data:
                 if category["include_in_homepage"]:
                     sorted_data = sorted(
-                        category["metadata"], key=lambda k: k["popularity"], reverse=True
+                        category["metadata"],
+                        key=lambda k: k["popularity"],
+                        reverse=True,
                     )
                     sorted_data = sorted_data[:data_cap_limit]
                     for item in sorted_data:
@@ -99,9 +102,11 @@ def home() -> Dict[str, str]:
                         key=lambda k: k.get("air_date") or "",
                         reverse=True,
                     )
-                    newly_added_episodes_data = newly_added_episodes_sort_data[:data_cap_limit]
+                    newly_added_episodes_data = newly_added_episodes_sort_data[
+                        :data_cap_limit
+                    ]
             random.shuffle(carousel_data)
-            
+
             cache.set("categories_data", categories_data)
             cache.set("carousel_data", carousel_data)
             cache.set("top_rated_series_data", top_rated_series_data)
