@@ -28,6 +28,8 @@ class _Settings(BaseSettings):
     AUTH0_DOMAIN: str = getenv("AUTH0_DOMAIN")
     LOGO_URL: str = getenv("LOGO_URL")
     RCLONE_LISTEN_PORT: int = int(getenv("RCLONE_LISTEN_PORT", "35530"))
+    
+    MONGODB_URI: str = getenv("MONGODB_URI")
 
 
 settings = _Settings()

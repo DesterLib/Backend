@@ -13,12 +13,12 @@ from app.core.cron import fetch_metadata
 from fastapi.responses import UJSONResponse
 from subprocess import STDOUT, DEVNULL, Popen, run
 from starlette.middleware.cors import CORSMiddleware
-from app.core import TMDB, Database, Metadata, RCloneAPI, build_config
+from app.core import TMDB, LocalJsonDatabase, Metadata, RCloneAPI, build_config
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 
 start_time = time.time()
-config = Database(file_path="config.json")
+config = LocalJsonDatabase(file_path="config.json")
 metadata = Metadata(file_path="metadata.json")
 rclone = {}
 
@@ -34,6 +34,9 @@ def startup():
 
     if not config.get_from_col("rclone", "listen_port"):
         config.add_to_col("rclone", {"listen_port": settings.RCLONE_LISTEN_PORT})
+
+    if not config.get("mongodb_uri"):
+        config.set("mongodb_uri", settings.MONGODB_URI)
 
     if not config.get("categories"):
         config.set("categories", None)

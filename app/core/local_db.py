@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional
 from app.utils.data import sort_by_type
 
 
-class Database:
+class LocalJsonDatabase:
     def __init__(self, file_path: str):
         self.path = file_path
         self.sorted = None
@@ -65,7 +65,7 @@ class Database:
         return len(self.data)
 
 
-class Metadata(Database):
+class Metadata(LocalJsonDatabase):
     def __init__(self, file_path: str):
         super().__init__(file_path)
         self.sorted = None
