@@ -1,13 +1,14 @@
 import gzip
-import httpx
 import os.path
-import ujson as json
+from datetime import datetime, timedelta
+from difflib import SequenceMatcher
 from math import ceil
+from typing import Any, Dict, Optional
+
+import httpx
+import ujson as json
 from app import logger
 from app.models import DataType
-from difflib import SequenceMatcher
-from typing import Any, Dict, Optional
-from datetime import datetime, timedelta
 
 
 class TMDB:
@@ -143,6 +144,7 @@ class TMDB:
                 return
         else:
             logger.debug(f"Trying search using key-value search for '{title}'")
+            '''
             for each in data:
                 if title == each.get("original_title", "").lower().strip():
                     return each["id"]
@@ -161,6 +163,7 @@ class TMDB:
             if match:
                 return match["id"]
             logger.debug(f"Advanced difflib search failed for '{title}'")
+            '''
 
     def get_details(self, tmdb_id: int, data_type: DataType) -> Dict[str, Any]:
         """Get the details of a movie / series from the API

@@ -175,8 +175,7 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict[
                 "external_ids": movie_info.get("external_ids"),
             }
         )
-        update_action = pymongo.UpdateOne({"id": drive_meta["id"]}, {
-                                          "$set": curr_metadata}, upsert=True)
+        update_action = pymongo.InsertOne(curr_metadata)
         mongo_meta.append(update_action)
     logger.debug(
         f"Using advanced search for {len(advanced_search_list)} titles.")
@@ -226,17 +225,19 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict[
                 "external_ids": movie_info.get("external_ids"),
             }
         )
-        update_action = pymongo.UpdateOne({"id": drive_meta["id"]}, {
-                                          "$set": curr_metadata}, upsert=True)
+        update_action = pymongo.InsertOne(curr_metadata)
         mongo_meta.append(update_action)
 
+    metadata.delete_many({})
     metadata.bulk_write(mongo_meta)
-    mongo.set_is_metadata_init(True)
     return metadata
 
 
-def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
-    metadata = []
+def generate_series_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict[str, Any]) -> Dict[str, Any]:
+    from main import mongo
+
+    metadata = mongo.metadata[category_metadata["id"]]
+    mongo_meta = []
     for drive_meta in data:
         original_name = drive_meta["name"]
         cleaned_title = clean_file_name(original_name)
@@ -308,38 +309,43 @@ def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
                 episode.update(episode_details)
                 episode["episode_thumbnail"] = episode.pop("still_path", None)
 
-        metadata.append(
-            dict(
-                id=drive_meta.get("id"),
-                tmdb_id=series_info.get("id"),
-                file_name=drive_meta.get("name"),
-                original_title=series_info.get("original_name"),
-                title=series_info.get("name"),
-                status=series_info.get("status"),
-                total_episodes=series_info.get("number_of_episodes"),
-                total_seasons=series_info.get("number_of_seasons"),
-                homepage=series_info.get("homepage"),
-                logo=logo,
-                popularity=series_info.get("popularity"),
-                revenue=series_info.get("revenue"),
-                rating=series_info.get("vote_average"),
-                year=try_int(series_info.get(
+        curr_metadata = (
+            {
+                "id": drive_meta.get("id"),
+                "tmdb_id": series_info.get("id"),
+                "file_name": drive_meta.get("name"),
+                "original_title": series_info.get("original_name"),
+                "title": series_info.get("name"),
+                "status": series_info.get("status"),
+                "total_episodes": series_info.get("number_of_episodes"),
+                "total_seasons": series_info.get("number_of_seasons"),
+                "homepage": series_info.get("homepage"),
+                "logo": logo,
+                "popularity": series_info.get("popularity"),
+                "revenue": series_info.get("revenue"),
+                "rating": series_info.get("vote_average"),
+                "year": try_int(series_info.get(
                     "first_air_date", "").split("-")[0])
                 or None,
-                first_air_date=series_info.get("first_air_date"),
-                release_date=series_info.get("first_air_date"),
-                last_air_date=series_info.get("last_air_date"),
-                tagline=series_info.get("tagline"),
-                description=series_info.get("overview"),
-                seasons=seasons,
-                last_episode_to_air=series_info.get("last_episode_to_air"),
-                next_episode_to_air=series_info.get("next_episode_to_air"),
-                cast=series_info.get("credits", {}).get("cast", []),
-                backdrop_url=series_info.get("backdrop_path"),
-                poster_url=series_info.get("poster_path"),
-                genres=series_info.get("genres"),
-                subtitles=drive_meta.get("subtitles"),
-                external_ids=series_info.get("external_ids"),
-            )
+                "first_air_date": series_info.get("first_air_date"),
+                "release_date": series_info.get("first_air_date"),
+                "last_air_date": series_info.get("last_air_date"),
+                "tagline": series_info.get("tagline"),
+                "description": series_info.get("overview"),
+                "seasons": seasons,
+                "last_episode_to_air": series_info.get("last_episode_to_air"),
+                "next_episode_to_air": series_info.get("next_episode_to_air"),
+                "cast": series_info.get("credits", {}).get("cast", []),
+                "backdrop_url": series_info.get("backdrop_path"),
+                "poster_url": series_info.get("poster_path"),
+                "genres": series_info.get("genres"),
+                "subtitles": drive_meta.get("subtitles"),
+                "external_ids": series_info.get("external_ids"),
+            }
         )
+        update_action = pymongo.InsertOne(curr_metadata)
+        mongo_meta.append(update_action)
+
+    metadata.delete_many({})
+    metadata.bulk_write(mongo_meta)
     return metadata

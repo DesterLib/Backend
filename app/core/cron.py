@@ -5,7 +5,7 @@ from .. import logger
 
 
 def fetch_metadata(tmdb: TMDB):
-    from main import rclone
+    from main import mongo, rclone
     for key, category in rclone.items():
         category_id = category.data.get("id") or category.data.get("drive_id")
         category_metadata = {"id": category_id, "type": category.data.get("type"), "name": category.data.get(
@@ -18,3 +18,4 @@ def fetch_metadata(tmdb: TMDB):
         else:
             generate_movie_metadata(
                 tmdb, rclone[key].fetch_movies(), category_metadata)
+        mongo.set_is_metadata_init(True)
