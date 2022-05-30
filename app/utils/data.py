@@ -1,18 +1,21 @@
 import re
-from .. import logger
-from app import logger
+from collections import defaultdict
 from copy import deepcopy
 from functools import reduce
-# from app.core import TMDB
+from typing import Any, Dict, Optional
+
+import pymongo
+from app import logger
 from app.models import DataType
 from app.settings import settings
-from collections import defaultdict
-from typing import Any, Dict, Optional
+
+from .. import logger
 
 
 def group_by(key, seq):
     return reduce(
-        lambda grp, val: grp[key(val)].append(val) or grp, seq, defaultdict(list)
+        lambda grp, val: grp[key(val)].append(
+            val) or grp, seq, defaultdict(list)
     )
 
 
@@ -113,9 +116,12 @@ def clean_file_name(name: str) -> str:
     return name.strip().rstrip(".-_")
 
 
-def generate_movie_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
-    metadata = []
+def generate_movie_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict[str, Any]) -> Dict[str, Any]:
+    from main import mongo
+
+    metadata = mongo.metadata[category_metadata["id"]]
     advanced_search_list = []
+    mongo_meta = []
     for drive_meta in data:
         original_name = drive_meta["name"]
         cleaned_title = clean_file_name(original_name)
@@ -134,10 +140,11 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
         )
         movie_info = tmdb.get_details(tmdb_id, DataType.movies)
         try:
-            logo = movie_info.get("images", {}).get("logos", [{}])[0].get("file_path")
+            logo = movie_info.get("images", {}).get(
+                "logos", [{}])[0].get("file_path")
         except IndexError:
             logo = None
-        metadata.append(
+        curr_metadata = (
             {
                 "id": drive_meta["id"],
                 "tmdb_id": movie_info["id"],
@@ -168,7 +175,11 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
                 "external_ids": movie_info.get("external_ids"),
             }
         )
-    logger.debug(f"Using advanced search for {len(advanced_search_list)} titles.")
+        update_action = pymongo.UpdateOne({"id": drive_meta["id"]}, {
+                                          "$set": curr_metadata}, upsert=True)
+        mongo_meta.append(update_action)
+    logger.debug(
+        f"Using advanced search for {len(advanced_search_list)} titles.")
     for name, year in advanced_search_list:
         logger.debug(f"Advanced search identifying: {cleaned_title}")
         tmdb_id = tmdb.find_media_id(name, DataType.movies)
@@ -180,10 +191,11 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
         )
         movie_info = tmdb.get_details(tmdb_id, DataType.movies, use_api=False)
         try:
-            logo = movie_info.get("images", {}).get("logos", [{}])[0].get("file_path")
+            logo = movie_info.get("images", {}).get(
+                "logos", [{}])[0].get("file_path")
         except IndexError:
             logo = None
-        metadata.append(
+        curr_metadata = (
             {
                 "id": drive_meta["id"],
                 "tmdb_id": movie_info["id"],
@@ -214,7 +226,12 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
                 "external_ids": movie_info.get("external_ids"),
             }
         )
+        update_action = pymongo.UpdateOne({"id": drive_meta["id"]}, {
+                                          "$set": curr_metadata}, upsert=True)
+        mongo_meta.append(update_action)
 
+    metadata.bulk_write(mongo_meta)
+    mongo.set_is_metadata_init(True)
     return metadata
 
 
@@ -243,7 +260,8 @@ def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
         logger.info(f"Number of seasons: {len(seasons)}")
 
         try:
-            logo = series_info.get("images", {}).get("logos", [{}])[0].get("file_path")
+            logo = series_info.get("images", {}).get(
+                "logos", [{}])[0].get("file_path")
         except BaseException:
             logo = None
 
@@ -260,7 +278,8 @@ def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
                 logger.debug(f"     {episode['name']}")
                 parsed_data = parse_episode_filename(episode["name"])
                 episode_number = parsed_data.get("episode")
-                season_number = parsed_data.get("season", season.get("season_number"))
+                season_number = parsed_data.get(
+                    "season", season.get("season_number"))
                 if season_number != season.get("season_number"):
                     logger.debug(
                         f"      Season number mismatch: {season_number} != {season.get('season_number')}"
@@ -304,7 +323,8 @@ def generate_series_metadata(tmdb, data: Dict[str, Any]) -> Dict[str, Any]:
                 popularity=series_info.get("popularity"),
                 revenue=series_info.get("revenue"),
                 rating=series_info.get("vote_average"),
-                year=try_int(series_info.get("first_air_date", "").split("-")[0])
+                year=try_int(series_info.get(
+                    "first_air_date", "").split("-")[0])
                 or None,
                 first_air_date=series_info.get("first_air_date"),
                 release_date=series_info.get("first_air_date"),

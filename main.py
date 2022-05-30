@@ -1,75 +1,43 @@
+import json
 import os
-import time
 import shlex
-import uvicorn
-from sys import platform
-from app import __version__
-from fastapi import FastAPI
+import time
 from asyncio.log import logger
+from shutil import which
+from subprocess import Popen
+from sys import platform
+from typing import Any, Dict, List
+
+import uvicorn
+from fastapi import FastAPI
+from fastapi.responses import UJSONResponse
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from starlette.middleware.cors import CORSMiddleware
+
+from app import __version__
 from app.api import main_router
+from app.core import TMDB, MongoDB, RCloneAPI
+from app.core.cron import fetch_metadata
 from app.settings import settings
 from app.utils import time_formatter
-from app.core.cron import fetch_metadata
-from fastapi.responses import UJSONResponse
-from subprocess import STDOUT, DEVNULL, Popen, run
-from starlette.middleware.cors import CORSMiddleware
-from starlette.exceptions import HTTPException as StarletteHTTPException
-from app.core import TMDB, Metadata, RCloneAPI, LocalJsonDatabase, build_config
+from scripts.install_rclone import download_rclone
 
+if not settings.MONGODB_DOMAIN:
+    logger.error("No MongoDB domain found! Exiting.")
+    exit()
+if not settings.MONGODB_USERNAME:
+    logger.error("No MongoDB username found! Exiting.")
+    exit()
+if not settings.MONGODB_PASSWORD:
+    logger.error("No MongoDB password found! Exiting.")
+    exit()
 
 start_time = time.time()
-config = LocalJsonDatabase(file_path="config.json")
-metadata = Metadata(file_path="metadata.json")
+mongo = MongoDB(settings.MONGODB_DOMAIN,
+                settings.MONGODB_USERNAME, settings.MONGODB_PASSWORD)
 rclone = {}
 
-
-def startup():
-    logger.info("Starting up...")
-    if not config.get_from_col("auth0", "domain"):
-        config.add_to_col("auth0", {"domain": settings.AUTH0_DOMAIN})
-    if not config.get_from_col("auth0", "client_id"):
-        config.add_to_col("auth0", {"client_id": settings.AUTH0_CLIENT_ID})
-    if not config.get_from_col("auth0", "client_secret"):
-        config.add_to_col("auth0", {"client_secret": settings.AUTH0_CLIENT_SECRET})
-
-    if not config.get_from_col("rclone", "listen_port"):
-        config.add_to_col("rclone", {"listen_port": settings.RCLONE_LISTEN_PORT})
-
-    if not config.get("mongodb_uri"):
-        config.set("mongodb_uri", settings.MONGODB_URI)
-
-    if not config.get("categories"):
-        config.set("categories", None)
-    if not config.get("tmdb_api_key"):
-        config.set("tmdb_api_key", settings.TMDB_API_KEY)
-    rclone_conf = build_config(config)
-    rclone_port = config.get_from_col("rclone", "listen_port")
-    with open("rclone.conf", "w+") as w:
-        w.write(rclone_conf)
-    if platform in ["win32", "cygwin", "msys"]:
-        run(
-            shlex.split(
-                f"powershell.exe Stop-Process -Id (Get-NetTCPConnection -LocalPort {rclone_port}).OwningProcess -Force"
-            ),
-            stdout=DEVNULL,
-            stderr=STDOUT,
-        )
-    elif platform in ["linux", "linux2"]:
-        run(
-            shlex.split(f"bash kill $(lsof -t -i:{rclone_port})"),
-            stdout=DEVNULL,
-            stderr=STDOUT,
-        )
-    elif platform in ["darwin"]:
-        run(
-            shlex.split(f"kill $(lsof -t -i:{rclone_port})"),
-            stdout=DEVNULL,
-            stderr=STDOUT,
-        )
-    else:
-        exit("Unsupported platform")
-    from shutil import which
-
+def rclone_setup(categories: List[Dict[str, Any]]):
     rclone_bin = which("rclone")
     rclone_bin_name = (
         "rclone.exe" if platform in ["win32", "cygwin", "msys"] else "rclone"
@@ -78,33 +46,39 @@ def startup():
         if os.path.exists(f"bin/{rclone_bin_name}"):
             rclone_bin = f"bin/{rclone_bin_name}"
         else:
-            from scripts.install_rclone import download_rclone
-
             rclone_bin = download_rclone()
+
+    with open("rclone.conf", "w+") as w:
+        w.write(mongo.get_rclone_conf())
     Popen(
         shlex.split(
-            f"{rclone_bin} rcd --rc-no-auth --rc-addr localhost:{rclone_port} --config rclone.conf"
+            f"{rclone_bin} rcd --rc-no-auth --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf"
         )
     )
 
-    categories = config.get("categories")
     for category in categories:
-        id = category.get("id") or category.get("drive_id")
-        provider = category.get("provider") or "gdrive"
-        rclone[id] = RCloneAPI(id, provider)
+        rclone[id] = RCloneAPI(category)
 
-    tmdb_api_key = config.get("tmdb_api_key")
 
-    tmdb = TMDB(api_key=tmdb_api_key)
+def metadata_setup():
+    tmdb = TMDB(api_key=mongo.get_tmbd_api_key())
+    fetch_metadata(tmdb)
+
+
+def startup():
+    logger.info("Starting up...")
+
     logger.debug("Initializing core modules...")
-    if not len(metadata):
-        logger.debug("Metadata file is empty. Fetching metadata...")
-        metadata.data = fetch_metadata(tmdb, categories)
-        metadata.save()
-        time.sleep(2)
+
+    if mongo.get_is_config_init() is True:
+        categories = mongo.get_categories()
+        rclone_setup(categories)
+        if mongo.get_is_metadata_init() is False:
+            metadata_setup()
+        logger.debug("Done.")
     else:
-        logger.debug("Metadata file is not empty. Skipping fetching metadata...")
-    logger.debug("Done.")
+        # logic for first time setup
+        pass
 
 
 app = FastAPI(

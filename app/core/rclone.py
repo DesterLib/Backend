@@ -1,12 +1,13 @@
-import re
 import json
-import requests
-from pytz import UTC
-from httplib2 import Http
+import re
 from datetime import datetime
-from dateutil.parser import parse
 from typing import Any, Dict, List, Optional
+
+import requests
+from dateutil.parser import parse
+from httplib2 import Http
 from oauth2client.client import GoogleCredentials
+from pytz import UTC
 
 
 def build_config(config) -> str:
@@ -63,10 +64,11 @@ def build_config(config) -> str:
 
 
 class RCloneAPI:
-    def __init__(self, id, provider):
-        self.id = id
-        self.fs = "".join(c for c in id if c.isalnum()) + ":"
-        self.provider = provider
+    def __init__(self, data: Dict[str, Any]):
+        self.data = data
+        self.id = data.get("id") or data.get("drive_id")
+        self.fs = "".join(c for c in self.id if c.isalnum()) + ":"
+        self.provider = data.get("provider") or "gdrive"
         self.RCLONE_RC_URL = "http://localhost:35530"
         self.RCLONE = {
             "mkdir": "operations/mkdir",
@@ -213,7 +215,8 @@ class RCloneAPI:
                             "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
+                    parent_dirs[item["Path"]
+                                ]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(
