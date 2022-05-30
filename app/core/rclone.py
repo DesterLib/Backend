@@ -1,5 +1,6 @@
 import json
 import re
+from dateutil.parser import isoparse
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -193,7 +194,7 @@ class RCloneAPI:
                             "name": item["Name"],
                             "path": item["Path"],
                             "parent": parent,
-                            "modified_time": item["ModTime"],
+                            "modified_time": isoparse(item["ModTime"]),
                         }
                     )
             else:
@@ -210,7 +211,7 @@ class RCloneAPI:
                             "name": item["Name"],
                             "path": item["Path"],
                             "parent": parent,
-                            "modified_time": item["ModTime"],
+                            "modified_time": isoparse(item["ModTime"]),
                             "seasons": {},
                             "json_path": f"[{len(metadata)}]",
                         }
@@ -230,7 +231,7 @@ class RCloneAPI:
                         "name": item["Name"],
                         "path": item["Path"],
                         "parent": parent,
-                        "modified_time": item["ModTime"],
+                        "modified_time": isoparse(item["ModTime"]),
                         "episodes": [],
                         "json_path": parent["json_path"] + f'["{season}"]',
                     }
