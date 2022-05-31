@@ -54,31 +54,62 @@ def home() -> Dict[str, str]:
         for category in mongo.categories:
             category_col = mongo.metadata[category["id"]]
             if True:
-                data = category_col.find({}, unwanted_keys)
-                sorted_popularity_data = list(data.sort(
-                    [('popularity', -1)]).limit(data_cap_limit))
+                sorted_popularity_data = list(category_col.aggregate([
+                    {
+                        '$sort': {
+                            'popularity': -1
+                        }
+                    }, {
+                        '$limit': data_cap_limit
+                    }, {
+                        '$project': unwanted_keys
+                    }]
+                ))
                 category["metadata"] = sorted_popularity_data
                 categories_data.append(category)
                 carousel_data.extend(sorted_popularity_data[:3])
 
-                data = category_col.find({}, unwanted_keys)
-                sorted_top_rated_data = data.sort(
-                    [('rating', -1)]).limit(data_cap_limit)
+                sorted_top_rated_data = category_col.aggregate([
+                    {
+                        '$sort': {
+                            'rating': -1
+                        }
+                    }, {
+                        '$limit': data_cap_limit
+                    }, {
+                        '$project': unwanted_keys
+                    }]
+                )
 
                 if category["type"] == "movies":
                     most_popular_movies_data.extend(sorted_popularity_data)
                     top_rated_movies_data.extend(sorted_top_rated_data)
-                    data = category_col.find({}, unwanted_keys)
-                    sorted_newly_added_data = data.sort(
-                        [('modified_time', -1)]).limit(data_cap_limit)
+                    sorted_newly_added_data = category_col.aggregate([
+                        {
+                            '$sort': {
+                                'modified_time': -1
+                            }
+                        }, {
+                            '$limit': data_cap_limit
+                        }, {
+                            '$project': unwanted_keys
+                        }]
+                    )
                     newly_added_movies_data.extend(sorted_newly_added_data)
                 else:
                     most_popular_series_data.extend(sorted_popularity_data)
                     top_rated_series_data.extend(sorted_top_rated_data)
-                    data = category_col.find(
-                        {"seasons.episodes.modified_time": {"$type": "date"}}, unwanted_keys)
-                    sorted_newly_added_data = data.sort(
-                        [('seasons.episodes.modified_time', -1)]).limit(data_cap_limit)
+                    sorted_newly_added_data = category_col.aggregate([
+                        {
+                            '$sort': {
+                                'seasons.episodes.modified_time': -1
+                            }
+                        }, {
+                            '$limit': data_cap_limit
+                        }, {
+                            '$project': unwanted_keys
+                        }]
+                    )
                     newly_added_episodes_data.extend(sorted_newly_added_data)
         carousel_data = sorted(
             carousel_data, key=lambda k: k["popularity"], reverse=True
