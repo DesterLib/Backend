@@ -147,6 +147,7 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict[
         curr_metadata = (
             {
                 "id": drive_meta["id"],
+                "path": drive_meta["path"],
                 "tmdb_id": movie_info["id"],
                 "imdb_id": movie_info.get("imdb_id"),
                 "file_name": drive_meta["name"],
@@ -197,6 +198,7 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict[
         curr_metadata = (
             {
                 "id": drive_meta["id"],
+                "path": drive_meta["path"],
                 "tmdb_id": movie_info["id"],
                 "imdb_id": movie_info.get("imdb_id"),
                 "file_name": drive_meta["name"],
@@ -312,6 +314,7 @@ def generate_series_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict
         curr_metadata = (
             {
                 "id": drive_meta.get("id"),
+                "path": drive_meta["path"],
                 "tmdb_id": series_info.get("id"),
                 "file_name": drive_meta.get("name"),
                 "original_title": series_info.get("original_name"),
