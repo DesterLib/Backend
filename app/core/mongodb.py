@@ -3,6 +3,7 @@ from typing import Any, Dict, List
 
 from croniter import croniter
 from pymongo import MongoClient
+import pymongo
 
 
 class MongoDB:
@@ -82,6 +83,14 @@ class MongoDB:
         tmdb_api_key = result["tmdb"].get("api_key", "")
         self.tmdb_api_key = tmdb_api_key
         return tmdb_api_key
+
+    def set_config(self, data: Dict[str, Any]) -> bool:
+        bulk_action = []
+        for k, v in data.items():
+            bulk_action.append(pymongo.InsertOne({k: v}))
+        self.config_col.delete_many({})
+        self.config_col.bulk_write(bulk_action)
+        return True
 
     def set_is_config_init(self, is_config_init):
         self.other_col.update_one({"is_config_init": {"$type": "bool"}}, {
