@@ -53,7 +53,7 @@ def query(
 
     movies_match = []
     series_match = []
-    for category in mongo.categories:
+    for category in mongo.config["categories"]:
         result = mongo.metadata[category["id"]].aggregate([{
             '$match': {
                 '$text': {

@@ -57,7 +57,7 @@ def home() -> Dict[str, str]:
             "last_episode_to_air": 0,
             "next_episode_to_air": 0,
         }
-        for category in mongo.categories:
+        for category in mongo.config["categories"]:
             category_col = mongo.metadata[category["id"]]
             if True:
                 sorted_popularity_data = list(category_col.aggregate([

@@ -108,7 +108,6 @@ class RCloneAPI:
             "statsReset": "core/stats-reset",
         }
         self.fs_conf = self.rc_conf()
-        self.fs_conf["token"] = json.loads(self.fs_conf["token"])
 
     def rc_ls(self, options: Optional[dict] = {}) -> List[Dict[str, Any]]:
         rc_data = {

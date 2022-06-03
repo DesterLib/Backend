@@ -16,7 +16,7 @@ def settings(id: int) -> Dict[str, Any]:
     from main import mongo
 
     results = {}
-    for category in mongo.categories:
+    for category in mongo.config["categories"]:
         if category["type"] == "movies":
             result = list(mongo.metadata[category["id"]].find(
                 {"tmdb_id": id}, {'_id': 0}))

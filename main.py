@@ -1,10 +1,8 @@
-import json
-import os
 import shlex
 import time
 from asyncio.log import logger
 from shutil import which
-from subprocess import Popen
+from subprocess import Popen, run, DEVNULL, STDOUT
 from sys import platform
 from typing import Any, Dict, List
 
@@ -37,24 +35,26 @@ mongo = MongoDB(settings.MONGODB_DOMAIN,
                 settings.MONGODB_USERNAME, settings.MONGODB_PASSWORD)
 rclone = {}
 
-def rclone_setup(categories: List[Dict[str, Any]]):
+
+def restart_rclone():
     rclone_bin = which("rclone")
-    if not rclone_bin:
-        rclone_bin_name = (
-            "rclone.exe" if platform in [
-                "win32", "cygwin", "msys"] else "rclone"
-        )
-        if os.path.exists(f"bin/{rclone_bin_name}"):
-            rclone_bin = f"bin/{rclone_bin_name}"
-        else:
-            rclone_bin = download_rclone()
-    with open("rclone.conf", "w+") as w:
-        w.write(mongo.get_rclone_conf())
+    run(shlex.split(
+        f"powershell.exe Stop-Process -Id (Get-NetTCPConnection -LocalPort {settings.RCLONE_LISTEN_PORT}).OwningProcess -Force"), stdout=DEVNULL, stderr=STDOUT)
     Popen(
         shlex.split(
             f"{rclone_bin} rcd --rc-no-auth --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf", posix=(not platform in ["win32", "cygwin", "msys"])
         )
     )
+
+
+def rclone_setup(categories: List[Dict[str, Any]]):
+    rclone_conf = ""
+    for item in mongo.config["rclone"]:
+        rclone_conf += f"\n\n{item}"
+    with open("rclone.conf", "w+") as w:
+        w.write(rclone_conf)
+
+    restart_rclone()
 
     for category in categories:
         rclone[id] = RCloneAPI(category)
