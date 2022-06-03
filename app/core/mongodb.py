@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, Dict, List
 
 from croniter import croniter
-from pymongo import MongoClient, InsertOne, UpdateOne
+from pymongo import MongoClient, UpdateOne, TEXT
 
 
 class MongoDB:
@@ -17,9 +17,9 @@ class MongoDB:
 
         self.config_col = self.db["config"]
         self.history_col = self.db["history"]
-        self.movies_cache_col = self.db["movies_cache"]
+        self.movies_cache_col = self.metadata["_movies_cache"]
         self.other_col = self.db["other"]
-        self.series_cache_col = self.db["series_cache"]
+        self.series_cache_col = self.metadata["_series_cache"]
         self.watchlist_col = self.db["watchlist"]
 
         self.config = {"app": {}, "categories": [],
@@ -29,6 +29,12 @@ class MongoDB:
         self.get_is_config_init()
         self.is_metadata_init = False
         self.get_is_metadata_init()
+        self.is_series_cache_init = False
+        self.get_is_metadata_init()
+        self.is_movies_cache_init = False
+        self.get_is_movies_cache_init()
+        self.is_series_cache_init = False
+        self.get_is_series_cache_init()
 
     def get_config(self) -> Dict[str, Any]:
         config = {"_id": None, "app": {}, "categories": [],
@@ -50,6 +56,18 @@ class MongoDB:
             {"is_metadata_init": {"$exists": True}}) or {"is_metadata_init": False}
         self.is_metadata_init = result["is_metadata_init"]
         return result["is_metadata_init"]
+
+    def get_is_movies_cache_init(self) -> bool:
+        result = self.other_col.find_one(
+            {"is_movies_cache_init": {"$exists": True}}) or {"is_movies_cache_init": False}
+        self.is_movies_cache_init = result["is_movies_cache_init"]
+        return result["is_movies_cache_init"]
+
+    def get_is_series_cache_init(self) -> bool:
+        result = self.other_col.find_one(
+            {"is_series_cache_init": {"$exists": True}}) or {"is_series_cache_init": False}
+        self.is_series_cache_init = result["is_series_cache_init"]
+        return result["is_series_cache_init"]
 
     def get_is_build_time(self) -> bool:
         build_config = self.config_col.find_one(
@@ -172,11 +190,27 @@ class MongoDB:
     def set_is_config_init(self, is_config_init):
         if is_config_init != self.is_config_init:
             self.other_col.update_one({"is_config_init": {"$exists": True}}, {
-                                    "$set": {"is_config_init": is_config_init}}, upsert=True)
+                "$set": {"is_config_init": is_config_init}}, upsert=True)
             self.is_config_init = is_config_init
 
     def set_is_metadata_init(self, is_metadata_init):
         if is_metadata_init != self.is_metadata_init:
             self.other_col.update_one({"is_metadata_init": {"$exists": True}}, {
-                                    "$set": {"is_metadata_init": is_metadata_init}}, upsert=True)
+                "$set": {"is_metadata_init": is_metadata_init}}, upsert=True)
             self.is_metadata_init = is_metadata_init
+
+    def set_is_movies_cache_init(self, is_movies_cache_init):
+        if is_movies_cache_init != self.is_movies_cache_init:
+            self.movies_cache_col.create_index([("original_title", TEXT)],
+                                               background=True, name="original_title")
+            self.other_col.update_one({"is_movies_cache_init": {"$exists": True}}, {
+                "$set": {"is_movies_cache_init": is_movies_cache_init}}, upsert=True)
+            self.is_metadata_init = is_movies_cache_init
+
+    def set_is_series_cache_init(self, is_series_cache_init):
+        if is_series_cache_init != self.is_series_cache_init:
+            self.series_cache_col.create_index([("original_title", TEXT)],
+                                               background=True, name="original_title")
+            self.other_col.update_one({"is_series_cache_init": {"$exists": True}}, {
+                "$set": {"is_series_cache_init": is_series_cache_init}}, upsert=True)
+            self.is_series_cache_init = is_series_cache_init

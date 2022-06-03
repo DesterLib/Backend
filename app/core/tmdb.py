@@ -14,13 +14,10 @@ from app.models import DataType
 class TMDB:
     def __init__(self, api_key: str):
         from main import mongo
-        is_series_cache_done = mongo.other_col.find_one(
-            {"is_series_cache_done": {"$type": "bool"}}) or {"is_series_cache_done": False}
-        is_movies_cache_done = mongo.other_col.find_one(
-            {"is_movies_cache_done": {"$type": "bool"}}) or {"is_movies_cache_done": False}
-        if is_series_cache_done["is_series_cache_done"] is False:
+
+        if mongo.is_series_cache_init is False:
             self.export_data(DataType.series)
-        if is_movies_cache_done["is_movies_cache_done"] is False:
+        if mongo.is_movies_cache_init is False:
             self.export_data(DataType.movies)
         self.client = httpx.Client(params={"api_key": api_key})
         self.config = self.get_server_config()
@@ -66,11 +63,9 @@ class TMDB:
             print(f"Chunk {x}/{total_chunks}")
             x = x + 1
         if data_type == DataType.series:
-            mongo.other_col.update_one({"is_series_cache_done": {"$ne": None}}, {
-                                       "$set": {"is_series_cache_done": True}}, upsert=True)
+            mongo.set_is_series_cache_init(True)
         else:
-            mongo.other_col.update_one({"is_movies_cache_done": {"$ne": None}}, {
-                                       "$set": {"is_movies_cache_done": True}}, upsert=True)
+            mongo.set_is_movies_cache_init(True)
 
     def get_episode_details(
         self, tmdb_id: int, episode_number: int, season_number: int = 1

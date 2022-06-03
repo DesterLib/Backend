@@ -4,7 +4,7 @@ from copy import deepcopy
 from functools import reduce
 from typing import Any, Dict, Optional
 
-import pymongo
+from pymongo import InsertOne, TEXT
 from app import logger
 from app.models import DataType
 from app.settings import settings
@@ -176,7 +176,7 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict[
                 "external_ids": movie_info.get("external_ids"),
             }
         )
-        update_action = pymongo.InsertOne(curr_metadata)
+        update_action = InsertOne(curr_metadata)
         mongo_meta.append(update_action)
     logger.debug(
         f"Using advanced search for {len(advanced_search_list)} titles.")
@@ -227,12 +227,12 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict[
                 "external_ids": movie_info.get("external_ids"),
             }
         )
-        update_action = pymongo.InsertOne(curr_metadata)
+        update_action = InsertOne(curr_metadata)
         mongo_meta.append(update_action)
 
     metadata.delete_many({})
     metadata.bulk_write(mongo_meta)
-    metadata.create_index([("title", pymongo.TEXT)],
+    metadata.create_index([("title", TEXT)],
                           background=True, name="title")
     return metadata
 
@@ -348,11 +348,11 @@ def generate_series_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict
                 "external_ids": series_info.get("external_ids"),
             }
         )
-        update_action = pymongo.InsertOne(curr_metadata)
+        update_action = InsertOne(curr_metadata)
         mongo_meta.append(update_action)
 
     metadata.delete_many({})
     metadata.bulk_write(mongo_meta)
-    metadata.create_index([("title", pymongo.TEXT)],
+    metadata.create_index([("title", TEXT)],
                           background=True, name="title")
     return metadata
