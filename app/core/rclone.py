@@ -4,7 +4,7 @@ import requests
 from pytz import UTC
 from httplib2 import Http
 from datetime import datetime
-from dateutil.parser import parse, isoparse
+from dateutil.parser import parse
 from typing import Any, Dict, List, Optional
 from oauth2client.client import GoogleCredentials
 
@@ -155,12 +155,9 @@ class RCloneAPI:
                         "id": item["ID"],
                         "name": item["Name"],
                         "path": item["Path"],
-                        "type": "file",
                         "parent": parent,
-                        "mimeType": item["MimeType"],
-                        "modifiedTime": item["ModTime"],
-                        "videoMediaMetadata": {},
-                        "subtitles": None,
+                        "mime_type": item["MimeType"],
+                        "modified_time": item["ModTime"],
                     }
                 )
             elif item["IsDir"] is True:
@@ -199,7 +196,8 @@ class RCloneAPI:
                             "name": item["Name"],
                             "path": item["Path"],
                             "parent": parent,
-                            "modified_time": isoparse(item["ModTime"]),
+                            "mime_type": item["MimeType"],
+                            "modified_time": item["ModTime"],
                         }
                     )
             else:
@@ -216,12 +214,14 @@ class RCloneAPI:
                             "name": item["Name"],
                             "path": item["Path"],
                             "parent": parent,
-                            "modified_time": isoparse(item["ModTime"]),
+                            "mime_type": item["MimeType"],
+                            "modified_time": item["ModTime"],
                             "seasons": {},
                             "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
+                    parent_dirs[item["Path"]
+                                ]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(
@@ -235,7 +235,8 @@ class RCloneAPI:
                         "name": item["Name"],
                         "path": item["Path"],
                         "parent": parent,
-                        "modified_time": isoparse(item["ModTime"]),
+                        "mime_type": item["MimeType"],
+                        "modified_time": item["ModTime"],
                         "episodes": [],
                         "json_path": parent["json_path"] + f'["{season}"]',
                     }
