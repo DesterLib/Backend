@@ -232,6 +232,8 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict[
 
     metadata.delete_many({})
     metadata.bulk_write(mongo_meta)
+    metadata.create_index([("title", pymongo.TEXT)],
+                          background=True, name="title")
     return metadata
 
 
@@ -351,4 +353,6 @@ def generate_series_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict
 
     metadata.delete_many({})
     metadata.bulk_write(mongo_meta)
+    metadata.create_index([("title", pymongo.TEXT)],
+                          background=True, name="title")
     return metadata

@@ -8,7 +8,7 @@ def fetch_metadata(tmdb: TMDB):
     from main import mongo, rclone
     for key, category in rclone.items():
         category_id = category.data.get("id") or category.data.get("drive_id")
-        category_metadata = {"id": category_id, "type": category.data.get("type"), "name": category.data.get(
+        category_metadata = {"id": category_id, "type": category.data.get("type", "movies"), "name": category.data.get(
             "name"), "include_in_homepage": category.data.get("include_in_homepage", True)}
         logger.info("Generating metadata:" + category_metadata["name"])
         logger.debug("Category type: " + category_metadata["type"])

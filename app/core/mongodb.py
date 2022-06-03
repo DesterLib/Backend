@@ -110,12 +110,12 @@ class MongoDB:
         if old_category_ids != new_category_ids:
             config_rclone = build_config(self.config)
             bulk_action.append(self.set_rclone(config_rclone))
+            self.set_is_metadata_init(False)
 
         self.config_col.bulk_write(bulk_action)
-        if self.is_config_init is False:
-            self.set_is_config_init(True)
+        self.set_is_config_init(True)
 
-        if self.is_metadata_init is False or (old_category_ids != new_category_ids):
+        if self.is_metadata_init is False:
             from main import metadata_setup, rclone_setup
             rclone_setup(self.config["categories"])
             metadata_setup()
@@ -170,11 +170,13 @@ class MongoDB:
         return update_action
 
     def set_is_config_init(self, is_config_init):
-        self.other_col.update_one({"is_config_init": {"$exists": True}}, {
-                                  "$set": {"is_config_init": is_config_init}}, upsert=True)
-        self.is_config_init = is_config_init
+        if is_config_init != self.is_config_init:
+            self.other_col.update_one({"is_config_init": {"$exists": True}}, {
+                                    "$set": {"is_config_init": is_config_init}}, upsert=True)
+            self.is_config_init = is_config_init
 
     def set_is_metadata_init(self, is_metadata_init):
-        self.other_col.update_one({"is_metadata_init": {"$exists": True}}, {
-                                  "$set": {"is_metadata_init": is_metadata_init}}, upsert=True)
-        self.is_metadata_init = is_metadata_init
+        if is_metadata_init != self.is_metadata_init:
+            self.other_col.update_one({"is_metadata_init": {"$exists": True}}, {
+                                    "$set": {"is_metadata_init": is_metadata_init}}, upsert=True)
+            self.is_metadata_init = is_metadata_init
