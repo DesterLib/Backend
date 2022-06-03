@@ -37,9 +37,30 @@ rclone = {}
 
 
 def restart_rclone():
+    if platform in ["win32", "cygwin", "msys"]:
+        run(
+            shlex.split(
+                f"powershell.exe Stop-Process -Id (Get-NetTCPConnection -LocalPort {settings.RCLONE_LISTEN_PORT}).OwningProcess -Force"
+            ),
+            stdout=DEVNULL,
+            stderr=STDOUT,
+        )
+    elif platform in ["linux", "linux2"]:
+        run(
+            shlex.split(
+                f"bash kill $(lsof -t -i:{settings.RCLONE_LISTEN_PORT})"),
+            stdout=DEVNULL,
+            stderr=STDOUT,
+        )
+    elif platform in ["darwin"]:
+        run(
+            shlex.split(f"kill $(lsof -t -i:{settings.RCLONE_LISTEN_PORT})"),
+            stdout=DEVNULL,
+            stderr=STDOUT,
+        )
+    else:
+        exit("Unsupported platform")
     rclone_bin = which("rclone")
-    run(shlex.split(
-        f"powershell.exe Stop-Process -Id (Get-NetTCPConnection -LocalPort {settings.RCLONE_LISTEN_PORT}).OwningProcess -Force"), stdout=DEVNULL, stderr=STDOUT)
     Popen(
         shlex.split(
             f"{rclone_bin} rcd --rc-no-auth --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf", posix=(not platform in ["win32", "cygwin", "msys"])
