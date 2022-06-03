@@ -4,10 +4,10 @@ from copy import deepcopy
 from functools import reduce
 from typing import Any, Dict, Optional
 
-from pymongo import InsertOne, TEXT
 from app import logger
 from app.models import DataType
 from app.settings import settings
+from pymongo import TEXT, InsertOne
 
 from .. import logger
 
@@ -182,14 +182,14 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict[
         f"Using advanced search for {len(advanced_search_list)} titles.")
     for name, year in advanced_search_list:
         logger.debug(f"Advanced search identifying: {cleaned_title}")
-        tmdb_id = tmdb.find_media_id(name, DataType.movies)
+        tmdb_id = tmdb.find_media_id(name, DataType.movies, use_api=False)
         if not tmdb_id:
             logger.info(f"Advanced search could not identify: '{name}'")
             continue
         logger.info(
             f"Advanced search successfully identified: {name} {f'({year})' if year else ''}    ID: {tmdb_id}"
         )
-        movie_info = tmdb.get_details(tmdb_id, DataType.movies, use_api=False)
+        movie_info = tmdb.get_details(tmdb_id, DataType.movies)
         try:
             logo = movie_info.get("images", {}).get(
                 "logos", [{}])[0].get("file_path")

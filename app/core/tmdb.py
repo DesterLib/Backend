@@ -1,5 +1,4 @@
 import gzip
-import os.path
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
 from math import ceil
@@ -9,6 +8,7 @@ import httpx
 import ujson as json
 from app import logger
 from app.models import DataType
+from pymongo import InsertOne
 
 
 class TMDB:
@@ -16,8 +16,10 @@ class TMDB:
         from main import mongo
 
         if mongo.is_series_cache_init is False:
+            mongo.series_cache_col.delete_many({})
             self.export_data(DataType.series)
         if mongo.is_movies_cache_init is False:
+            mongo.movies_cache_col.delete_many({})
             self.export_data(DataType.movies)
         self.client = httpx.Client(params={"api_key": api_key})
         self.config = self.get_server_config()
@@ -45,23 +47,27 @@ class TMDB:
             gzip.decompress(httpx.get(export_url).content).decode(
                 "utf-8").splitlines()
         )
-        chunks = [lines[i:i+5000]
-                  for i in range(0, len(lines), 5000)]
+        bulk_action = []
+        chunks = [lines[i:i+100000]
+                  for i in range(0, len(lines), 100000)]
         total_chunks = len(chunks)
-        x = 0
+        x = 1
+        logger.debug(
+            "Splitting %s items into chunks of 100,000 items" % len(lines))
         for chunk in chunks:
-            for n, line in enumerate(chunk):
+            for line in chunk:
                 try:
-                    chunk[n] = json.loads(line)
+                    bulk_action.append(InsertOne(json.loads(line)))
                 except:
-                    chunk[n] = {}
+                    pass
             if data_type == DataType.series:
-                mongo.series_cache_col.insert_many(chunk)
+                mongo.series_cache_col.bulk_write(bulk_action)
             else:
-                mongo.movies_cache_col.insert_many(chunk)
-            chunks[x] = None
-            print(f"Chunk {x}/{total_chunks}")
-            x = x + 1
+                mongo.movies_cache_col.bulk_write(bulk_action)
+            logger.debug(f"Chunk {x}/{total_chunks}")
+            chunks[x - 1] = None
+            x += 1
+            bulk_action = []
         if data_type == DataType.series:
             mongo.set_is_series_cache_init(True)
         else:
@@ -138,15 +144,33 @@ class TMDB:
                 )
                 return
         else:
+            from main import mongo
             logger.debug(f"Trying search using key-value search for '{title}'")
-            '''
-            for each in data:
+            if data_type == DataType.series:
+                cache_col = mongo.series_cache_col
+            else:
+                cache_col = mongo.movies_cache_col
+            result = cache_col.aggregate([{
+                '$match': {
+                    '$text': {
+                        '$search': title
+                    }
+                }
+            }, {
+                '$sort': {
+                    'score': {
+                        '$meta': 'textScore'
+                    }, 'popularity': -1
+                }
+            }, {
+                '$limit': 20
+            }])
+            for each in result:
                 if title == each.get("original_title", "").lower().strip():
                     return each["id"]
-            logger.debug(f"Basic key-value search failed for '{title}'")
             max_ratio, match = 0, None
             matcher = SequenceMatcher(b=title)
-            for each in data:
+            for each in result:
                 matcher.set_seq1(
                     each.get("original_title", "").lower().strip())
                 ratio = matcher.ratio()
@@ -158,7 +182,6 @@ class TMDB:
             if match:
                 return match["id"]
             logger.debug(f"Advanced difflib search failed for '{title}'")
-            '''
 
     def get_details(self, tmdb_id: int, data_type: DataType) -> Dict[str, Any]:
         """Get the details of a movie / series from the API

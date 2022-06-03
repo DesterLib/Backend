@@ -10,7 +10,7 @@ def fetch_metadata(tmdb: TMDB):
         category_id = category.data.get("id") or category.data.get("drive_id")
         category_metadata = {"id": category_id, "type": category.data.get("type", "movies"), "name": category.data.get(
             "name"), "include_in_homepage": category.data.get("include_in_homepage", True)}
-        logger.info("Generating metadata:" + category_metadata["name"])
+        logger.info("Generating metadata: " + category_metadata["name"])
         logger.debug("Category type: " + category_metadata["type"])
         if category_metadata["type"] == "series":
             generate_series_metadata(

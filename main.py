@@ -1,3 +1,4 @@
+import os
 import shlex
 import time
 from asyncio.log import logger
@@ -104,31 +105,27 @@ def startup():
         pass
 
 
-app = FastAPI(
-    title="DesterLib",
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    exception_handlers={
-        StarletteHTTPException: lambda req, exc: UJSONResponse(
-            status_code=404, content={"ok": False, "message": "Are you lost?"}
-        ),
-        500: lambda req, exc: UJSONResponse(
-            status_code=500,
-            content={
-                "ok": False,
-                "message": "Internal server error",
-                "error_msg": str(exc),
-            },
-        ),
-    },
-)
+app = FastAPI(title="DesterLib",
+              openapi_url=f"{settings.API_V1_STR}/openapi.json")
 
 
 @app.exception_handler(StarletteHTTPException)
-async def _spa_server(req: Request, exc: StarletteHTTPException):
-    if exc.status_code == 404:
-        return FileResponse("build/index.html", media_type="text/html")
+async def static(request: Request, exception: StarletteHTTPException):
+    if exception.status_code == 404:
+        if os.path.exists("build/index.html"):
+            return FileResponse("build/index.html", media_type="text/html")
+        else:
+            return UJSONResponse(status_code=404, content={"ok": False, "message": "Are you lost?"})
+    elif exception.status_code == 500:
+        return UJSONResponse(status_code=500, content={
+            "ok": False,
+            "message": "Internal server error"
+        })
     else:
-        return await http_exception_handler(req, exc)
+        return UJSONResponse(status_code=exception.status_code, content={
+            "ok": False,
+            "message": "Unknown error"
+        })
 
 app.add_middleware(
     CORSMiddleware,
@@ -139,7 +136,8 @@ app.add_middleware(
 )
 
 app.include_router(main_router, prefix=settings.API_V1_STR)
-app.mount("/", StaticFiles(directory="build/", html=True), name="static")
+if os.path.exists("build/index.html"):
+    app.mount("/", StaticFiles(directory="build/", html=True), name="static")
 
 startup()
 if __name__ == "__main__":
