@@ -2,13 +2,15 @@ import shlex
 import time
 from asyncio.log import logger
 from shutil import which
-from subprocess import Popen, run, DEVNULL, STDOUT
+from subprocess import DEVNULL, STDOUT, Popen, run
 from sys import platform
 from typing import Any, Dict, List
 
 import uvicorn
-from fastapi import FastAPI
-from fastapi.responses import UJSONResponse
+from fastapi import FastAPI, Request
+from fastapi.exception_handlers import http_exception_handler
+from fastapi.responses import FileResponse, UJSONResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.cors import CORSMiddleware
 
@@ -120,6 +122,14 @@ app = FastAPI(
     },
 )
 
+
+@app.exception_handler(StarletteHTTPException)
+async def _spa_server(req: Request, exc: StarletteHTTPException):
+    if exc.status_code == 404:
+        return FileResponse("build/index.html", media_type="text/html")
+    else:
+        return await http_exception_handler(req, exc)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -129,15 +139,7 @@ app.add_middleware(
 )
 
 app.include_router(main_router, prefix=settings.API_V1_STR)
-app.add_api_route(
-    "/",
-    lambda: {
-        "ok": True,
-        "message": "Backend is working.",
-        "version": __version__,
-        "uptime": time_formatter(time.time() - start_time),
-    },
-)
+app.mount("/", StaticFiles(directory="build/", html=True), name="static")
 
 startup()
 if __name__ == "__main__":
