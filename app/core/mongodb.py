@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Any, Dict, List
-
+import certifi
 from croniter import croniter
 from pymongo import MongoClient, UpdateOne, TEXT
 
@@ -10,8 +10,10 @@ class MongoDB:
         self.domain = domain
         self.username = username
         self.password = password
+        self.tlsca_ = certifi.where()
         self.client = MongoClient(
-            f"mongodb+srv://{username}:{password}@{domain}/?retryWrites=true&w=majority")
+            f"mongodb+srv://{username}:{password}@{domain}/?retryWrites=true&w=majority",
+            tlsCAFile=self.tlsca_)
         self.db = self.client["main"]
         self.metadata = self.client["metadata"]
 
