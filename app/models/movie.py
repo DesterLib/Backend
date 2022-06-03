@@ -1,9 +1,7 @@
 from datetime import datetime
-from typing import Any, Dict, List
-
-from dateutil.parser import isoparse
-
 from ..settings import settings
+from typing import Any, Dict, List
+from dateutil.parser import isoparse
 
 
 class Movie:
@@ -13,8 +11,9 @@ class Movie:
         self.file_name: str = file_metadata.get("name") or ""
         self.path: str = file_metadata.get("path") or ""
         self.parent: dict = file_metadata.get("parent") or {}
-        self.modified_time: datetime = isoparse(file_metadata.get(
-            "modified_time", "1900-03-27T00:00:00.000+00:00"))
+        self.modified_time: datetime = isoparse(
+            file_metadata.get("modified_time", "1900-03-27T00:00:00.000+00:00")
+        )
 
         # Media Info
         self.tmdb_id: int = media_metadata.get("id") or 0
@@ -30,13 +29,14 @@ class Movie:
         self.year: int = self.release_date.year
         self.tagline: str = media_metadata.get("tagline") or ""
         self.description: str = media_metadata.get("overview") or ""
-        self.cast: List[Dict[str, Any]] = media_metadata.get(
-            "credits", {}).get("cast") or []
-        self.collection: Dict[str, Any] = media_metadata.get(
-            "belongs_to_collection") or {}
+        self.cast: List[Dict[str, Any]] = (
+            media_metadata.get("credits", {}).get("cast") or []
+        )
+        self.collection: Dict[str, Any] = (
+            media_metadata.get("belongs_to_collection") or {}
+        )
         self.genres: List[Dict[str, Any]] = media_metadata.get("genres") or []
-        self.external_ids: Dict[str, str] = media_metadata.get(
-            "external_ids") or {}
+        self.external_ids: Dict[str, str] = media_metadata.get("external_ids") or {}
 
         # Media Resources
         self.logo_path: str = self.get_logo(media_metadata)
@@ -47,8 +47,10 @@ class Movie:
 
     def get_logo(self, media_metadata):
         try:
-            logo = media_metadata.get("images", {}).get(
-                "logos", [{}])[0].get("file_path") or ""
+            logo = (
+                media_metadata.get("images", {}).get("logos", [{}])[0].get("file_path")
+                or ""
+            )
         except BaseException:
             logo = ""
         return logo

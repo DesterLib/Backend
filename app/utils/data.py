@@ -3,17 +3,15 @@ from .. import logger
 from app import logger
 from copy import deepcopy
 from functools import reduce
-from app.models import DataType, Movie, Serie
-from app.settings import settings
 from collections import defaultdict
-from pymongo import TEXT, DESCENDING, InsertOne
 from typing import Any, Dict, Optional
+from app.models import Movie, Serie, DataType
+from pymongo import TEXT, DESCENDING, InsertOne
 
 
 def group_by(key, seq):
     return reduce(
-        lambda grp, val: grp[key(val)].append(
-            val) or grp, seq, defaultdict(list)
+        lambda grp, val: grp[key(val)].append(val) or grp, seq, defaultdict(list)
     )
 
 
@@ -142,8 +140,7 @@ def generate_movie_metadata(
         curr_metadata: Movie = Movie(drive_meta, movie_info)
         update_action = InsertOne(curr_metadata.__dict__)
         mongo_meta.append(update_action)
-    logger.debug(
-        f"Using advanced search for {len(advanced_search_list)} titles.")
+    logger.debug(f"Using advanced search for {len(advanced_search_list)} titles.")
     for name, year in advanced_search_list:
         logger.debug(f"Advanced search identifying: {cleaned_title}")
         tmdb_id = tmdb.find_media_id(name, DataType.movies, use_api=False)
@@ -199,6 +196,9 @@ def generate_series_metadata(
     metadata.delete_many({})
     metadata.bulk_write(mongo_meta)
     metadata.create_index([("title", TEXT)], background=True, name="title")
-    metadata.create_index([("seasons.episodes.modified_time",
-                          DESCENDING)], background=True, name="modified_time")
+    metadata.create_index(
+        [("seasons.episodes.modified_time", DESCENDING)],
+        background=True,
+        name="modified_time",
+    )
     return metadata

@@ -1,9 +1,8 @@
-from datetime import datetime
-from typing import Any, Dict
-
-from dateutil.parser import isoparse
 import re
 from .. import logger
+from typing import Any, Dict
+from datetime import datetime
+from dateutil.parser import isoparse
 
 
 class Episode:
@@ -13,8 +12,9 @@ class Episode:
         self.file_name: str = file_metadata.get("name") or ""
         self.path: str = file_metadata.get("path") or ""
         self.parent: dict = file_metadata.get("parent") or {}
-        self.modified_time: datetime = isoparse(file_metadata.get(
-            "modifiedTime", "1900-03-27T00:00:00.000+00:00"))
+        self.modified_time: datetime = isoparse(
+            file_metadata.get("modifiedTime", "1900-03-27T00:00:00.000+00:00")
+        )
 
         parsed_data = self.parse_episode_filename(self.file_name)
         episode_number = parsed_data.get("episode")
@@ -41,8 +41,7 @@ class Episode:
         self.rating: float = episode_metadata.get("vote_average") or 0
 
         # Media Resources
-        self.thumbnail_path: str = episode_metadata.get(
-            "still_path") or ""
+        self.thumbnail_path: str = episode_metadata.get("still_path") or ""
 
     def parse_episode_filename(self, name: str) -> Dict[str, Any]:
         reg_exps = [
