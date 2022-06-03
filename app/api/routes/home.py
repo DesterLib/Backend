@@ -1,10 +1,10 @@
-import random
 import time
+import random
+from app import logger
+# from diskcache import Cache
+from fastapi import APIRouter
 from typing import Dict, Union
 
-from app import logger
-#from diskcache import Cache
-from fastapi import APIRouter
 
 router = APIRouter(
     # dependencies=[Depends(get_token_header)],
@@ -15,26 +15,27 @@ router = APIRouter(
 
 data_cap_limit = 15
 
-#cache = Cache(directory="cache", timeout=60 * 10)
+# cache = Cache(directory="cache", timeout=60 * 10)
 # This current implementation is not optimal since it just straight up deletes all the cache.
 # Which forces the script to regenerate the cache causing delay to user-end.
 # A better way is to run a cron job to update the cache every 'x' seconds and provide the data
-# which reduces any delay, I haven't implemented it cuz I plan to use asyncio here but the code itself is not compatible with asyncio yet.
+# which reduces any delay, I haven't implemented it cuz I plan to use
+# asyncio here but the code itself is not compatible with asyncio yet.
 
 
 @router.get("", response_model=Dict[str, Union[str, int, float, bool, None, dict]])
 def home() -> Dict[str, str]:
     start = time.perf_counter()
-    #data = cache.get("home_route_data")
+    # data = cache.get("home_route_data")
     if True:  # if not data
         logger.debug("Generating new data for home route")
         from main import mongo
 
-        if mongo.is_config_init == False:
+        if not mongo.is_config_init:
             return {
                 "ok": False,
                 "message": "The config needs to be initialized.",
-                "redirect": "/settings"
+                "redirect": "/settings",
             }
         random.seed(100)
         categories_data = []
@@ -60,61 +61,47 @@ def home() -> Dict[str, str]:
         for category in mongo.config["categories"]:
             category_col = mongo.metadata[category["id"]]
             if True:
-                sorted_popularity_data = list(category_col.aggregate([
-                    {
-                        '$sort': {
-                            'popularity': -1
-                        }
-                    }, {
-                        '$limit': data_cap_limit
-                    }, {
-                        '$project': unwanted_keys
-                    }]
-                ))
+                sorted_popularity_data = list(
+                    category_col.aggregate(
+                        [
+                            {"$sort": {"popularity": -1}},
+                            {"$limit": data_cap_limit},
+                            {"$project": unwanted_keys},
+                        ]
+                    )
+                )
                 category["metadata"] = sorted_popularity_data
                 categories_data.append(category)
                 carousel_data.extend(sorted_popularity_data[:3])
 
-                sorted_top_rated_data = category_col.aggregate([
-                    {
-                        '$sort': {
-                            'rating': -1
-                        }
-                    }, {
-                        '$limit': data_cap_limit
-                    }, {
-                        '$project': unwanted_keys
-                    }]
+                sorted_top_rated_data = category_col.aggregate(
+                    [
+                        {"$sort": {"rating": -1}},
+                        {"$limit": data_cap_limit},
+                        {"$project": unwanted_keys},
+                    ]
                 )
 
                 if category["type"] == "movies":
                     most_popular_movies_data.extend(sorted_popularity_data)
                     top_rated_movies_data.extend(sorted_top_rated_data)
-                    sorted_newly_added_data = category_col.aggregate([
-                        {
-                            '$sort': {
-                                'modified_time': -1
-                            }
-                        }, {
-                            '$limit': data_cap_limit
-                        }, {
-                            '$project': unwanted_keys
-                        }]
+                    sorted_newly_added_data = category_col.aggregate(
+                        [
+                            {"$sort": {"modified_time": -1}},
+                            {"$limit": data_cap_limit},
+                            {"$project": unwanted_keys},
+                        ]
                     )
                     newly_added_movies_data.extend(sorted_newly_added_data)
                 else:
                     most_popular_series_data.extend(sorted_popularity_data)
                     top_rated_series_data.extend(sorted_top_rated_data)
-                    sorted_newly_added_data = category_col.aggregate([
-                        {
-                            '$sort': {
-                                'seasons.episodes.modified_time': -1
-                            }
-                        }, {
-                            '$limit': data_cap_limit
-                        }, {
-                            '$project': unwanted_keys
-                        }]
+                    sorted_newly_added_data = category_col.aggregate(
+                        [
+                            {"$sort": {"seasons.episodes.modified_time": -1}},
+                            {"$limit": data_cap_limit},
+                            {"$project": unwanted_keys},
+                        ]
                     )
                     newly_added_episodes_data.extend(sorted_newly_added_data)
         carousel_data = sorted(
@@ -136,7 +123,9 @@ def home() -> Dict[str, str]:
             newly_added_movies_data, key=lambda k: k["modified_time"], reverse=True
         )
         # cache.set("home_route_data", dict(categories_data=categories_data, carousel_data=carousel_data, top_rated_series_data=top_rated_series_data,
-        #          top_rated_movies_data=top_rated_movies_data, newly_added_movies_data=newly_added_movies_data, newly_added_episodes_data=newly_added_episodes_data))
+        # top_rated_movies_data=top_rated_movies_data,
+        # newly_added_movies_data=newly_added_movies_data,
+        # newly_added_episodes_data=newly_added_episodes_data))
     else:
         logger.debug("Using cached data")
         categories_data = data.get("categories_data")

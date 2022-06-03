@@ -1,14 +1,13 @@
 import gzip
-from datetime import datetime, timedelta
-from difflib import SequenceMatcher
-from math import ceil
-from typing import Any, Dict, Optional
-
 import httpx
 import ujson as json
+from math import ceil
 from app import logger
-from app.models import DataType
 from pymongo import InsertOne
+from app.models import DataType
+from difflib import SequenceMatcher
+from typing import Any, Dict, Optional
+from datetime import datetime, timedelta
 
 
 class TMDB:
@@ -38,27 +37,25 @@ class TMDB:
     @staticmethod
     def export_data(data_type: DataType):
         from main import mongo
+
         date_str = (datetime.now() - timedelta(days=1)).strftime("%m_%d_%Y")
         type_name = "tv_series" if data_type == DataType.series else "movie"
         export_url = (
             f"http://files.tmdb.org/p/exports/{type_name}_ids_{date_str}.json.gz"
         )
         lines = (
-            gzip.decompress(httpx.get(export_url).content).decode(
-                "utf-8").splitlines()
+            gzip.decompress(httpx.get(export_url).content).decode("utf-8").splitlines()
         )
         bulk_action = []
-        chunks = [lines[i:i+100000]
-                  for i in range(0, len(lines), 100000)]
+        chunks = [lines[i : i + 100000] for i in range(0, len(lines), 100000)]
         total_chunks = len(chunks)
         x = 1
-        logger.debug(
-            "Splitting %s items into chunks of 100,000 items" % len(lines))
+        logger.debug("Splitting %s items into chunks of 100,000 items" % len(lines))
         for chunk in chunks:
             for line in chunk:
                 try:
                     bulk_action.append(InsertOne(json.loads(line)))
-                except:
+                except BaseException:
                     pass
             if data_type == DataType.series:
                 mongo.series_cache_col.bulk_write(bulk_action)
@@ -118,8 +115,7 @@ class TMDB:
         original_title = title
         title = clean_file_name(title)
         if not title:
-            logger.debug(
-                f"The parsed title returned an empty string. Skipping...")
+            logger.debug(f"The parsed title returned an empty string. Skipping...")
             logger.debug(f"Original Title: {original_title}")
             return None
         if use_api:
@@ -145,34 +141,26 @@ class TMDB:
                 return
         else:
             from main import mongo
+
             logger.debug(f"Trying search using key-value search for '{title}'")
             if data_type == DataType.series:
                 cache_col = mongo.series_cache_col
             else:
                 cache_col = mongo.movies_cache_col
-            result = cache_col.aggregate([{
-                '$match': {
-                    '$text': {
-                        '$search': title
-                    }
-                }
-            }, {
-                '$sort': {
-                    'score': {
-                        '$meta': 'textScore'
-                    }, 'popularity': -1
-                }
-            }, {
-                '$limit': 20
-            }])
+            result = cache_col.aggregate(
+                [
+                    {"$match": {"$text": {"$search": title}}},
+                    {"$sort": {"score": {"$meta": "textScore"}, "popularity": -1}},
+                    {"$limit": 20},
+                ]
+            )
             for each in result:
                 if title == each.get("original_title", "").lower().strip():
                     return each["id"]
             max_ratio, match = 0, None
             matcher = SequenceMatcher(b=title)
             for each in result:
-                matcher.set_seq1(
-                    each.get("original_title", "").lower().strip())
+                matcher.set_seq1(each.get("original_title", "").lower().strip())
                 ratio = matcher.ratio()
                 if ratio > 0.99:
                     return each
@@ -207,16 +195,14 @@ class TMDB:
         while x < n_of_appends:
             append_seasons.append("")
             for n in range((x * 20), ((x + 1) * 20)):
-                append_seasons[x] = append_seasons[x] + \
-                    "season/" + str(n) + ","
+                append_seasons[x] = append_seasons[x] + "season/" + str(n) + ","
             append_seasons[x] = append_seasons[x][:-1]
             x += 1
         if type_name == "tv":
             for n, append_season in enumerate(append_seasons):
                 params = {"append_to_response": append_season}
                 tmp_response = self.client.get(url, params=params).json()
-                season_keys = [k for k in tmp_response.keys()
-                               if "season/" in k]
+                season_keys = [k for k in tmp_response.keys() if "season/" in k]
                 for k in season_keys:
                     response[k] = tmp_response[k]
         else:

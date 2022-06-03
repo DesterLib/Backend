@@ -1,21 +1,18 @@
 import re
-from collections import defaultdict
+from .. import logger
+from app import logger
 from copy import deepcopy
 from functools import reduce
-from typing import Any, Dict, Optional
-
-from app import logger
 from app.models import DataType
 from app.settings import settings
+from collections import defaultdict
 from pymongo import TEXT, InsertOne
-
-from .. import logger
+from typing import Any, Dict, Optional
 
 
 def group_by(key, seq):
     return reduce(
-        lambda grp, val: grp[key(val)].append(
-            val) or grp, seq, defaultdict(list)
+        lambda grp, val: grp[key(val)].append(val) or grp, seq, defaultdict(list)
     )
 
 
@@ -116,7 +113,9 @@ def clean_file_name(name: str) -> str:
     return name.strip().rstrip(".-_")
 
 
-def generate_movie_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict[str, Any]) -> Dict[str, Any]:
+def generate_movie_metadata(
+    tmdb, data: Dict[str, Any], category_metadata: Dict[str, Any]
+) -> Dict[str, Any]:
     from main import mongo
 
     metadata = mongo.metadata[category_metadata["id"]]
@@ -140,46 +139,41 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict[
         )
         movie_info = tmdb.get_details(tmdb_id, DataType.movies)
         try:
-            logo = movie_info.get("images", {}).get(
-                "logos", [{}])[0].get("file_path")
+            logo = movie_info.get("images", {}).get("logos", [{}])[0].get("file_path")
         except IndexError:
             logo = None
-        curr_metadata = (
-            {
-                "id": drive_meta["id"],
-                "path": drive_meta["path"],
-                "tmdb_id": movie_info["id"],
-                "imdb_id": movie_info.get("imdb_id"),
-                "file_name": drive_meta["name"],
-                "original_title": movie_info.get("original_title"),
-                "title": movie_info.get("title"),
-                "status": movie_info.get("status"),
-                "homepage": movie_info.get("homepage"),
-                "logo": logo,
-                "modified_time": drive_meta["modifiedTime"],
-                "video_metadata": drive_meta.get("videoMediaMetadata"),
-                "thumbnail_path": f"{settings.API_V1_STR}/assets/thumbnail/{drive_meta['id']}",
-                "popularity": movie_info.get("popularity"),
-                "revenue": movie_info.get("revenue"),
-                "rating": movie_info.get("vote_average"),
-                "release_date": movie_info.get("release_date"),
-                "year": try_int(movie_info.get("release_date", "").split("-")[0])
-                or None,
-                "tagline": movie_info.get("tagline"),
-                "description": movie_info.get("overview"),
-                "cast": movie_info.get("credits", {}).get("cast", []),
-                "backdrop_url": movie_info.get("backdrop_path"),
-                "collection": movie_info.get("belongs_to_collection"),
-                "poster_url": movie_info.get("poster_path"),
-                "genres": movie_info.get("genres"),
-                "subtitles": drive_meta["subtitles"],
-                "external_ids": movie_info.get("external_ids"),
-            }
-        )
+        curr_metadata = {
+            "id": drive_meta["id"],
+            "path": drive_meta["path"],
+            "tmdb_id": movie_info["id"],
+            "imdb_id": movie_info.get("imdb_id"),
+            "file_name": drive_meta["name"],
+            "original_title": movie_info.get("original_title"),
+            "title": movie_info.get("title"),
+            "status": movie_info.get("status"),
+            "homepage": movie_info.get("homepage"),
+            "logo": logo,
+            "modified_time": drive_meta["modifiedTime"],
+            "video_metadata": drive_meta.get("videoMediaMetadata"),
+            "thumbnail_path": f"{settings.API_V1_STR}/assets/thumbnail/{drive_meta['id']}",
+            "popularity": movie_info.get("popularity"),
+            "revenue": movie_info.get("revenue"),
+            "rating": movie_info.get("vote_average"),
+            "release_date": movie_info.get("release_date"),
+            "year": try_int(movie_info.get("release_date", "").split("-")[0]) or None,
+            "tagline": movie_info.get("tagline"),
+            "description": movie_info.get("overview"),
+            "cast": movie_info.get("credits", {}).get("cast", []),
+            "backdrop_url": movie_info.get("backdrop_path"),
+            "collection": movie_info.get("belongs_to_collection"),
+            "poster_url": movie_info.get("poster_path"),
+            "genres": movie_info.get("genres"),
+            "subtitles": drive_meta["subtitles"],
+            "external_ids": movie_info.get("external_ids"),
+        }
         update_action = InsertOne(curr_metadata)
         mongo_meta.append(update_action)
-    logger.debug(
-        f"Using advanced search for {len(advanced_search_list)} titles.")
+    logger.debug(f"Using advanced search for {len(advanced_search_list)} titles.")
     for name, year in advanced_search_list:
         logger.debug(f"Advanced search identifying: {cleaned_title}")
         tmdb_id = tmdb.find_media_id(name, DataType.movies, use_api=False)
@@ -191,53 +185,50 @@ def generate_movie_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict[
         )
         movie_info = tmdb.get_details(tmdb_id, DataType.movies)
         try:
-            logo = movie_info.get("images", {}).get(
-                "logos", [{}])[0].get("file_path")
+            logo = movie_info.get("images", {}).get("logos", [{}])[0].get("file_path")
         except IndexError:
             logo = None
-        curr_metadata = (
-            {
-                "id": drive_meta["id"],
-                "path": drive_meta["path"],
-                "tmdb_id": movie_info["id"],
-                "imdb_id": movie_info.get("imdb_id"),
-                "file_name": drive_meta["name"],
-                "original_title": movie_info.get("original_title"),
-                "title": movie_info.get("title"),
-                "status": movie_info.get("status"),
-                "homepage": movie_info.get("homepage"),
-                "logo": logo,
-                "modified_time": drive_meta["modifiedTime"],
-                "video_metadata": drive_meta.get("videoMediaMetadata"),
-                "thumbnail_path": f"{settings.API_V1_STR}/assets/thumbnail/{drive_meta['id']}",
-                "popularity": movie_info.get("popularity"),
-                "revenue": movie_info.get("revenue"),
-                "rating": movie_info.get("vote_average"),
-                "release_date": movie_info.get("release_date"),
-                "year": try_int(movie_info.get("release_date", "").split("-")[0])
-                or None,
-                "tagline": movie_info.get("tagline"),
-                "description": movie_info.get("overview"),
-                "cast": movie_info.get("credits", {}).get("cast", []),
-                "backdrop_url": movie_info.get("backdrop_path"),
-                "collection": movie_info.get("belongs_to_collection"),
-                "poster_url": movie_info.get("poster_path"),
-                "genres": movie_info.get("genres"),
-                "subtitles": drive_meta["subtitles"],
-                "external_ids": movie_info.get("external_ids"),
-            }
-        )
+        curr_metadata = {
+            "id": drive_meta["id"],
+            "path": drive_meta["path"],
+            "tmdb_id": movie_info["id"],
+            "imdb_id": movie_info.get("imdb_id"),
+            "file_name": drive_meta["name"],
+            "original_title": movie_info.get("original_title"),
+            "title": movie_info.get("title"),
+            "status": movie_info.get("status"),
+            "homepage": movie_info.get("homepage"),
+            "logo": logo,
+            "modified_time": drive_meta["modifiedTime"],
+            "video_metadata": drive_meta.get("videoMediaMetadata"),
+            "thumbnail_path": f"{settings.API_V1_STR}/assets/thumbnail/{drive_meta['id']}",
+            "popularity": movie_info.get("popularity"),
+            "revenue": movie_info.get("revenue"),
+            "rating": movie_info.get("vote_average"),
+            "release_date": movie_info.get("release_date"),
+            "year": try_int(movie_info.get("release_date", "").split("-")[0]) or None,
+            "tagline": movie_info.get("tagline"),
+            "description": movie_info.get("overview"),
+            "cast": movie_info.get("credits", {}).get("cast", []),
+            "backdrop_url": movie_info.get("backdrop_path"),
+            "collection": movie_info.get("belongs_to_collection"),
+            "poster_url": movie_info.get("poster_path"),
+            "genres": movie_info.get("genres"),
+            "subtitles": drive_meta["subtitles"],
+            "external_ids": movie_info.get("external_ids"),
+        }
         update_action = InsertOne(curr_metadata)
         mongo_meta.append(update_action)
 
     metadata.delete_many({})
     metadata.bulk_write(mongo_meta)
-    metadata.create_index([("title", TEXT)],
-                          background=True, name="title")
+    metadata.create_index([("title", TEXT)], background=True, name="title")
     return metadata
 
 
-def generate_series_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict[str, Any]) -> Dict[str, Any]:
+def generate_series_metadata(
+    tmdb, data: Dict[str, Any], category_metadata: Dict[str, Any]
+) -> Dict[str, Any]:
     from main import mongo
 
     metadata = mongo.metadata[category_metadata["id"]]
@@ -265,8 +256,7 @@ def generate_series_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict
         logger.info(f"Number of seasons: {len(seasons)}")
 
         try:
-            logo = series_info.get("images", {}).get(
-                "logos", [{}])[0].get("file_path")
+            logo = series_info.get("images", {}).get("logos", [{}])[0].get("file_path")
         except BaseException:
             logo = None
 
@@ -283,8 +273,7 @@ def generate_series_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict
                 logger.debug(f"     {episode['name']}")
                 parsed_data = parse_episode_filename(episode["name"])
                 episode_number = parsed_data.get("episode")
-                season_number = parsed_data.get(
-                    "season", season.get("season_number"))
+                season_number = parsed_data.get("season", season.get("season_number"))
                 if season_number != season.get("season_number"):
                     logger.debug(
                         f"      Season number mismatch: {season_number} != {season.get('season_number')}"
@@ -313,46 +302,42 @@ def generate_series_metadata(tmdb, data: Dict[str, Any], category_metadata: Dict
                 episode.update(episode_details)
                 episode["episode_thumbnail"] = episode.pop("still_path", None)
 
-        curr_metadata = (
-            {
-                "id": drive_meta.get("id"),
-                "path": drive_meta["path"],
-                "tmdb_id": series_info.get("id"),
-                "file_name": drive_meta.get("name"),
-                "original_title": series_info.get("original_name"),
-                "title": series_info.get("name"),
-                "status": series_info.get("status"),
-                "total_episodes": series_info.get("number_of_episodes"),
-                "total_seasons": series_info.get("number_of_seasons"),
-                "homepage": series_info.get("homepage"),
-                "logo": logo,
-                "popularity": series_info.get("popularity"),
-                "revenue": series_info.get("revenue"),
-                "rating": series_info.get("vote_average"),
-                "year": try_int(series_info.get(
-                    "first_air_date", "").split("-")[0])
-                or None,
-                "first_air_date": series_info.get("first_air_date"),
-                "release_date": series_info.get("first_air_date"),
-                "last_air_date": series_info.get("last_air_date"),
-                "tagline": series_info.get("tagline"),
-                "description": series_info.get("overview"),
-                "seasons": seasons,
-                "last_episode_to_air": series_info.get("last_episode_to_air"),
-                "next_episode_to_air": series_info.get("next_episode_to_air"),
-                "cast": series_info.get("credits", {}).get("cast", []),
-                "backdrop_url": series_info.get("backdrop_path"),
-                "poster_url": series_info.get("poster_path"),
-                "genres": series_info.get("genres"),
-                "subtitles": drive_meta.get("subtitles"),
-                "external_ids": series_info.get("external_ids"),
-            }
-        )
+        curr_metadata = {
+            "id": drive_meta.get("id"),
+            "path": drive_meta["path"],
+            "tmdb_id": series_info.get("id"),
+            "file_name": drive_meta.get("name"),
+            "original_title": series_info.get("original_name"),
+            "title": series_info.get("name"),
+            "status": series_info.get("status"),
+            "total_episodes": series_info.get("number_of_episodes"),
+            "total_seasons": series_info.get("number_of_seasons"),
+            "homepage": series_info.get("homepage"),
+            "logo": logo,
+            "popularity": series_info.get("popularity"),
+            "revenue": series_info.get("revenue"),
+            "rating": series_info.get("vote_average"),
+            "year": try_int(series_info.get("first_air_date", "").split("-")[0])
+            or None,
+            "first_air_date": series_info.get("first_air_date"),
+            "release_date": series_info.get("first_air_date"),
+            "last_air_date": series_info.get("last_air_date"),
+            "tagline": series_info.get("tagline"),
+            "description": series_info.get("overview"),
+            "seasons": seasons,
+            "last_episode_to_air": series_info.get("last_episode_to_air"),
+            "next_episode_to_air": series_info.get("next_episode_to_air"),
+            "cast": series_info.get("credits", {}).get("cast", []),
+            "backdrop_url": series_info.get("backdrop_path"),
+            "poster_url": series_info.get("poster_path"),
+            "genres": series_info.get("genres"),
+            "subtitles": drive_meta.get("subtitles"),
+            "external_ids": series_info.get("external_ids"),
+        }
         update_action = InsertOne(curr_metadata)
         mongo_meta.append(update_action)
 
     metadata.delete_many({})
     metadata.bulk_write(mongo_meta)
-    metadata.create_index([("title", TEXT)],
-                          background=True, name="title")
+    metadata.create_index([("title", TEXT)], background=True, name="title")
     return metadata

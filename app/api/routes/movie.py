@@ -1,7 +1,6 @@
 import time
-from enum import Enum
+from typing import Any, Dict
 from fastapi import APIRouter
-from typing import Any, Dict, Optional
 
 
 router = APIRouter(
@@ -18,8 +17,9 @@ def settings(id: int) -> Dict[str, Any]:
     results = {}
     for category in mongo.config["categories"]:
         if category["type"] == "movies":
-            result = list(mongo.metadata[category["id"]].find(
-                {"tmdb_id": id}, {'_id': 0}))
+            result = list(
+                mongo.metadata[category["id"]].find({"tmdb_id": id}, {"_id": 0})
+            )
             for item in result:
                 if results == {}:
                     results = item

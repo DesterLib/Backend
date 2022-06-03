@@ -54,42 +54,26 @@ def query(
     movies_match = []
     series_match = []
     for category in mongo.config["categories"]:
-        result = mongo.metadata[category["id"]].aggregate([{
-            '$match': {
-                '$text': {
-                    '$search': query
-                }
-            }
-        }, {
-            '$sort': {
-                'score': {
-                    '$meta': 'textScore'
-                }
-            }
-        }, {
-            '$limit': limit
-        }, {
-            '$addFields': {
-                'textScore': {
-                    '$meta': 'textScore'
-                }
-            }
-        }, {
-            '$project': unwanted_keys
-        }])
+        result = mongo.metadata[category["id"]].aggregate(
+            [
+                {"$match": {"$text": {"$search": query}}},
+                {"$sort": {"score": {"$meta": "textScore"}}},
+                {"$limit": limit},
+                {"$addFields": {"textScore": {"$meta": "textScore"}}},
+                {"$project": unwanted_keys},
+            ]
+        )
         if category["type"] == "series":
             series_match.extend(result)
         else:
             movies_match.extend(result)
     results = {}
-    results["movies"] = (
-        sorted(movies_match, key=lambda k: k["textScore"], reverse=True)[
-            :limit]
-    )
-    results["series"] = (
-        sorted(series_match, key=lambda k: k["textScore"], reverse=True)[
-            :limit]
-    )
+    results["movies"] = sorted(
+        movies_match, key=lambda k: k["textScore"], reverse=True
+    )[:limit]
+    results["series"] = sorted(
+        series_match, key=lambda k: k["textScore"], reverse=True
+    )[:limit]
     return {
         "ok": True,
         "message": "success",

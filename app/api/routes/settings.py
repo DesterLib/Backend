@@ -1,7 +1,6 @@
 import time
-from enum import Enum
-from fastapi import APIRouter, Request
-from typing import Any, Dict, Optional
+from typing import Any, Dict
+from fastapi import Request, APIRouter
 
 
 router = APIRouter(

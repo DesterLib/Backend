@@ -1,14 +1,12 @@
-import json
 import re
-from dateutil.parser import isoparse
-from datetime import datetime
-from typing import Any, Dict, List, Optional
-
+import json
 import requests
-from dateutil.parser import parse
-from httplib2 import Http
-from oauth2client.client import GoogleCredentials
 from pytz import UTC
+from httplib2 import Http
+from datetime import datetime
+from dateutil.parser import parse, isoparse
+from typing import Any, Dict, List, Optional
+from oauth2client.client import GoogleCredentials
 
 
 def build_config(config) -> List[str]:
@@ -30,7 +28,9 @@ def build_config(config) -> List[str]:
             id = category["id"]
             safe_fs = "".join(c for c in id if c.isalnum())
             drive_id = category["drive_id"]
-            rclone_conf.append(f"[{safe_fs}]\ntype = drive\nclient_id = {client_id}\nclient_secret = {client_secret}\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\nteam_drive = {drive_id}\n")
+            rclone_conf.append(
+                f"[{safe_fs}]\ntype = drive\nclient_id = {client_id}\nclient_secret = {client_secret}\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\nteam_drive = {drive_id}\n"
+            )
         elif provider == "onedrive":
             token = json.dumps(
                 {
@@ -43,7 +43,9 @@ def build_config(config) -> List[str]:
             id = category["id"]
             safe_fs = "".join(c for c in id if c.isalnum())
             drive_id = category["drive_id"]
-            rclone_conf.append(f"[{safe_fs}]\ntype = onedrive\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = personal")
+            rclone_conf.append(
+                f"[{safe_fs}]\ntype = onedrive\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = personal"
+            )
         elif provider == "sharepoint":
             token = json.dumps(
                 {
@@ -57,10 +59,14 @@ def build_config(config) -> List[str]:
             drive_id = category.get("drive_id")
             if id is not None and drive_id is not None:
                 safe_fs = "".join(c for c in id if c.isalnum())
-                rclone_conf.append(f"[{safe_fs}]\ntype = onedrive\nroot_folder_id = {id}\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = documentLibrary")
+                rclone_conf.append(
+                    f"[{safe_fs}]\ntype = onedrive\nroot_folder_id = {id}\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = documentLibrary"
+                )
             elif drive_id is not None:
                 safe_fs = "".join(c for c in drive_id if c.isalnum())
-                rclone_conf.append(f"[{safe_fs}]\ntype = onedrive\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = documentLibrary")
+                rclone_conf.append(
+                    f"[{safe_fs}]\ntype = onedrive\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = documentLibrary"
+                )
     return rclone_conf
 
 
@@ -215,8 +221,7 @@ class RCloneAPI:
                             "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]
-                                ]["json_path"] = f"[{len(metadata) - 1}]"
+                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(
