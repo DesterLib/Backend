@@ -30,7 +30,6 @@ async def settings_post(request: Request) -> Dict[str, Any]:
     from main import mongo
 
     data = await request.json()
-    print(data)
     mongo.set_config(data)
     return {
         "ok": True,

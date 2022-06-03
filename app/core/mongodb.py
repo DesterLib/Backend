@@ -33,7 +33,7 @@ class MongoDB:
         self.categories = self.config.get("categories", [])
 
     def get_config(self) -> Dict[str, Any]:
-        config = {}
+        config = {"_id": None}
         for document in self.config_col.find():
             config = config | document
         del config["_id"]
@@ -85,11 +85,15 @@ class MongoDB:
         return tmdb_api_key
 
     def set_config(self, data: Dict[str, Any]) -> bool:
+        from . import build_config
         bulk_action = []
         for k, v in data.items():
             bulk_action.append(pymongo.InsertOne({k: v}))
+        rclone_conf = build_config(data)
+        bulk_action.append(pymongo.InsertOne({"rclone": rclone_conf}))
         self.config_col.delete_many({})
         self.config_col.bulk_write(bulk_action)
+        self.set_is_config_init(True)
         return True
 
     def set_is_config_init(self, is_config_init):

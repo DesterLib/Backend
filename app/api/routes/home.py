@@ -30,6 +30,12 @@ def home() -> Dict[str, str]:
         logger.debug("Generating new data for home route")
         from main import mongo
 
+        if mongo.is_config_init == False:
+            return {
+                "ok": False,
+                "message": "The config needs to be initialized.",
+                "redirect": "/settings"
+            }
         random.seed(100)
         categories_data = []
         carousel_data = []

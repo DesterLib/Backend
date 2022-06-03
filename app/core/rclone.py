@@ -11,45 +11,45 @@ from oauth2client.client import GoogleCredentials
 from pytz import UTC
 
 
-def build_config(config) -> str:
-    rclone_conf = ""
-    for category in config.get("categories"):
+def build_config(config) -> List[str]:
+    rclone_conf = []
+    for category in config["categories"]:
         provider = category.get("provider", "gdrive")
         if provider == "gdrive":
             provider = "drive"
-            client_id = config.get_from_col("gdrive", "client_id")
-            client_secret = config.get_from_col("gdrive", "client_secret")
+            client_id = config["gdrive"]["client_id"]
+            client_secret = config["gdrive"]["client_secret"]
             token = json.dumps(
                 {
-                    "access_token": config.get_from_col("gdrive", "access_token"),
+                    "access_token": config["gdrive"]["access_token"],
                     "token_type": "Bearer",
-                    "refresh_token": config.get_from_col("gdrive", "refresh_token"),
+                    "refresh_token": config["gdrive"]["refresh_token"],
                     "expiry": "2022-03-27T00:00:00.000+00:00",
                 },
             )
             id = category["id"]
             safe_fs = "".join(c for c in id if c.isalnum())
             drive_id = category["drive_id"]
-            rclone_conf += f"[{safe_fs}]\ntype = drive\nclient_id = {client_id}\nclient_secret = {client_secret}\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\nteam_drive = {drive_id}\n"
+            rclone_conf.append(f"[{safe_fs}]\ntype = drive\nclient_id = {client_id}\nclient_secret = {client_secret}\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\nteam_drive = {drive_id}\n")
         elif provider == "onedrive":
             token = json.dumps(
                 {
-                    "access_token": config.get_from_col("onedrive", "access_token"),
+                    "access_token": config["onedrive"]["access_token"],
                     "token_type": "Bearer",
-                    "refresh_token": config.get_from_col("onedrive", "refresh_token"),
+                    "refresh_token": config["onedrive"]["refresh_token"],
                     "expiry": "2022-03-27T00:00:00.000+00:00",
                 },
             )
             id = category["id"]
             safe_fs = "".join(c for c in id if c.isalnum())
             drive_id = category["drive_id"]
-            rclone_conf += f"[{safe_fs}]\ntype = onedrive\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = personal"
+            rclone_conf.append(f"[{safe_fs}]\ntype = onedrive\nscope = drive\nroot_folder_id = {id}\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = personal")
         elif provider == "sharepoint":
             token = json.dumps(
                 {
-                    "access_token": config.get_from_col("sharepoint", "access_token"),
+                    "access_token": config["sharepoint"]["access_token"],
                     "token_type": "Bearer",
-                    "refresh_token": config.get_from_col("sharepoint", "refresh_token"),
+                    "refresh_token": config["sharepoint"]["refresh_token"],
                     "expiry": "2022-03-27T00:00:00.000+00:00",
                 },
             )
@@ -57,10 +57,10 @@ def build_config(config) -> str:
             drive_id = category.get("drive_id")
             if id is not None and drive_id is not None:
                 safe_fs = "".join(c for c in id if c.isalnum())
-                rclone_conf += f"[{safe_fs}]\ntype = onedrive\nroot_folder_id = {id}\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = documentLibrary"
+                rclone_conf.append(f"[{safe_fs}]\ntype = onedrive\nroot_folder_id = {id}\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = documentLibrary")
             elif drive_id is not None:
                 safe_fs = "".join(c for c in drive_id if c.isalnum())
-                rclone_conf += f"[{safe_fs}]\ntype = onedrive\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = documentLibrary"
+                rclone_conf.append(f"[{safe_fs}]\ntype = onedrive\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = documentLibrary")
     return rclone_conf
 
 

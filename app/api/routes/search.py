@@ -81,7 +81,6 @@ def query(
             series_match.extend(result)
         else:
             movies_match.extend(result)
-    print(movies_match)
     results = {}
     results["movies"] = (
         sorted(movies_match, key=lambda k: k["textScore"], reverse=True)[

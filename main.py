@@ -16,7 +16,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app import __version__
 from app.api import main_router
-from app.core import TMDB, MongoDB, RCloneAPI
+from app.core import TMDB, MongoDB, RCloneAPI, build_config
 from app.core.cron import fetch_metadata
 from app.settings import settings
 from app.utils import time_formatter
@@ -39,20 +39,20 @@ rclone = {}
 
 def rclone_setup(categories: List[Dict[str, Any]]):
     rclone_bin = which("rclone")
-    rclone_bin_name = (
-        "rclone.exe" if platform in ["win32", "cygwin", "msys"] else "rclone"
-    )
     if not rclone_bin:
+        rclone_bin_name = (
+            "rclone.exe" if platform in [
+                "win32", "cygwin", "msys"] else "rclone"
+        )
         if os.path.exists(f"bin/{rclone_bin_name}"):
             rclone_bin = f"bin/{rclone_bin_name}"
         else:
             rclone_bin = download_rclone()
-
     with open("rclone.conf", "w+") as w:
         w.write(mongo.get_rclone_conf())
     Popen(
         shlex.split(
-            f"{rclone_bin} rcd --rc-no-auth --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf"
+            f"{rclone_bin} rcd --rc-no-auth --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf", posix=(not platform in ["win32", "cygwin", "msys"])
         )
     )
 
