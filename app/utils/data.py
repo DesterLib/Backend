@@ -4,13 +4,14 @@ from copy import deepcopy
 from functools import reduce
 from app.models import Movie, Serie
 from collections import defaultdict
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 from pymongo import TEXT, DESCENDING, InsertOne
 
 
 def group_by(key, seq):
     return reduce(
-        lambda grp, val: grp[key(val)].append(val) or grp, seq, defaultdict(list)
+        lambda grp, val: grp[key(val)].append(
+            val) or grp, seq, defaultdict(list)
     )
 
 
@@ -118,7 +119,7 @@ def generate_movie_metadata(
 
     metadata = mongo.metadata[category_metadata["id"]]
     advanced_search_list = []
-    mongo_meta = []
+    identified_list: Dict[int, Movie] = {}
     for drive_meta in data:
         original_name = drive_meta["name"]
         cleaned_title = clean_file_name(original_name)
@@ -135,11 +136,15 @@ def generate_movie_metadata(
         logger.info(
             f"Successfully identified: {name} {f'({year})' if year else ''}    ID: {tmdb_id}"
         )
-        movie_info = tmdb.get_details(tmdb_id, "movies")
-        curr_metadata: Movie = Movie(drive_meta, movie_info)
-        update_action = InsertOne(curr_metadata.__dict__)
-        mongo_meta.append(update_action)
-    logger.debug(f"Using advanced search for {len(advanced_search_list)} titles.")
+        identified_match = identified_list.get(tmdb_id)
+        if identified_match:
+            identified_match.append_file(drive_meta)
+        else:
+            movie_info = tmdb.get_details(tmdb_id, "movies")
+            curr_metadata: Movie = Movie(drive_meta, movie_info)
+            identified_list[tmdb_id] = curr_metadata
+    logger.debug(
+        f"Using advanced search for {len(advanced_search_list)} titles.")
     for name, year in advanced_search_list:
         logger.debug(f"Advanced search identifying: {cleaned_title}")
         tmdb_id = tmdb.find_media_id(name, "movies", use_api=False)
@@ -149,13 +154,19 @@ def generate_movie_metadata(
         logger.info(
             f"Advanced search successfully identified: {name} {f'({year})' if year else ''}    ID: {tmdb_id}"
         )
-        movie_info = tmdb.get_details(tmdb_id, "movies")
-        curr_metadata: Movie = Movie(drive_meta, movie_info)
-        update_action = InsertOne(curr_metadata.__dict__)
-        mongo_meta.append(update_action)
+        identified_match = identified_list.get(tmdb_id)
+        if identified_match:
+            identified_match.append_file(drive_meta)
+        else:
+            movie_info = tmdb.get_details(tmdb_id, "movies")
+            curr_metadata: Movie = Movie(drive_meta, movie_info)
+            identified_list[tmdb_id] = curr_metadata
 
     del movie_info
-    del curr_metadata
+    mongo_meta = []
+    for item in identified_list.values():
+        mongo_meta.append(InsertOne(item.__dict__))
+    del identified_list
     metadata.delete_many({})
     metadata.bulk_write(mongo_meta)
     metadata.create_index([("title", TEXT)], background=True, name="title")

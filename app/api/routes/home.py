@@ -41,6 +41,7 @@ unwanted_keys = {
     "imdb_id": 0,
 }
 
+
 @router.get("", response_model=Dict[str, Union[str, int, float, bool, None, dict]])
 def home() -> Dict[str, str]:
     start = time.perf_counter()
