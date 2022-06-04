@@ -36,7 +36,6 @@ unwanted_keys = {
     "next_episode_to_air": 0,
     "path": 0,
     "parent": 0,
-    "description": 0,
     "revenue": 0,
     "tagline": 0,
     "imdb_id": 0,
