@@ -5,6 +5,7 @@ import uvicorn
 from shutil import which
 from sys import platform
 from asyncio.log import logger
+from io import TextIOWrapper
 from app.api import main_router
 from app.settings import settings
 from typing import Any, Dict, List
@@ -12,7 +13,7 @@ from fastapi import FastAPI, Request
 from app.core.cron import fetch_metadata
 from fastapi.staticfiles import StaticFiles
 from app.core import TMDB, MongoDB, RCloneAPI
-from subprocess import STDOUT, DEVNULL, Popen, run
+from subprocess import STDOUT, DEVNULL, PIPE, Popen, run
 from starlette.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, UJSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -59,14 +60,18 @@ def restart_rclone():
     else:
         exit("Unsupported platform")
     rclone_bin = which("rclone")
-    Popen(
+    rclone_process = Popen(
         shlex.split(
             f"{rclone_bin} rcd --rc-no-auth --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf",
             posix=(platform not in ["win32", "cygwin", "msys"]),
         ),
-        stdout=DEVNULL,
+        stdout=PIPE,
         stderr=STDOUT,
     )
+    for line in TextIOWrapper(rclone_process.stdout, encoding="utf-8"):
+        if "Serving remote control on" in line:
+            time.sleep(1)
+            break
 
 
 def rclone_setup(categories: List[Dict[str, Any]]):

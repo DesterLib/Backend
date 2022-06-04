@@ -113,7 +113,6 @@ class RCloneAPI:
             "statsReset": "core/stats-reset",
         }
         self.fs_conf: Dict[str, Any] = self.rc_conf()
-        self.fs_conf["token"] = self.refresh()
 
     def rc_ls(self, options: Optional[dict] = {}) -> List[Dict[str, Any]]:
         rc_data: Dict[str, Any] = {
@@ -128,7 +127,7 @@ class RCloneAPI:
         ).json()
         return result["list"]
 
-    def rc_conf(self) -> Dict:
+    def rc_conf(self) -> Dict[str, Any]:
         rc_data: Dict[str, str] = {"name": self.fs[:-1]}
         result = requests.post(
             "%s/%s" % (self.RCLONE_RC_URL, self.RCLONE["getConfigForRemote"]),
