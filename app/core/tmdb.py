@@ -184,7 +184,7 @@ class TMDB:
         url = f"https://api.themoviedb.org/3/{type_name}/{tmdb_id}"
         params = {
             "include_image_language": "en",
-            "append_to_response": "credits,images,external_ids",
+            "append_to_response": "credits,images,external_ids,videos,reviews",
         }
         response = self.client.get(url, params=params).json()
         length = len(response.get("seasons", []))
@@ -209,7 +209,7 @@ class TMDB:
                 url,
                 params={
                     "include_image_language": "en",
-                    "append_to_response": "credits,images,external_ids",
+                    "append_to_response": "credits,images,external_ids,videos,reviews",
                 },
             ).json()
         # This limits the number of seasons to 17 seasons

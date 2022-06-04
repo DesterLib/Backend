@@ -17,17 +17,20 @@ class SortType(str, Enum):
     release_date = "release_date"
 
 
-unwanted_keys = [
-    "cast",
-    "seasons",
-    "homepage",
-    "file_name",
-    "subtitles",
-    "collection",
-    "external_ids",
-    "last_episode_to_air",
-    "next_episode_to_air",
-]
+unwanted_keys = {
+    "_id": 0,
+    "cast": 0,
+    "seasons": 0,
+    "file_name": 0,
+    "subtitles": 0,
+    "external_ids": 0,
+    "videos": 0,
+    "reviews": 0,
+    "collection": 0,
+    "homepage": 0,
+    "last_episode_to_air": 0,
+    "next_episode_to_air": 0,
+}
 
 
 @router.get("", response_model=Dict[str, Any], status_code=200)
@@ -37,19 +40,6 @@ def query(
 ) -> Dict[str, Any]:
     start = perf_counter()
     from main import mongo
-
-    unwanted_keys = {
-        "_id": 0,
-        "cast": 0,
-        "seasons": 0,
-        "file_name": 0,
-        "subtitles": 0,
-        "external_ids": 0,
-        "collection": 0,
-        "homepage": 0,
-        "last_episode_to_air": 0,
-        "next_episode_to_air": 0,
-    }
 
     movies_match = []
     series_match = []

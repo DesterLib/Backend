@@ -53,6 +53,8 @@ def home() -> Dict[str, str]:
             "file_name": 0,
             "subtitles": 0,
             "external_ids": 0,
+            "videos": 0,
+            "reviews": 0,
             "collection": 0,
             "homepage": 0,
             "last_episode_to_air": 0,

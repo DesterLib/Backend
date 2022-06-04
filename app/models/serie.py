@@ -33,6 +33,9 @@ class Serie:
         self.cast: List[Dict[str, Any]] = (
             media_metadata.get("credits", {}).get("cast") or []
         )
+        self.crew: List[Dict[str, Any]] = (
+            media_metadata.get("credits", {}).get("crew") or []
+        )
         self.collection: Dict[str, Any] = (
             media_metadata.get("belongs_to_collection") or {}
         )
@@ -53,6 +56,8 @@ class Serie:
         self.thumbnail_path: str = f"{settings.API_V1_STR}/assets/thumbnail/{self.id}"
         self.backdrop_path: str = media_metadata.get("backdrop_path") or ""
         self.poster_path: str = media_metadata.get("poster_path") or ""
+        self.videos: List[Dict[str, Any]] = media_metadata.get("videos", {}).get("results") or []
+        self.reviews: List[Dict[str, Any]] = media_metadata.get("reviews", {}).get("results") or []
 
         # Seasons
         self.seasons: List[Season] = []
