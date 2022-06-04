@@ -1,6 +1,6 @@
-from time import perf_counter
 from typing import Any, Dict
 from fastapi import APIRouter
+from time import perf_counter
 
 
 router = APIRouter(

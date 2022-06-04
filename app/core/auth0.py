@@ -3,8 +3,8 @@ import jwt
 import httpx
 import os.path
 import ujson as json
-from app import logger
 from time import time
+from app import logger
 from fastapi import status
 from functools import wraps
 from json import JSONDecodeError

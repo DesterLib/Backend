@@ -6,7 +6,7 @@ from app import logger
 from pymongo import InsertOne
 from difflib import SequenceMatcher
 from typing import Any, Dict, Optional
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone, timedelta
 
 
 class TMDB:

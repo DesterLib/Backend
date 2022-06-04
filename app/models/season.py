@@ -1,6 +1,6 @@
 from typing import List
-from app.models import Episode
 from datetime import datetime
+from app.models import Episode
 from dateutil.parser import isoparse
 
 

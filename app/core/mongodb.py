@@ -1,7 +1,7 @@
 import certifi
 from croniter import croniter
-from datetime import datetime, timezone
 from typing import Any, Dict, List
+from datetime import datetime, timezone
 from pymongo import TEXT, UpdateOne, MongoClient
 
 
@@ -146,8 +146,7 @@ class MongoDB:
             bulk_action.append(self.set_auth0(config_auth0))
         if config_categories != self.config["categories"]:
             new_category_ids = sorted([x["id"] for x in config_categories])
-            old_category_ids = sorted([x["id"]
-                                      for x in self.config["categories"]])
+            old_category_ids = sorted([x["id"] for x in self.config["categories"]])
             bulk_action.append(self.set_categories(config_categories))
         if config_gdrive != self.config["gdrive"]:
             bulk_action.append(self.set_gdrive(config_gdrive))
@@ -241,8 +240,7 @@ class MongoDB:
         return update_action
 
     def set_build(self, data: Dict[str, Any]):
-        update_data: Dict[str, str] = {
-            "cron": data.get("cron", "*/120 * * * *")}
+        update_data: Dict[str, str] = {"cron": data.get("cron", "*/120 * * * *")}
         update_action: UpdateOne = UpdateOne(
             {"build": {"$exists": True}}, {"$set": {"build": update_data}}, upsert=True
         )

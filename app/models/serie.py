@@ -56,8 +56,12 @@ class Serie:
         self.thumbnail_path: str = f"{settings.API_V1_STR}/assets/thumbnail/{self.id}"
         self.backdrop_path: str = media_metadata.get("backdrop_path") or ""
         self.poster_path: str = media_metadata.get("poster_path") or ""
-        self.videos: List[Dict[str, Any]] = media_metadata.get("videos", {}).get("results") or []
-        self.reviews: List[Dict[str, Any]] = media_metadata.get("reviews", {}).get("results") or []
+        self.videos: List[Dict[str, Any]] = (
+            media_metadata.get("videos", {}).get("results") or []
+        )
+        self.reviews: List[Dict[str, Any]] = (
+            media_metadata.get("reviews", {}).get("results") or []
+        )
 
         # Seasons
         self.seasons: List[Season] = []

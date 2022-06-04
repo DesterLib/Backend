@@ -2,8 +2,8 @@ import re
 import json
 import requests
 from httplib2 import Http
-from datetime import datetime, timezone
 from dateutil.parser import parse
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from oauth2client.client import GoogleCredentials
 
@@ -219,8 +219,7 @@ class RCloneAPI:
                             "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]
-                                ]["json_path"] = f"[{len(metadata) - 1}]"
+                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(

@@ -1,5 +1,5 @@
-from time import perf_counter
 from typing import Any, Dict
+from time import perf_counter
 from fastapi import Request, APIRouter
 
 

@@ -8,8 +8,9 @@ __credits__ = ["EverythingSuckz", "Elias Benbourenane", "AlkenD"]
 
 import logging
 import os.path
-from datetime import datetime, timezone
 from os import makedirs
+from datetime import datetime, timezone
+
 
 if not os.path.isdir("logs"):
     makedirs("logs")
@@ -23,7 +24,10 @@ logging.basicConfig(
     handlers=[
         logging.StreamHandler(),
         logging.FileHandler(
-            "logs/{}.log".format(datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%S")), mode="w"
+            "logs/{}.log".format(
+                datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%S")
+            ),
+            mode="w",
         ),
     ],
 )

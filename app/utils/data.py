@@ -2,9 +2,9 @@ import re
 from app import logger
 from copy import deepcopy
 from functools import reduce
+from app.models import Movie, Serie
 from collections import defaultdict
 from typing import Any, Dict, Optional
-from app.models import Movie, Serie
 from pymongo import TEXT, DESCENDING, InsertOne
 
 
