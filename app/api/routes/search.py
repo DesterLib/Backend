@@ -1,4 +1,3 @@
-from enum import Enum
 from fastapi import APIRouter
 from time import perf_counter
 from typing import Any, Dict, Optional
@@ -8,14 +7,6 @@ router = APIRouter(
     prefix="/search",
     tags=["internals"],
 )
-
-
-class SortType(str, Enum):
-    popularity = "popularity"
-    rating = "rating"
-    modified_time = "modified_time"
-    release_date = "release_date"
-
 
 unwanted_keys = {
     "_id": 0,

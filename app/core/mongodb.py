@@ -26,6 +26,7 @@ class MongoDB:
         self.watchlist_col = self.db["watchlist"]
 
         self.config = {
+            "auth0": {},
             "app": {},
             "categories": [],
             "gdrive": {},

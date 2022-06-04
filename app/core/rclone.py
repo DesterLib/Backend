@@ -134,6 +134,7 @@ class RCloneAPI:
             data=json.dumps(rc_data),
             headers={"Content-Type": "application/json"},
         ).json()
+        result["token"] = json.loads(result["token"])
         return result
 
     def fetch_movies(self) -> List[Dict[str, Any]]:
@@ -219,7 +220,8 @@ class RCloneAPI:
                             "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
+                    parent_dirs[item["Path"]
+                                ]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(
@@ -261,6 +263,25 @@ class RCloneAPI:
             "expiry": creds.token_expiry,
         }
         return result
+
+    def stream(self, path: str, headers):
+        if parse(self.fs_conf["token"]["expiry"]) <= datetime.now(timezone.utc):
+            self.fs_conf["token"] = self.refresh()
+        opt: Dict[str, str] = {"header-download": ""}
+        for header in headers:
+            opt["header-download"] += '"%s","%s",' % (header[0], header[1]) 
+        print(opt)
+        rc_data: Dict[str, Any] = {
+            "command": "cat",
+            "arg": [f"{self.fs}{path}"],
+            "opt": opt,
+        }
+        result = requests.post(
+            "%s/%s" % (self.RCLONE_RC_URL, self.RCLONE["coreCommand"]),
+            data=json.dumps(rc_data),
+            headers={"Content-Type": "application/json"},
+        ).json()
+        return result["result"]
 
     def thumbnail(self, id) -> Optional[str]:
         if parse(self.fs_conf["token"]["expiry"]) <= datetime.now(timezone.utc):
