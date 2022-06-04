@@ -113,6 +113,7 @@ class RCloneAPI:
             "statsReset": "core/stats-reset",
         }
         self.fs_conf: Dict[str, Any] = self.rc_conf()
+        self.fs_conf["token"] = self.refresh()
 
     def rc_ls(self, options: Optional[dict] = {}) -> List[Dict[str, Any]]:
         rc_data: Dict[str, Any] = {
@@ -134,7 +135,7 @@ class RCloneAPI:
             data=json.dumps(rc_data),
             headers={"Content-Type": "application/json"},
         ).json()
-        result["token"] = json.loads(result["token"])
+        result["token"] = json.loads(result.get("token", "{}"))
         return result
 
     def fetch_movies(self) -> List[Dict[str, Any]]:
@@ -265,12 +266,11 @@ class RCloneAPI:
         return result
 
     def stream(self, path: str, headers):
-        if parse(self.fs_conf["token"]["expiry"]) <= datetime.now(timezone.utc):
-            self.fs_conf["token"] = self.refresh()
-        opt: Dict[str, str] = {"header-download": ""}
+        opt: Dict[str, str] = {"header-download": "", "config": "rclone.conf"}
         for header in headers:
-            opt["header-download"] += '"%s","%s",' % (header[0], header[1]) 
-        print(opt)
+            if header[0].lower() == "range":
+                opt["header-download"] = "'Range':'%s'" % (header[1])
+        print(opt["header-download"])
         rc_data: Dict[str, Any] = {
             "command": "cat",
             "arg": [f"{self.fs}{path}"],
@@ -284,7 +284,7 @@ class RCloneAPI:
         return result["result"]
 
     def thumbnail(self, id) -> Optional[str]:
-        if parse(self.fs_conf["token"]["expiry"]) <= datetime.now(timezone.utc):
+        if parse(self.fs_conf.get("token", {}).get("expiry", "2022-03-27T00:00:00.000+00:00")) <= datetime.now(timezone.utc):
             self.fs_conf["token"] = self.refresh()
         result = requests.get(
             f"https://www.googleapis.com/drive/v3/files/{id}?supportsAllDrives=true&fields=thumbnailLink",
