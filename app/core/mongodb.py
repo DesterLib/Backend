@@ -26,8 +26,8 @@ class MongoDB:
         self.watchlist_col = self.db["watchlist"]
 
         self.config = {
-            "auth0": {},
             "app": {},
+            "auth0": {},
             "categories": [],
             "gdrive": {},
             "tmdb": {},
@@ -50,6 +50,7 @@ class MongoDB:
         config = {
             "_id": None,
             "app": {},
+            "auth0": {},
             "categories": [],
             "gdrive": {},
             "tmdb": {},
