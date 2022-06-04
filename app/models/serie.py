@@ -1,6 +1,6 @@
-from .season import Season
+from app.models import Season
 from datetime import datetime
-from ..settings import settings
+from app.settings import settings
 from typing import Any, Dict, List
 from dateutil.parser import isoparse
 

@@ -1,4 +1,4 @@
-import time
+from time import time
 from app import __version__
 from typing import Any, Dict
 from fastapi import APIRouter
@@ -20,5 +20,5 @@ def auth() -> Dict[str, Any]:
         "ok": True,
         "message": "Backend is working.",
         "version": __version__,
-        "uptime": time_formatter(time.time() - start_time),
+        "uptime": time_formatter(time() - start_time),
     }

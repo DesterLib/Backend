@@ -1,6 +1,6 @@
 import certifi
 from croniter import croniter
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List
 from pymongo import TEXT, UpdateOne, MongoClient
 
@@ -95,11 +95,11 @@ class MongoDB:
         }
         last_build_time = self.other_col.find_one(
             {"last_build_time": {"$exists": True}}
-        ) or {"last_build_time": datetime.fromtimestamp(1)}
+        ) or {"last_build_time": datetime.fromtimestamp(1, tz=timezone.utc)}
         cron = croniter(
             build_config["build"].get("cron", "*/120 * * * *"), last_build_time
         )
-        if datetime.now() > cron.get_next(datetime):
+        if datetime.now(timezone.utc) > cron.get_next(datetime):
             return True
         else:
             return False
@@ -128,10 +128,11 @@ class MongoDB:
         return tmdb_api_key
 
     def set_config(self, data: Dict[str, Any]) -> bool:
-        from . import build_config
+        from app.core import build_config
 
         bulk_action = []
         config_app = data.get("app", {})
+        config_auth0 = data.get("auth0", {})
         config_categories = data.get("categories", [])
         config_gdrive = data.get("gdrive", {})
         config_tmdb = data.get("tmdb", {})
@@ -141,9 +142,12 @@ class MongoDB:
 
         if config_app != self.config["app"]:
             bulk_action.append(self.set_app(config_app))
+        if config_auth0 != self.config["auth0"]:
+            bulk_action.append(self.set_auth0(config_auth0))
         if config_categories != self.config["categories"]:
             new_category_ids = sorted([x["id"] for x in config_categories])
-            old_category_ids = sorted([x["id"] for x in self.config["categories"]])
+            old_category_ids = sorted([x["id"]
+                                      for x in self.config["categories"]])
             bulk_action.append(self.set_categories(config_categories))
         if config_gdrive != self.config["gdrive"]:
             bulk_action.append(self.set_gdrive(config_gdrive))
@@ -165,23 +169,33 @@ class MongoDB:
             rclone_setup(self.config["categories"])
             metadata_setup()
 
-        return True
-
     def set_app(self, data: Dict[str, Any]):
-        update_data = {
+        update_data: Dict[str, str] = {
             "name": data.get("name", "Dester"),
             "title": data.get("title", "Dester"),
             "description": data.get("description", "Dester"),
             "domain": data.get("domain", ""),
         }
-        update_action = UpdateOne(
+        update_action: UpdateOne = UpdateOne(
             {"app": {"$exists": True}}, {"$set": {"app": update_data}}, upsert=True
         )
         self.config["app"] = update_data
         return update_action
 
+    def set_auth0(self, data: Dict[str, Any]):
+        update_data: Dict[str, str] = {
+            "client_id": data.get("client_id", ""),
+            "client_secret": data.get("client_secret", ""),
+            "domain": data.get("domain", ""),
+        }
+        update_action: UpdateOne = UpdateOne(
+            {"auth0": {"$exists": True}}, {"$set": {"auth0": update_data}}, upsert=True
+        )
+        self.config["auth0"] = update_data
+        return update_action
+
     def set_categories(self, data: List[Dict[str, Any]]):
-        update_data = []
+        update_data: List[Dict[str, Any]] = []
         for item in data:
             update_data.append(
                 {
@@ -195,7 +209,7 @@ class MongoDB:
                     "anime": item.get("anime", False),
                 }
             )
-        update_action = UpdateOne(
+        update_action: UpdateOne = UpdateOne(
             {"categories": {"$exists": True}},
             {"$set": {"categories": update_data}},
             upsert=True,
@@ -204,13 +218,13 @@ class MongoDB:
         return update_action
 
     def set_gdrive(self, data: Dict[str, Any]):
-        update_data = {
+        update_data: Dict[str, str] = {
             "client_id": data.get("client_id", ""),
             "client_secret": data.get("client_secret", ""),
             "access_token": data.get("access_token", ""),
             "refresh_token": data.get("refresh_token", ""),
         }
-        update_action = UpdateOne(
+        update_action: UpdateOne = UpdateOne(
             {"gdrive": {"$exists": True}},
             {"$set": {"gdrive": update_data}},
             upsert=True,
@@ -219,24 +233,25 @@ class MongoDB:
         return update_action
 
     def set_tmdb(self, data: Dict[str, Any]):
-        update_data = {"api_key": data.get("api_key", "")}
-        update_action = UpdateOne(
+        update_data: Dict[str, str] = {"api_key": data.get("api_key", "")}
+        update_action: UpdateOne = UpdateOne(
             {"tmdb": {"$exists": True}}, {"$set": {"tmdb": update_data}}, upsert=True
         )
         self.config["tmdb"] = update_data
         return update_action
 
     def set_build(self, data: Dict[str, Any]):
-        update_data = {"cron": data.get("cron", "*/120 * * * *")}
-        update_action = UpdateOne(
+        update_data: Dict[str, str] = {
+            "cron": data.get("cron", "*/120 * * * *")}
+        update_action: UpdateOne = UpdateOne(
             {"build": {"$exists": True}}, {"$set": {"build": update_data}}, upsert=True
         )
         self.config["build"] = update_data
         return update_action
 
     def set_rclone(self, data: List[Dict[str, Any]]):
-        update_data = data
-        update_action = UpdateOne(
+        update_data: List[Dict[str, Any]] = data
+        update_action: UpdateOne = UpdateOne(
             {"rclone": {"$exists": True}},
             {"$set": {"rclone": update_data}},
             upsert=True,
@@ -244,7 +259,7 @@ class MongoDB:
         self.config["rclone"] = update_data
         return update_action
 
-    def set_is_config_init(self, is_config_init):
+    def set_is_config_init(self, is_config_init: bool):
         if is_config_init != self.is_config_init:
             self.other_col.update_one(
                 {"is_config_init": {"$exists": True}},
@@ -253,7 +268,7 @@ class MongoDB:
             )
             self.is_config_init = is_config_init
 
-    def set_is_metadata_init(self, is_metadata_init):
+    def set_is_metadata_init(self, is_metadata_init: bool):
         if is_metadata_init != self.is_metadata_init:
             self.other_col.update_one(
                 {"is_metadata_init": {"$exists": True}},
@@ -262,7 +277,7 @@ class MongoDB:
             )
             self.is_metadata_init = is_metadata_init
 
-    def set_is_movies_cache_init(self, is_movies_cache_init):
+    def set_is_movies_cache_init(self, is_movies_cache_init: bool):
         if is_movies_cache_init != self.is_movies_cache_init:
             self.movies_cache_col.create_index(
                 [("original_title", TEXT)], background=True, name="original_title"
@@ -274,7 +289,7 @@ class MongoDB:
             )
             self.is_metadata_init = is_movies_cache_init
 
-    def set_is_series_cache_init(self, is_series_cache_init):
+    def set_is_series_cache_init(self, is_series_cache_init: bool):
         if is_series_cache_init != self.is_series_cache_init:
             self.series_cache_col.create_index(
                 [("original_title", TEXT)], background=True, name="original_title"

@@ -1,4 +1,4 @@
-from .. import logger
+from app import logger
 from app.core import TMDB
 from app.utils import generate_movie_metadata, generate_series_metadata
 

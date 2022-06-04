@@ -1,11 +1,10 @@
 import re
-from .. import logger
 from app import logger
 from copy import deepcopy
 from functools import reduce
 from collections import defaultdict
 from typing import Any, Dict, Optional
-from app.models import Movie, Serie, DataType
+from app.models import Movie, Serie
 from pymongo import TEXT, DESCENDING, InsertOne
 
 
@@ -43,7 +42,7 @@ def sort_by_type(metadata: Dict[str, Any] = {}) -> Dict[str, Any]:
     return data
 
 
-def parse_filename(name: str, data_type: DataType):
+def parse_filename(name: str, data_type: str):
     reg_exps = (
         [
             # (2019) The Mandalorian
@@ -55,7 +54,7 @@ def parse_filename(name: str, data_type: DataType):
             # The Mandalorian
             r"^(?P<year>)(?P<title>.*)$",
         ]
-        if data_type == DataType.series
+        if data_type == "series"
         else [
             # (2008) Iron Man.mkv
             r"^[\(\[\{](?P<year>\d{4})[\)\]\}]\s(?P<title>[^.]+).*(?P<extention>\..*)?$",
@@ -124,10 +123,10 @@ def generate_movie_metadata(
         original_name = drive_meta["name"]
         cleaned_title = clean_file_name(original_name)
         logger.debug(f"Identifying: {cleaned_title}")
-        name_year = parse_filename(cleaned_title, DataType.movies)
+        name_year = parse_filename(cleaned_title, "movies")
         name = name_year.get("title")
         year = name_year.get("year")
-        tmdb_id = tmdb.find_media_id(name, DataType.movies)
+        tmdb_id = tmdb.find_media_id(name, "movies")
         if not tmdb_id:
             advanced_search_list.append((name, year))
             logger.info(f"Could not identify: {name}")
@@ -136,21 +135,21 @@ def generate_movie_metadata(
         logger.info(
             f"Successfully identified: {name} {f'({year})' if year else ''}    ID: {tmdb_id}"
         )
-        movie_info = tmdb.get_details(tmdb_id, DataType.movies)
+        movie_info = tmdb.get_details(tmdb_id, "movies")
         curr_metadata: Movie = Movie(drive_meta, movie_info)
         update_action = InsertOne(curr_metadata.__dict__)
         mongo_meta.append(update_action)
     logger.debug(f"Using advanced search for {len(advanced_search_list)} titles.")
     for name, year in advanced_search_list:
         logger.debug(f"Advanced search identifying: {cleaned_title}")
-        tmdb_id = tmdb.find_media_id(name, DataType.movies, use_api=False)
+        tmdb_id = tmdb.find_media_id(name, "movies", use_api=False)
         if not tmdb_id:
             logger.info(f"Advanced search could not identify: '{name}'")
             continue
         logger.info(
             f"Advanced search successfully identified: {name} {f'({year})' if year else ''}    ID: {tmdb_id}"
         )
-        movie_info = tmdb.get_details(tmdb_id, DataType.movies)
+        movie_info = tmdb.get_details(tmdb_id, "movies")
         curr_metadata: Movie = Movie(drive_meta, movie_info)
         update_action = InsertOne(curr_metadata.__dict__)
         mongo_meta.append(update_action)
@@ -174,19 +173,19 @@ def generate_series_metadata(
         original_name = drive_meta["name"]
         cleaned_title = clean_file_name(original_name)
         logger.debug(f"Identifying: {cleaned_title}")
-        name_year = parse_filename(cleaned_title, DataType.series)
+        name_year = parse_filename(cleaned_title, "series")
         name = name_year.get("title")
         year = name_year.get("year")
-        tmdb_id = tmdb.find_media_id(name, DataType.series)
+        tmdb_id = tmdb.find_media_id(name, "series")
         if not tmdb_id:
-            tmdb_id = tmdb.find_media_id(name, DataType.series, use_api=False)
+            tmdb_id = tmdb.find_media_id(name, "series", use_api=False)
             if not tmdb_id:
                 logger.info(f"Could not identify: '{name}'")
                 continue
         logger.info(
             f"Successfully identified: {name} {f'({year})' if year else ''}    ID: {tmdb_id}"
         )
-        series_info = tmdb.get_details(tmdb_id, DataType.series)
+        series_info = tmdb.get_details(tmdb_id, "series")
         curr_metadata: Serie = Serie(drive_meta, series_info)
         update_action = InsertOne(curr_metadata.__dict__)
         mongo_meta.append(update_action)

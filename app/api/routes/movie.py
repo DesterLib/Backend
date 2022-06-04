@@ -1,4 +1,4 @@
-import time
+from time import perf_counter
 from typing import Any, Dict
 from fastapi import APIRouter
 
@@ -11,7 +11,7 @@ router = APIRouter(
 
 @router.get("", response_model=Dict[str, Any], status_code=200)
 def settings(id: int) -> Dict[str, Any]:
-    start = time.perf_counter()
+    start = perf_counter()
     from main import mongo
 
     results = {}
@@ -35,5 +35,5 @@ def settings(id: int) -> Dict[str, Any]:
         "ok": True,
         "message": "success",
         "results": results,
-        "time_taken": time.perf_counter() - start,
+        "time_taken": perf_counter() - start,
     }

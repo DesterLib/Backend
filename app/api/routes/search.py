@@ -1,4 +1,4 @@
-import time
+from time import perf_counter
 from enum import Enum
 from fastapi import APIRouter
 from typing import Any, Dict, Optional
@@ -35,7 +35,7 @@ def query(
     query: Optional[str] = None,
     limit: Optional[int] = 10,
 ) -> Dict[str, Any]:
-    start = time.perf_counter()
+    start = perf_counter()
     from main import mongo
 
     unwanted_keys = {
@@ -78,5 +78,5 @@ def query(
         "ok": True,
         "message": "success",
         "results": results,
-        "time_taken": time.perf_counter() - start,
+        "time_taken": perf_counter() - start,
     }

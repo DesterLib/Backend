@@ -4,10 +4,9 @@ import ujson as json
 from math import ceil
 from app import logger
 from pymongo import InsertOne
-from app.models import DataType
 from difflib import SequenceMatcher
 from typing import Any, Dict, Optional
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 
 class TMDB:
@@ -16,10 +15,10 @@ class TMDB:
 
         if mongo.is_series_cache_init is False:
             mongo.series_cache_col.delete_many({})
-            self.export_data(DataType.series)
+            self.export_data("series")
         if mongo.is_movies_cache_init is False:
             mongo.movies_cache_col.delete_many({})
-            self.export_data(DataType.movies)
+            self.export_data("movies")
         self.client = httpx.Client(params={"api_key": api_key})
         self.config = self.get_server_config()
         self.image_base_url = self.config["images"]["secure_base_url"]
@@ -35,11 +34,11 @@ class TMDB:
         return response.json()
 
     @staticmethod
-    def export_data(data_type: DataType):
+    def export_data(data_type: str):
         from main import mongo
 
-        date_str = (datetime.now() - timedelta(days=1)).strftime("%m_%d_%Y")
-        type_name = "tv_series" if data_type == DataType.series else "movie"
+        date_str = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%m_%d_%Y")
+        type_name = "tv_series" if data_type == "series" else "movie"
         export_url = (
             f"http://files.tmdb.org/p/exports/{type_name}_ids_{date_str}.json.gz"
         )
@@ -57,7 +56,7 @@ class TMDB:
                     bulk_action.append(InsertOne(json.loads(line)))
                 except BaseException:
                     pass
-            if data_type == DataType.series:
+            if data_type == "series":
                 mongo.series_cache_col.bulk_write(bulk_action)
             else:
                 mongo.movies_cache_col.bulk_write(bulk_action)
@@ -65,7 +64,7 @@ class TMDB:
             chunks[x - 1] = None
             x += 1
             bulk_action = []
-        if data_type == DataType.series:
+        if data_type == "series":
             mongo.set_is_series_cache_init(True)
         else:
             mongo.set_is_movies_cache_init(True)
@@ -90,7 +89,7 @@ class TMDB:
     def find_media_id(
         self,
         title: str,
-        data_type: DataType,
+        data_type: str,
         use_api: bool = True,
         year: Optional[int] = None,
         adult: bool = False,
@@ -101,7 +100,7 @@ class TMDB:
 
         Args:
             title (str): The title of the movie / series
-            data_type (DataType): The type of the title
+            data_type (str): The type of the title
             use_api (bool): Use API calls to get info
             year (int): Release Year of the media
             adult (bool): If the media is under adult category or not
@@ -120,7 +119,7 @@ class TMDB:
             return None
         if use_api:
             logger.debug(f"Trying search using API for '{title}'")
-            type_name = "tv" if data_type == DataType.series else "movie"
+            type_name = "tv" if data_type == "series" else "movie"
             resp = self.client.get(
                 f"https://api.themoviedb.org/3/search/{type_name}",
                 params={
@@ -143,7 +142,7 @@ class TMDB:
             from main import mongo
 
             logger.debug(f"Trying search using key-value search for '{title}'")
-            if data_type == DataType.series:
+            if data_type == "series":
                 cache_col = mongo.series_cache_col
             else:
                 cache_col = mongo.movies_cache_col
@@ -171,17 +170,17 @@ class TMDB:
                 return match["id"]
             logger.debug(f"Advanced difflib search failed for '{title}'")
 
-    def get_details(self, tmdb_id: int, data_type: DataType) -> Dict[str, Any]:
+    def get_details(self, tmdb_id: int, data_type: str) -> Dict[str, Any]:
         """Get the details of a movie / series from the API
 
         Args:
             tmdb_id (int): The TMDB ID of the movie / series
-            data_type (DataType): The type of the title
+            data_type (str): The type of the title
 
         Returns:
             dict: The details of the movie / series
         """
-        type_name = "tv" if data_type == DataType.series else "movie"
+        type_name = "tv" if data_type == "series" else "movie"
         url = f"https://api.themoviedb.org/3/{type_name}/{tmdb_id}"
         params = {
             "include_image_language": "en",

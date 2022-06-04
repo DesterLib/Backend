@@ -1,8 +1,8 @@
 __all__ = ["main_router"]
 
 import os.path
-import pkgutil
-from .. import logger
+from pkgutil import iter_modules
+from app import logger
 from fastapi import APIRouter
 
 
@@ -12,7 +12,7 @@ main_router = APIRouter()
 pkgpath = os.path.join(os.path.dirname(__file__), "routes")
 
 
-for _, mod, _ in pkgutil.iter_modules([pkgpath]):
+for _, mod, _ in iter_modules([pkgpath]):
     try:
         imported_route = getattr(__import__(module.format(mod), fromlist=[func]), func)
     except AttributeError:

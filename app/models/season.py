@@ -1,5 +1,5 @@
 from typing import List
-from .episode import Episode
+from app.models import Episode
 from datetime import datetime
 from dateutil.parser import isoparse
 

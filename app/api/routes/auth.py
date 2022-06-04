@@ -15,6 +15,6 @@ client = AsyncClient()
 
 @router.get("", response_model=Dict[str, Any], status_code=200)
 def auth() -> Dict[str, Any]:
-    from main import config
+    from main import mongo
 
-    return config.get("auth0")
+    return mongo.config.get("auth0")

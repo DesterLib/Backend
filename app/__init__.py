@@ -6,17 +6,15 @@ __copyright__ = "Copyright 2022, DesterLib"
 __authors__ = ["Elias Benbourenane", "EverythingSuckz"]
 __credits__ = ["EverythingSuckz", "Elias Benbourenane", "AlkenD"]
 
-
-import os
 import logging
 import os.path
-from datetime import datetime
-
+from datetime import datetime, timezone
+from os import makedirs
 
 if not os.path.isdir("logs"):
-    os.makedirs("logs")
+    makedirs("logs")
 if not os.path.isdir("cache"):
-    os.makedirs("cache")
+    makedirs("cache")
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -25,7 +23,7 @@ logging.basicConfig(
     handlers=[
         logging.StreamHandler(),
         logging.FileHandler(
-            "logs/{}.log".format(datetime.now().strftime("%Y-%m-%d_%H%M%S")), mode="w"
+            "logs/{}.log".format(datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%S")), mode="w"
         ),
     ],
 )

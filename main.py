@@ -12,7 +12,7 @@ from fastapi import FastAPI, Request
 from app.core.cron import fetch_metadata
 from fastapi.staticfiles import StaticFiles
 from app.core import TMDB, MongoDB, RCloneAPI
-from subprocess import STDOUT, DEVNULL, Popen, run
+from subprocess import STDOUT, DEVNULL, PIPE, Popen, run
 from starlette.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, UJSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -46,7 +46,8 @@ def restart_rclone():
         )
     elif platform in ["linux", "linux2"]:
         run(
-            shlex.split(f"bash kill $(lsof -t -i:{settings.RCLONE_LISTEN_PORT})"),
+            shlex.split(
+                f"bash kill $(lsof -t -i:{settings.RCLONE_LISTEN_PORT})"),
             stdout=DEVNULL,
             stderr=STDOUT,
         )
@@ -62,8 +63,8 @@ def restart_rclone():
     Popen(
         shlex.split(
             f"{rclone_bin} rcd --rc-no-auth --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf",
-            posix=(platform not in ["win32", "cygwin", "msys"]),
-        )
+            posix=(platform not in ["win32", "cygwin", "msys"])
+        ), stdout=DEVNULL, stderr=STDOUT
     )
 
 
@@ -81,6 +82,7 @@ def rclone_setup(categories: List[Dict[str, Any]]):
 
 
 def metadata_setup():
+    global tmdb
     tmdb = TMDB(api_key=mongo.get_tmbd_api_key())
     fetch_metadata(tmdb)
 
@@ -101,7 +103,8 @@ def startup():
         pass
 
 
-app = FastAPI(title="DesterLib", openapi_url=f"{settings.API_V1_STR}/openapi.json")
+app = FastAPI(title="DesterLib",
+              openapi_url=f"{settings.API_V1_STR}/openapi.json")
 
 
 @app.exception_handler(StarletteHTTPException)

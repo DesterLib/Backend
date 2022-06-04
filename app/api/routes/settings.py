@@ -1,4 +1,4 @@
-import time
+from time import perf_counter
 from typing import Any, Dict
 from fastapi import Request, APIRouter
 
@@ -11,7 +11,7 @@ router = APIRouter(
 
 @router.get("", response_model=Dict[str, Any], status_code=200)
 def settings_get() -> Dict[str, Any]:
-    start = time.perf_counter()
+    start = perf_counter()
     from main import mongo
 
     config = mongo.get_config()
@@ -19,13 +19,13 @@ def settings_get() -> Dict[str, Any]:
         "ok": True,
         "message": "success",
         "results": config,
-        "time_taken": time.perf_counter() - start,
+        "time_taken": perf_counter() - start,
     }
 
 
 @router.post("", response_model=Dict[str, Any], status_code=200)
 async def settings_post(request: Request) -> Dict[str, Any]:
-    start = time.perf_counter()
+    start = perf_counter()
     from main import mongo
 
     data = await request.json()

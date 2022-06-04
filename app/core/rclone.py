@@ -1,9 +1,8 @@
 import re
 import json
 import requests
-from pytz import UTC
 from httplib2 import Http
-from datetime import datetime
+from datetime import datetime, timezone
 from dateutil.parser import parse
 from typing import Any, Dict, List, Optional
 from oauth2client.client import GoogleCredentials
@@ -72,12 +71,12 @@ def build_config(config) -> List[str]:
 
 class RCloneAPI:
     def __init__(self, data: Dict[str, Any]):
-        self.data = data
-        self.id = data.get("id") or data.get("drive_id")
-        self.fs = "".join(c for c in self.id if c.isalnum()) + ":"
-        self.provider = data.get("provider") or "gdrive"
-        self.RCLONE_RC_URL = "http://localhost:35530"
-        self.RCLONE = {
+        self.data: Dict[str, Any] = data
+        self.id: str = data.get("id") or data.get("drive_id") or ""
+        self.fs: str = "".join(c for c in self.id if c.isalnum()) + ":"
+        self.provider: str = data.get("provider") or "gdrive"
+        self.RCLONE_RC_URL: str = "http://localhost:35530"
+        self.RCLONE: Dict[str, str] = {
             "mkdir": "operations/mkdir",
             "purge": "operations/purge",
             "deleteFile": "operations/deletefile",
@@ -113,10 +112,10 @@ class RCloneAPI:
             "statsDelete": "core/stats-delete",
             "statsReset": "core/stats-reset",
         }
-        self.fs_conf = self.rc_conf()
+        self.fs_conf: Dict[str, Any] = self.rc_conf()
 
     def rc_ls(self, options: Optional[dict] = {}) -> List[Dict[str, Any]]:
-        rc_data = {
+        rc_data: Dict[str, Any] = {
             "fs": self.fs,
             "remote": "",
             "opt": options,
@@ -129,7 +128,7 @@ class RCloneAPI:
         return result["list"]
 
     def rc_conf(self) -> Dict:
-        rc_data = {"name": self.fs[:-1]}
+        rc_data: Dict[str, str] = {"name": self.fs[:-1]}
         result = requests.post(
             "%s/%s" % (self.RCLONE_RC_URL, self.RCLONE["getConfigForRemote"]),
             data=json.dumps(rc_data),
@@ -139,7 +138,7 @@ class RCloneAPI:
 
     def fetch_movies(self) -> List[Dict[str, Any]]:
         rc_ls_result = self.rc_ls({"recurse": True, "filesOnly": False})
-        metadata = []
+        metadata: List[Dict[str, Any]] = []
         dirs = {}
         for item in rc_ls_result:
             if item["IsDir"] is False and (
@@ -173,8 +172,8 @@ class RCloneAPI:
 
     def fetch_series(self) -> List[Dict[str, Any]]:
         rc_ls_result = self.rc_ls({"recurse": True, "maxDepth": 2})
-        metadata = []
-        parent_dirs = {
+        metadata: List[Dict[str, Any]] = []
+        parent_dirs: Dict[str, Dict[str, Any]] = {
             "": {
                 "path": "",
                 "depth": 0,
@@ -220,7 +219,8 @@ class RCloneAPI:
                             "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
+                    parent_dirs[item["Path"]
+                                ]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(
@@ -264,7 +264,7 @@ class RCloneAPI:
         return result
 
     def thumbnail(self, id) -> Optional[str]:
-        if parse(self.fs_conf["token"]["expiry"]) <= UTC.localize(datetime.now()):
+        if parse(self.fs_conf["token"]["expiry"]) <= datetime.now(timezone.utc):
             self.fs_conf["token"] = self.refresh()
         result = requests.get(
             f"https://www.googleapis.com/drive/v3/files/{id}?supportsAllDrives=true&fields=thumbnailLink",

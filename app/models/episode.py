@@ -1,5 +1,5 @@
 import re
-from .. import logger
+from app import logger
 from typing import Any, Dict
 from datetime import datetime
 from dateutil.parser import isoparse
