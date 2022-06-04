@@ -1,13 +1,11 @@
 import time
 import random
 from app import logger
-# from diskcache import Cache
 from fastapi import APIRouter
 from typing import Dict, Union
 
 
 router = APIRouter(
-    # dependencies=[Depends(get_token_header)],
     prefix="/home",
     responses={404: {"description": "Not found"}},
     tags=["internals"],
@@ -22,6 +20,27 @@ data_cap_limit = 15
 # which reduces any delay, I haven't implemented it cuz I plan to use
 # asyncio here but the code itself is not compatible with asyncio yet.
 
+unwanted_keys = {
+    "_id": 0,
+    "cast": 0,
+    "crew": 0,
+    "seasons": 0,
+    "file_name": 0,
+    "subtitles": 0,
+    "external_ids": 0,
+    "videos": 0,
+    "reviews": 0,
+    "collection": 0,
+    "homepage": 0,
+    "last_episode_to_air": 0,
+    "next_episode_to_air": 0,
+    "path": 0,
+    "parent": 0,
+    "description": 0,
+    "revenue": 0,
+    "tagline": 0,
+    "imdb_id": 0,
+}
 
 @router.get("", response_model=Dict[str, Union[str, int, float, bool, None, dict]])
 def home() -> Dict[str, str]:
@@ -37,7 +56,6 @@ def home() -> Dict[str, str]:
                 "message": "The config needs to be initialized.",
                 "redirect": "/settings",
             }
-        random.seed(100)
         categories_data = []
         carousel_data = []
         most_popular_movies_data = []
@@ -46,20 +64,6 @@ def home() -> Dict[str, str]:
         top_rated_movies_data = []
         newly_added_movies_data = []
         newly_added_episodes_data = []
-        unwanted_keys = {
-            "_id": 0,
-            "cast": 0,
-            "seasons": 0,
-            "file_name": 0,
-            "subtitles": 0,
-            "external_ids": 0,
-            "videos": 0,
-            "reviews": 0,
-            "collection": 0,
-            "homepage": 0,
-            "last_episode_to_air": 0,
-            "next_episode_to_air": 0,
-        }
         for category in mongo.config["categories"]:
             category_col = mongo.metadata[category["id"]]
             if True:

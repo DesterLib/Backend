@@ -20,6 +20,7 @@ class SortType(str, Enum):
 unwanted_keys = {
     "_id": 0,
     "cast": 0,
+    "crew": 0,
     "seasons": 0,
     "file_name": 0,
     "subtitles": 0,
@@ -30,6 +31,13 @@ unwanted_keys = {
     "homepage": 0,
     "last_episode_to_air": 0,
     "next_episode_to_air": 0,
+    "path": 0,
+    "parent": 0,
+    "description": 0,
+    "revenue": 0,
+    "tagline": 0,
+    "imdb_id": 0,
+    "genres": 0,
 }
 
 
