@@ -1,5 +1,5 @@
 from .movie import Movie
-from .serie import Serie
+from .episode import Episode # isort:skip
+from .season import Season # isort:skip
+from .serie import Serie # isort:skip
 from .token import Token
-from .season import Season
-from .episode import Episode
