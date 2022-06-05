@@ -266,6 +266,18 @@ class RCloneAPI:
         }
         return result
 
+    def size(self, path: str) -> int:
+        rc_data: Dict[str, Any] = {
+            "fs": self.fs,
+            "remote": path,
+        }
+        result = requests.post(
+            "%s/%s" % (self.RCLONE_RC_URL, self.RCLONE["getFileInfo"]),
+            data=json.dumps(rc_data),
+            headers={"Content-Type": "application/json"},
+        ).json()
+        return result["item"]["Size"]
+
     def stream(self, path: str, req_range: str):
         command = run(["rclone", "cat", f"{self.fs}{path}", "--header-download",
                       "'Range':'f{req_range}'", "--config", "rclone.conf"], stdout=PIPE)

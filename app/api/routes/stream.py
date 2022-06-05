@@ -22,11 +22,12 @@ def query(request: Request, full_path: str):
     rc = rclone["1LwKkllwdyGeuETh3WTitreTSSEi3Nfyq"]
 
     req_headers = request.headers.items()
-    res_headers = {"cache-control": "no-cache, no-store, must-revalidate", "pragma": "no-cache"}
+    res_headers = {"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Accept-Ranges": "bytes"}
     for item in req_headers:
         if item[0].lower() not in excluded_headers:
             res_headers[item[0]] = item[1]
-    req_range = res_headers.get("Range") or res_headers.get("range") or ""
+    req_range = res_headers.get("Range") or ""
+    res_headers["Content-Range"] = req_range + "/*"
     result = rc.stream(full_path, req_range)
 
     return Response(result, media_type="video/mp4", headers=res_headers)
