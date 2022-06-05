@@ -6,14 +6,38 @@ from dateutil.parser import isoparse
 
 
 class Episode:
-    __slots__ = ['id', 'file_name', 'path', 'parent', 'modified_time', 'tmdb_id', 'name',
-                 'overview', 'air_date', 'runtime', 'episode_number', 'rating', 'thumbnail_path']
+    __slots__ = [
+        "id",
+        "file_name",
+        "path",
+        "parent",
+        "modified_time",
+        "tmdb_id",
+        "name",
+        "overview",
+        "air_date",
+        "runtime",
+        "episode_number",
+        "rating",
+        "thumbnail_path",
+    ]
 
     def __dict__(self):
-        return {'id': self.id, 'file_name': self.file_name, 'path': self.path, 'parent': self.parent, 'modified_time': self.modified_time,
-                'tmdb_id': self.tmdb_id, 'name': self.name, 'overview': self.overview, 'air_date': self.air_date, 'runtime': self.runtime,
-                'episode_number': self.episode_number, 'rating': self.rating, 'thumbnail_path': self.thumbnail_path,
-                }
+        return {
+            "id": self.id,
+            "file_name": self.file_name,
+            "path": self.path,
+            "parent": self.parent,
+            "modified_time": self.modified_time,
+            "tmdb_id": self.tmdb_id,
+            "name": self.name,
+            "overview": self.overview,
+            "air_date": self.air_date,
+            "runtime": self.runtime,
+            "episode_number": self.episode_number,
+            "rating": self.rating,
+            "thumbnail_path": self.thumbnail_path,
+        }
 
     def __init__(self, file_metadata, media_metadata, index):
         # File Info
@@ -27,8 +51,7 @@ class Episode:
 
         parsed_data = self.parse_episode_filename(self.file_name)
         episode_number = parsed_data.get("episode")
-        season_number = parsed_data.get(
-            "season", media_metadata.get("season_number"))
+        season_number = parsed_data.get("season", media_metadata.get("season_number"))
         if season_number != media_metadata.get("season_number"):
             logger.debug(
                 f"      Season number mismatch: {season_number} != {media_metadata.get('season_number')}"

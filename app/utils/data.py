@@ -10,8 +10,7 @@ from pymongo import TEXT, DESCENDING, InsertOne
 
 def group_by(key, seq):
     return reduce(
-        lambda grp, val: grp[key(val)].append(
-            val) or grp, seq, defaultdict(list)
+        lambda grp, val: grp[key(val)].append(val) or grp, seq, defaultdict(list)
     )
 
 
@@ -143,8 +142,7 @@ def generate_movie_metadata(
             movie_info = tmdb.get_details(tmdb_id, "movies")
             curr_metadata: Movie = Movie(drive_meta, movie_info, rclone_index)
             identified_list[tmdb_id] = curr_metadata
-    logger.debug(
-        f"Using advanced search for {len(advanced_search_list)} titles.")
+    logger.debug(f"Using advanced search for {len(advanced_search_list)} titles.")
     for name, year in advanced_search_list:
         logger.debug(f"Advanced search identifying: {cleaned_title}")
         tmdb_id = tmdb.find_media_id(name, "movies", use_api=False)

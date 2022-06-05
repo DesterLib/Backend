@@ -30,7 +30,11 @@ async def image_path(
     )
 
 
-@router.get("/thumbnail/{rclone_index}/{file_id}", response_model=Dict[str, Any], status_code=200)
+@router.get(
+    "/thumbnail/{rclone_index}/{file_id}",
+    response_model=Dict[str, Any],
+    status_code=200,
+)
 async def image_path(
     file_id: str = Path(title := "File ID of the thumbnail that needs to be generated"),
     rclone_index: int = 0,

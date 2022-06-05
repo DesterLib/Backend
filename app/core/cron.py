@@ -23,5 +23,6 @@ def fetch_metadata():
             )
         else:
             generate_movie_metadata(
-                tmdb, rclone[key].fetch_movies(), category_metadata, key)
+                tmdb, rclone[key].fetch_movies(), category_metadata, key
+            )
         mongo.set_is_metadata_init(True)

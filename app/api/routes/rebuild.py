@@ -1,7 +1,8 @@
 from typing import Any, Dict
-from fastapi import APIRouter, BackgroundTasks
 from time import perf_counter
 from app.core.cron import fetch_metadata
+from fastapi import APIRouter, BackgroundTasks
+
 
 router = APIRouter(
     prefix="/rebuild",

@@ -10,9 +10,9 @@ from app.api import main_router
 from app.settings import settings
 from typing import Any, Dict, List
 from fastapi import FastAPI, Request
+from app.core import MongoDB, RCloneAPI
 from app.core.cron import fetch_metadata
 from fastapi.staticfiles import StaticFiles
-from app.core import MongoDB, RCloneAPI
 from starlette.middleware.cors import CORSMiddleware
 from subprocess import PIPE, STDOUT, DEVNULL, Popen, run
 from fastapi.responses import FileResponse, UJSONResponse
@@ -85,6 +85,7 @@ def rclone_setup(categories: List[Dict[str, Any]]):
 
     for i, category in enumerate(categories):
         rclone[i] = RCloneAPI(category, i)
+
 
 def startup():
     logger.info("Starting up...")
