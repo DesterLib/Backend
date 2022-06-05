@@ -16,10 +16,10 @@ excluded_headers = [
     "host",
 ]
 
-@router.get("/{full_path:path}")
-def query(request: Request, full_path: str):
+@router.get("/{rclone_index}/{full_path:path}")
+def query(request: Request, full_path: str, rclone_index: int):
     from main import rclone
-    rc = rclone["1LwKkllwdyGeuETh3WTitreTSSEi3Nfyq"]
+    rc = rclone[rclone_index]
 
     req_headers = request.headers.items()
     res_headers = {"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache", "Accept-Ranges": "bytes"}

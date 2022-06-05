@@ -10,7 +10,8 @@ from pymongo import TEXT, DESCENDING, InsertOne
 
 def group_by(key, seq):
     return reduce(
-        lambda grp, val: grp[key(val)].append(val) or grp, seq, defaultdict(list)
+        lambda grp, val: grp[key(val)].append(
+            val) or grp, seq, defaultdict(list)
     )
 
 
@@ -112,7 +113,7 @@ def clean_file_name(name: str) -> str:
 
 
 def generate_movie_metadata(
-    tmdb, data: Dict[str, Any], category_metadata: Dict[str, Any]
+    tmdb, data: Dict[str, Any], category_metadata: Dict[str, Any], rclone_index: int
 ) -> Dict[str, Any]:
     from main import mongo
 
@@ -140,9 +141,10 @@ def generate_movie_metadata(
             identified_match.append_file(drive_meta)
         else:
             movie_info = tmdb.get_details(tmdb_id, "movies")
-            curr_metadata: Movie = Movie(drive_meta, movie_info)
+            curr_metadata: Movie = Movie(drive_meta, movie_info, rclone_index)
             identified_list[tmdb_id] = curr_metadata
-    logger.debug(f"Using advanced search for {len(advanced_search_list)} titles.")
+    logger.debug(
+        f"Using advanced search for {len(advanced_search_list)} titles.")
     for name, year in advanced_search_list:
         logger.debug(f"Advanced search identifying: {cleaned_title}")
         tmdb_id = tmdb.find_media_id(name, "movies", use_api=False)
@@ -157,13 +159,13 @@ def generate_movie_metadata(
             identified_match.append_file(drive_meta)
         else:
             movie_info = tmdb.get_details(tmdb_id, "movies")
-            curr_metadata: Movie = Movie(drive_meta, movie_info)
+            curr_metadata: Movie = Movie(drive_meta, movie_info, rclone_index)
             identified_list[tmdb_id] = curr_metadata
 
     del movie_info
     mongo_meta = []
     for item in identified_list.values():
-        mongo_meta.append(InsertOne(item.__dict__))
+        mongo_meta.append(InsertOne(item.__dict__()))
     del identified_list
     metadata.delete_many({})
     metadata.bulk_write(mongo_meta)
@@ -172,7 +174,7 @@ def generate_movie_metadata(
 
 
 def generate_series_metadata(
-    tmdb, data: Dict[str, Any], category_metadata: Dict[str, Any]
+    tmdb, data: Dict[str, Any], category_metadata: Dict[str, Any], rclone_index: int
 ) -> Dict[str, Any]:
     from main import mongo
 
@@ -195,8 +197,8 @@ def generate_series_metadata(
             f"Successfully identified: {name} {f'({year})' if year else ''}    ID: {tmdb_id}"
         )
         series_info = tmdb.get_details(tmdb_id, "series")
-        curr_metadata: Serie = Serie(drive_meta, series_info)
-        update_action = InsertOne(curr_metadata.__dict__)
+        curr_metadata: Serie = Serie(drive_meta, series_info, rclone_index)
+        update_action = InsertOne(curr_metadata.__dict__())
         mongo_meta.append(update_action)
 
     del series_info

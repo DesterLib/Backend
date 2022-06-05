@@ -5,6 +5,15 @@ from dateutil.parser import isoparse
 
 
 class Season:
+    __slots__ = ['id', 'file_name', 'path', 'parent', 'modified_time', 'tmdb_id', 'name',
+                 'overview', 'air_date', 'episode_count', 'season_number', 'poster_path', 'episodes']
+
+    def __dict__(self):
+        return {'id': self.id, 'file_name': self.file_name, 'path': self.path, 'parent': self.parent, 'modified_time': self.modified_time,
+                'tmdb_id': self.tmdb_id, 'name': self.name, 'overview': self.overview, 'air_date': self.air_date, 'episode_count': self.episode_count,
+                'season_number': self.season_number, 'poster_path': self.poster_path, 'episodes': self.episodes
+                }
+
     def __init__(self, file_metadata, media_metadata):
         # File Info
         self.id: str = file_metadata.get("id") or ""
@@ -31,5 +40,6 @@ class Season:
         index: int = len(file_metadata.get("episodes", []))
         self.episodes: List[Episode] = []
         for episode in file_metadata.get("episodes", []):
-            self.episodes.append(Episode(episode, media_metadata, index).__dict__)
+            self.episodes.append(
+                Episode(episode, media_metadata, index).__dict__())
             index -= 1

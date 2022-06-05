@@ -18,8 +18,9 @@ def fetch_metadata(tmdb: TMDB):
         logger.debug("Category type: " + category_metadata["type"])
         if category_metadata["type"] == "series":
             generate_series_metadata(
-                tmdb, rclone[key].fetch_series(), category_metadata
+                tmdb, rclone[key].fetch_series(), category_metadata, key
             )
         else:
-            generate_movie_metadata(tmdb, rclone[key].fetch_movies(), category_metadata)
+            generate_movie_metadata(
+                tmdb, rclone[key].fetch_movies(), category_metadata, key)
         mongo.set_is_metadata_init(True)

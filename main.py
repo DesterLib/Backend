@@ -83,8 +83,8 @@ def rclone_setup(categories: List[Dict[str, Any]]):
 
     restart_rclone()
 
-    for category in categories:
-        rclone[category.get("id") or category.get("drive_id")] = RCloneAPI(category)
+    for i, category in enumerate(categories):
+        rclone[i] = RCloneAPI(category, i)
 
 
 def metadata_setup():
