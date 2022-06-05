@@ -72,8 +72,9 @@ def build_config(config) -> List[str]:
 
 
 class RCloneAPI:
-    def __init__(self, data: Dict[str, Any]):
+    def __init__(self, data: Dict[str, Any], index: int):
         self.data: Dict[str, Any] = data
+        self.index: int = index
         self.id: str = data.get("id") or data.get("drive_id") or ""
         self.fs: str = "".join(c for c in self.id if c.isalnum()) + ":"
         self.provider: str = data.get("provider") or "gdrive"
@@ -111,6 +112,7 @@ class RCloneAPI:
             "coreCommand": "core/command",
             "transferred": "core/transferred",
             "getSize": "operations/size",
+            "getFileInfo": "operations/stat",
             "statsDelete": "core/stats-delete",
             "statsReset": "core/stats-reset",
         }
@@ -267,9 +269,11 @@ class RCloneAPI:
         return result
 
     def size(self, path: str) -> int:
+        options = {"no-modtime": True, "no-mimetype": True,}
         rc_data: Dict[str, Any] = {
             "fs": self.fs,
             "remote": path,
+            "opt": options,
         }
         result = requests.post(
             "%s/%s" % (self.RCLONE_RC_URL, self.RCLONE["getFileInfo"]),
@@ -280,7 +284,7 @@ class RCloneAPI:
 
     def stream(self, path: str, req_range: str):
         command = run(["rclone", "cat", f"{self.fs}{path}", "--header-download",
-                      "'Range':'f{req_range}'", "--config", "rclone.conf"], stdout=PIPE)
+                      f"Range:{req_range}", "--config", "rclone.conf"], stdout=PIPE)
         result = command.stdout
         return result
 

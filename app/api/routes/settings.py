@@ -33,5 +33,5 @@ async def settings_post(request: Request) -> Dict[str, Any]:
     return {
         "ok": True,
         "message": "success",
-        "time_taken": time.perf_counter() - start,
+        "time_taken": perf_counter() - start,
     }
