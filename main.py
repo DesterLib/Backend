@@ -146,4 +146,4 @@ if os.path.exists("build/index.html"):
 
 startup()
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="localhost", port=settings.PORT, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=settings.PORT, reload=True)

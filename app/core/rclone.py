@@ -6,6 +6,8 @@ from dateutil.parser import parse
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from oauth2client.client import GoogleCredentials
+from subprocess import run, PIPE
+import shlex
 
 
 def build_config(config) -> List[str]:
@@ -220,7 +222,8 @@ class RCloneAPI:
                             "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
+                    parent_dirs[item["Path"]
+                                ]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(
@@ -263,27 +266,16 @@ class RCloneAPI:
         }
         return result
 
-    def stream(self, path: str, headers):
-        opt: Dict[str, str] = {"header-download": "", "config": "rclone.conf"}
-        for header in headers:
-            if header[0].lower() == "range":
-                opt["header-download"] = "'Range':'%s'" % (header[1])
-        print(opt["header-download"])
-        rc_data: Dict[str, Any] = {
-            "command": "cat",
-            "arg": [f"{self.fs}{path}"],
-            "opt": opt,
-        }
-        result = requests.post(
-            "%s/%s" % (self.RCLONE_RC_URL, self.RCLONE["coreCommand"]),
-            data=json.dumps(rc_data),
-            headers={"Content-Type": "application/json"},
-        ).json()
-        return result["result"]
+    def stream(self, path: str, req_range: str):
+        command = run(["rclone", "cat", f"{self.fs}{path}", "--header-download",
+                      "'Range':'f{req_range}'", "--config", "rclone.conf"], stdout=PIPE)
+        result = command.stdout
+        return result
 
     def thumbnail(self, id) -> Optional[str]:
         if parse(
-            self.fs_conf.get("token", {}).get("expiry", "2022-03-27T00:00:00.000+00:00")
+            self.fs_conf.get("token", {}).get(
+                "expiry", "2022-03-27T00:00:00.000+00:00")
         ) <= datetime.now(timezone.utc):
             self.fs_conf["token"] = self.refresh()
         result = requests.get(
