@@ -3,9 +3,10 @@ from app.core import TMDB
 from app.utils import generate_movie_metadata, generate_series_metadata
 
 
-def fetch_metadata(tmdb: TMDB):
+def fetch_metadata():
     from main import mongo, rclone
 
+    tmdb = TMDB(api_key=mongo.config["tmdb"]["api_key"])
     for key, category in rclone.items():
         category_id = category.data.get("id") or category.data.get("drive_id")
         category_metadata = {

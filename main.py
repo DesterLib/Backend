@@ -12,7 +12,7 @@ from typing import Any, Dict, List
 from fastapi import FastAPI, Request
 from app.core.cron import fetch_metadata
 from fastapi.staticfiles import StaticFiles
-from app.core import TMDB, MongoDB, RCloneAPI
+from app.core import MongoDB, RCloneAPI
 from starlette.middleware.cors import CORSMiddleware
 from subprocess import PIPE, STDOUT, DEVNULL, Popen, run
 from fastapi.responses import FileResponse, UJSONResponse
@@ -86,13 +86,6 @@ def rclone_setup(categories: List[Dict[str, Any]]):
     for i, category in enumerate(categories):
         rclone[i] = RCloneAPI(category, i)
 
-
-def metadata_setup():
-    global tmdb
-    tmdb = TMDB(api_key=mongo.get_tmbd_api_key())
-    fetch_metadata(tmdb)
-
-
 def startup():
     logger.info("Starting up...")
 
@@ -102,7 +95,7 @@ def startup():
         categories = mongo.get_categories()
         rclone_setup(categories)
         if mongo.get_is_metadata_init() is False:
-            metadata_setup()
+            fetch_metadata()
         logger.debug("Done.")
     else:
         # logic for first time setup
@@ -146,4 +139,4 @@ if os.path.exists("build/index.html"):
 
 startup()
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=settings.PORT, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=settings.PORT, reload=False)
