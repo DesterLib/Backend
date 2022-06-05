@@ -4,8 +4,8 @@ import shlex
 import uvicorn
 from shutil import which
 from sys import platform
-from asyncio.log import logger
 from io import TextIOWrapper
+from asyncio.log import logger
 from app.api import main_router
 from app.settings import settings
 from typing import Any, Dict, List
@@ -13,8 +13,8 @@ from fastapi import FastAPI, Request
 from app.core.cron import fetch_metadata
 from fastapi.staticfiles import StaticFiles
 from app.core import TMDB, MongoDB, RCloneAPI
-from subprocess import STDOUT, DEVNULL, PIPE, Popen, run
 from starlette.middleware.cors import CORSMiddleware
+from subprocess import PIPE, STDOUT, DEVNULL, Popen, run
 from fastapi.responses import FileResponse, UJSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 

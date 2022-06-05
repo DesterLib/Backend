@@ -1,5 +1,4 @@
 import time
-import random
 from app import logger
 from fastapi import APIRouter
 from typing import Dict, Union
@@ -107,9 +106,7 @@ def home() -> Dict[str, str]:
                 ]
             )
             newly_added_episodes_data.extend(sorted_newly_added_data)
-    carousel_data = sorted(
-        carousel_data, key=lambda k: k["popularity"], reverse=True
-    )
+    carousel_data = sorted(carousel_data, key=lambda k: k["popularity"], reverse=True)
     most_popular_movies_data = sorted(
         most_popular_movies_data, key=lambda k: k["popularity"], reverse=True
     )

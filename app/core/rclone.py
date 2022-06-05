@@ -220,8 +220,7 @@ class RCloneAPI:
                             "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]
-                                ]["json_path"] = f"[{len(metadata) - 1}]"
+                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(
@@ -283,7 +282,9 @@ class RCloneAPI:
         return result["result"]
 
     def thumbnail(self, id) -> Optional[str]:
-        if parse(self.fs_conf.get("token", {}).get("expiry", "2022-03-27T00:00:00.000+00:00")) <= datetime.now(timezone.utc):
+        if parse(
+            self.fs_conf.get("token", {}).get("expiry", "2022-03-27T00:00:00.000+00:00")
+        ) <= datetime.now(timezone.utc):
             self.fs_conf["token"] = self.refresh()
         result = requests.get(
             f"https://www.googleapis.com/drive/v3/files/{id}?supportsAllDrives=true&fields=thumbnailLink",
