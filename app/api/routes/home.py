@@ -60,6 +60,8 @@ def home() -> Dict[str, str]:
     top_rated_series_data = []
     top_rated_movies_data = []
     newly_added_movies_data = []
+    newly_released_movies_data = []
+    newly_released_episodes_data = []
     newly_added_episodes_data = []
     for category in mongo.config["categories"]:
         category_col = mongo.metadata[category["id"]]
@@ -95,18 +97,53 @@ def home() -> Dict[str, str]:
                 ]
             )
             newly_added_movies_data.extend(sorted_newly_added_data)
+            sorted_newly_released_data = category_col.aggregate(
+                [
+                    {"$sort": {"release_date": -1}},
+                    {"$limit": data_cap_limit},
+                    {"$project": unwanted_keys},
+                ]
+            )
+            newly_released_movies_data.extend(sorted_newly_released_data)
         else:
             most_popular_series_data.extend(sorted_popularity_data)
             top_rated_series_data.extend(sorted_top_rated_data)
             sorted_newly_added_data = category_col.aggregate(
                 [
-                    {"$sort": {"seasons.episodes.modified_time": -1}},
+                    {
+                        "$addFields": {
+                            "last_episode_modified_time": {
+                                "$first": {
+                                    "$max": "$seasons.episodes.modified_time"
+                                }
+                            }
+                        }
+                    },
+                    {"$sort": {"last_episode_modified_time": -1}},
                     {"$limit": data_cap_limit},
                     {"$project": unwanted_keys},
                 ]
             )
             newly_added_episodes_data.extend(sorted_newly_added_data)
-    carousel_data = sorted(carousel_data, key=lambda k: k["popularity"], reverse=True)
+            sorted_newly_released_data = category_col.aggregate(
+                [
+                    {
+                        "$addFields": {
+                            "last_episode_air_date": {
+                                "$dateFromString": {
+                                    "dateString": "$last_episode_to_air.air_date"
+                                }
+                            }
+                        }
+                    },
+                    {"$sort": {"last_episode_air_date": -1}},
+                    {"$limit": data_cap_limit},
+                    {"$project": unwanted_keys},
+                ]
+            )
+            newly_released_episodes_data.extend(sorted_newly_released_data)
+    carousel_data = sorted(
+        carousel_data, key=lambda k: k["popularity"], reverse=True)
     most_popular_movies_data = sorted(
         most_popular_movies_data, key=lambda k: k["popularity"], reverse=True
     )
@@ -122,6 +159,12 @@ def home() -> Dict[str, str]:
     newly_added_movies_data = sorted(
         newly_added_movies_data, key=lambda k: k["modified_time"], reverse=True
     )
+    newly_released_episodes_data = sorted(
+        newly_released_episodes_data, key=lambda k: k["last_episode_air_date"], reverse=True
+    )
+    newly_added_episodes_data = sorted(
+        newly_added_episodes_data, key=lambda k: k["last_episode_modified_time"], reverse=True
+    )
 
     end = time.perf_counter()
     return {
@@ -135,6 +178,7 @@ def home() -> Dict[str, str]:
             "top_rated_series": top_rated_series_data,
             "newly_added_movies": newly_added_movies_data,
             "newly_added_episodes": newly_added_episodes_data,
+            "newly_released_episodes": newly_released_episodes_data,
         },
         "time_taken": end - start,
     }

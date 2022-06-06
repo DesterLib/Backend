@@ -46,7 +46,7 @@ class Episode:
         self.path: str = file_metadata.get("path") or ""
         self.parent: dict = file_metadata.get("parent") or {}
         self.modified_time: datetime = isoparse(
-            file_metadata.get("modifiedTime", "1900-03-27T00:00:00.000+00:00")
+            file_metadata.get("modified_time", "1900-03-27T00:00:00.000+00:00")
         )
 
         parsed_data = self.parse_episode_filename(self.file_name)

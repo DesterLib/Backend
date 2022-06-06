@@ -4,6 +4,8 @@ from typing import Any, Dict, List
 from datetime import datetime, timezone
 from pymongo import TEXT, UpdateOne, MongoClient
 
+from app.core.cron import fetch_metadata
+
 
 class MongoDB:
     def __init__(self, domain: str, username: str, password: str):
@@ -168,7 +170,7 @@ class MongoDB:
             from main import rclone_setup, metadata_setup
 
             rclone_setup(self.config["categories"])
-            metadata_setup()
+            fetch_metadata()
 
     def set_app(self, data: Dict[str, Any]):
         update_data: Dict[str, str] = {
