@@ -167,7 +167,7 @@ class MongoDB:
         self.set_is_config_init(True)
 
         if self.is_metadata_init is False:
-            from main import rclone_setup, metadata_setup
+            from main import rclone_setup, fetch_metadata
 
             rclone_setup(self.config["categories"])
             fetch_metadata()

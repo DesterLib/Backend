@@ -1,10 +1,8 @@
 import re
-import json
+import ujson as json
 import requests
 from httplib2 import Http
 from subprocess import PIPE, run
-from dateutil.parser import parse
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from oauth2client.client import GoogleCredentials
 
@@ -300,6 +298,7 @@ class RCloneAPI:
         return result
 
     def thumbnail(self, id) -> Optional[str]:
+        '''
         if parse(
             self.fs_conf.get("token", {}).get("expiry", "2022-03-27T00:00:00.000+00:00")
         ) <= datetime.now(timezone.utc):
@@ -312,3 +311,5 @@ class RCloneAPI:
         ).json()
         if thumb := result.get("thumbnailLink"):
             return re.sub(r"=s\d+$", "", thumb)
+        '''
+        return ""
