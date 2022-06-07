@@ -4,8 +4,6 @@ from typing import Any, Dict, List
 from datetime import datetime, timezone
 from pymongo import TEXT, UpdateOne, MongoClient
 
-from app.core.cron import fetch_metadata
-
 
 class MongoDB:
     def __init__(self, domain: str, username: str, password: str):

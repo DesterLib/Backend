@@ -113,9 +113,7 @@ def home() -> Dict[str, str]:
                     {
                         "$addFields": {
                             "last_episode_modified_time": {
-                                "$first": {
-                                    "$max": "$seasons.episodes.modified_time"
-                                }
+                                "$first": {"$max": "$seasons.episodes.modified_time"}
                             }
                         }
                     },
@@ -142,8 +140,7 @@ def home() -> Dict[str, str]:
                 ]
             )
             newly_released_episodes_data.extend(sorted_newly_released_data)
-    carousel_data = sorted(
-        carousel_data, key=lambda k: k["popularity"], reverse=True)
+    carousel_data = sorted(carousel_data, key=lambda k: k["popularity"], reverse=True)
     most_popular_movies_data = sorted(
         most_popular_movies_data, key=lambda k: k["popularity"], reverse=True
     )
@@ -160,10 +157,14 @@ def home() -> Dict[str, str]:
         newly_added_movies_data, key=lambda k: k["modified_time"], reverse=True
     )
     newly_released_episodes_data = sorted(
-        newly_released_episodes_data, key=lambda k: k["last_episode_air_date"], reverse=True
+        newly_released_episodes_data,
+        key=lambda k: k["last_episode_air_date"],
+        reverse=True,
     )
     newly_added_episodes_data = sorted(
-        newly_added_episodes_data, key=lambda k: k["last_episode_modified_time"], reverse=True
+        newly_added_episodes_data,
+        key=lambda k: k["last_episode_modified_time"],
+        reverse=True,
     )
 
     end = time.perf_counter()
