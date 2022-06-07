@@ -126,7 +126,7 @@ def generate_movie_metadata(
         name_year = parse_filename(cleaned_title, "movies")
         name = name_year.get("title")
         year = name_year.get("year")
-        tmdb_id = tmdb.find_media_id(name, "movies")
+        tmdb_id = tmdb.find_media_id(name, "movies", year=year)
         if not tmdb_id:
             advanced_search_list.append((name, year))
             logger.info(f"Could not identify: {name}")
@@ -145,7 +145,7 @@ def generate_movie_metadata(
     logger.debug(f"Using advanced search for {len(advanced_search_list)} titles.")
     for name, year in advanced_search_list:
         logger.debug(f"Advanced search identifying: {cleaned_title}")
-        tmdb_id = tmdb.find_media_id(name, "movies", use_api=False)
+        tmdb_id = tmdb.find_media_id(name, "movies", year=year, use_api=False)
         if not tmdb_id:
             logger.info(f"Advanced search could not identify: '{name}'")
             continue
@@ -185,9 +185,9 @@ def generate_series_metadata(
         name_year = parse_filename(cleaned_title, "series")
         name = name_year.get("title")
         year = name_year.get("year")
-        tmdb_id = tmdb.find_media_id(name, "series")
+        tmdb_id = tmdb.find_media_id(name, "series", year=year)
         if not tmdb_id:
-            tmdb_id = tmdb.find_media_id(name, "series", use_api=False)
+            tmdb_id = tmdb.find_media_id(name, "series", year=year, use_api=False)
             if not tmdb_id:
                 logger.info(f"Could not identify: '{name}'")
                 continue
