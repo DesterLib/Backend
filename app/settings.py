@@ -8,10 +8,6 @@ load_dotenv()
 
 class _Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
-    CORS_ORIGINS = [
-        "http://localhost",
-        "http://localhost:35510",
-    ]
     ON_HEROKU: bool = getenv("DYNO") is not None
     PORT: int = int(getenv("PORT", "35500"))
     DEVELOPMENT: bool = getenv("DESTER_DEV", "").lower() == "true"

@@ -1,5 +1,6 @@
-from fastapi import Request, APIRouter
-from fastapi.responses import Response
+from fastapi import APIRouter, Request
+from fastapi.responses import StreamingResponse
+import requests
 
 
 router = APIRouter(
@@ -16,23 +17,28 @@ excluded_headers = [
 ]
 
 
+def iter_file(streamable):
+    with streamable as stream:
+        stream.raise_for_status()
+        for chunk in stream.iter_content(chunk_size=16384):
+            yield chunk
+
+
 @router.get("/{rclone_index}/{full_path:path}")
 def query(request: Request, full_path: str, rclone_index: int):
     from main import rclone
 
     rc = rclone[rclone_index]
+    stream_url = rc.stream(full_path)
 
-    req_headers = request.headers.items()
-    res_headers = {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-        "Accept-Ranges": "bytes",
-    }
-    for item in req_headers:
-        if item[0].lower() not in excluded_headers:
-            res_headers[item[0]] = item[1]
-    req_range = res_headers.get("Range") or ""
-    res_headers["Content-Range"] = req_range + "/*"
-    result = rc.stream(full_path, req_range)
+    result = requests.request(
+        method=request.method,
+        url=stream_url,
+        headers=request.headers,
+        allow_redirects=True,
+        stream=True,
+    )
+    headers = result.headers
+    headers["content-disposition"] = "inline"
 
-    return Response(result, media_type="video/mp4", headers=res_headers)
+    return StreamingResponse(iter_file(result), headers=headers, status_code=result.status_code)

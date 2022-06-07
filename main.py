@@ -62,7 +62,7 @@ def restart_rclone():
     rclone_bin = which("rclone")
     rclone_process = Popen(
         shlex.split(
-            f"{rclone_bin} rcd --rc-no-auth --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf",
+            f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf",
             posix=(platform not in ["win32", "cygwin", "msys"]),
         ),
         stdout=PIPE,
