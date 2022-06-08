@@ -31,22 +31,31 @@ unwanted_keys = {
 
 
 @router.get("/{rclone_index}/{page}", response_model=Dict[str, Any])
-def browse(rclone_index: int, page: int = 0, limit: Optional[int] = 20, sort: Optional[str] = "title:1") -> Dict[str, Any]:
+def browse(rclone_index: int, page: int = 0, limit: Optional[int] = 20, sort: Optional[str] = "title:1", media_type: Optional[str] = "movies") -> Dict[str, Any]:
     start = time.perf_counter()
     from main import mongo, rclone
 
-    category_id = rclone[rclone_index].id
-    category_col = mongo.metadata[category_id]
     sort_split = sort.split(":")
     sort_dict = {sort_split[0]: int(sort_split[1])}
-    result = list(category_col.aggregate(
-        [
-            {"$sort": sort_dict},
-            {"$skip": page * 20},
-            {"$limit": limit},
-            {"$project": unwanted_keys},
-        ]
-    ))
+    if rclone_index == -1:
+        category_cols = []
+        for category in rclone:
+            if media_type == category.data.get("type", "movies"):
+                category_cols.append(mongo.metadata[category.id])
+    else:
+        category_id = rclone[rclone_index].id
+        category_cols = [mongo.metadata[category_id]]
+    browse_result = []
+    for category_col in category_cols:
+        result = list(category_col.aggregate(
+            [
+                {"$sort": sort_dict},
+                {"$skip": page * 20},
+                {"$limit": limit},
+                {"$project": unwanted_keys},
+            ]
+        ))
+        browse_result.extend(result)
 
     end = time.perf_counter()
     return {

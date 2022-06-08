@@ -33,7 +33,7 @@ start_time = time.time()
 mongo = MongoDB(
     settings.MONGODB_DOMAIN, settings.MONGODB_USERNAME, settings.MONGODB_PASSWORD
 )
-rclone = {}
+rclone: Dict[int, RCloneAPI] = {}
 
 
 def restart_rclone():
