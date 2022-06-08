@@ -1,6 +1,6 @@
-from fastapi import APIRouter, Request
-from fastapi.responses import StreamingResponse
 import requests
+from fastapi import Request, APIRouter
+from fastapi.responses import StreamingResponse
 
 
 router = APIRouter(
@@ -41,4 +41,6 @@ def query(request: Request, full_path: str, rclone_index: int):
     headers = result.headers
     headers["content-disposition"] = "inline"
 
-    return StreamingResponse(iter_file(result), headers=headers, status_code=result.status_code)
+    return StreamingResponse(
+        iter_file(result), headers=headers, status_code=result.status_code
+    )
