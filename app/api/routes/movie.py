@@ -9,8 +9,8 @@ router = APIRouter(
 )
 
 
-@router.get("", response_model=Dict[str, Any], status_code=200)
-def settings(id: int) -> Dict[str, Any]:
+@router.get("/{id}", response_model=Dict[str, Any], status_code=200)
+def movie(id: int) -> Dict[str, Any]:
     start = perf_counter()
     from main import mongo
 

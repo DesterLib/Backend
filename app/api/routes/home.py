@@ -1,12 +1,10 @@
 import time
-from app import logger
 from fastapi import APIRouter
 from typing import Dict, Union
 
 
 router = APIRouter(
     prefix="/home",
-    responses={404: {"description": "Not found"}},
     tags=["internals"],
 )
 
@@ -44,7 +42,6 @@ unwanted_keys = {
 @router.get("", response_model=Dict[str, Union[str, int, float, bool, None, dict]])
 def home() -> Dict[str, str]:
     start = time.perf_counter()
-    logger.debug("Generating new data for home route")
     from main import mongo
 
     if not mongo.is_config_init:
@@ -65,15 +62,8 @@ def home() -> Dict[str, str]:
     newly_added_episodes_data = []
     for category in mongo.config["categories"]:
         category_col = mongo.metadata[category["id"]]
-        sorted_popularity_data = list(
-            category_col.aggregate(
-                [
-                    {"$sort": {"popularity": -1}},
-                    {"$limit": data_cap_limit},
-                    {"$project": unwanted_keys},
-                ]
-            )
-        )
+        sorted_popularity_data = list(category_col.aggregate(
+            [{"$sort": {"popularity": -1}}, {"$limit": data_cap_limit}, {"$project": unwanted_keys}]))
         category["metadata"] = sorted_popularity_data
         categories_data.append(category)
         carousel_data.extend(sorted_popularity_data[:3])
@@ -140,7 +130,8 @@ def home() -> Dict[str, str]:
                 ]
             )
             newly_released_episodes_data.extend(sorted_newly_released_data)
-    carousel_data = sorted(carousel_data, key=lambda k: k["popularity"], reverse=True)
+    carousel_data = sorted(
+        carousel_data, key=lambda k: k["popularity"], reverse=True)
     most_popular_movies_data = sorted(
         most_popular_movies_data, key=lambda k: k["popularity"], reverse=True
     )
