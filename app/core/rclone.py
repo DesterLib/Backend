@@ -2,9 +2,8 @@ import re
 import requests
 import ujson as json
 from httplib2 import Http
-from subprocess import PIPE, run
-from typing import Any, Dict, List, Optional
 from app.settings import settings
+from typing import Any, Dict, List, Optional
 from oauth2client.client import GoogleCredentials
 
 
@@ -222,8 +221,7 @@ class RCloneAPI:
                             "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]
-                                ]["json_path"] = f"[{len(metadata) - 1}]"
+                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(
@@ -284,7 +282,9 @@ class RCloneAPI:
         return result["item"]["Size"]
 
     def stream(self, path: str):
-        stream_url = f"http://localhost:{settings.RCLONE_LISTEN_PORT}/[{self.fs}]/{path}"
+        stream_url = (
+            f"http://localhost:{settings.RCLONE_LISTEN_PORT}/[{self.fs}]/{path}"
+        )
         return stream_url
 
     def thumbnail(self, id) -> Optional[str]:
