@@ -1,6 +1,5 @@
 from app.models import Season
 from datetime import datetime
-from typing import Any, Dict, List
 from dateutil.parser import isoparse
 
 
@@ -24,7 +23,6 @@ class Serie:
         "description",
         "cast",
         "crew",
-        "collection",
         "genres",
         "external_ids",
         "total_episodes",
@@ -61,7 +59,6 @@ class Serie:
             "description": self.description,
             "cast": self.cast,
             "crew": self.crew,
-            "collection": self.collection,
             "genres": self.genres,
             "external_ids": self.external_ids,
             "total_episodes": self.total_episodes,
@@ -79,80 +76,61 @@ class Serie:
 
     def __init__(self, file_metadata, media_metadata, rclone_index):
         # File Info
-        self.id: str = file_metadata.get("id") or ""
-        self.file_name: str = file_metadata.get("name") or ""
-        self.path: str = file_metadata.get("path") or ""
-        self.parent: dict = file_metadata.get("parent") or {}
-        self.modified_time: datetime = isoparse(
-            file_metadata.get("modified_time", "1900-03-27T00:00:00.000+00:00")
-        )
+        self.id: str = file_metadata["id"]
+        self.file_name: str = file_metadata["name"]
+        self.path: str = file_metadata["path"]
+        self.parent: dict = file_metadata["parent"]
+        self.modified_time: datetime = isoparse(file_metadata["modified_time"])
         self.rclone_index = rclone_index
 
         # Media Info
-        self.tmdb_id: int = media_metadata.get("id") or 0
-        self.title: str = media_metadata.get("name") or ""
-        self.original_title: str = media_metadata.get("original_name") or ""
-        self.status: str = media_metadata.get("status") or ""
-        self.popularity: float = media_metadata.get("popularity") or 0
-        self.rating: float = media_metadata.get("vote_average") or 0
-        release_date: str = media_metadata.get("first_air_date") or "1900-03-27"
-        self.release_date: datetime = datetime.strptime(release_date, "%Y-%m-%d")
+        self.tmdb_id: int = media_metadata["id"]
+        self.title: str = media_metadata["name"]
+        self.original_title: str = media_metadata["original_name"]
+        self.status: str = media_metadata["status"]
+        self.popularity: float = media_metadata["popularity"]
+        self.rating: float = media_metadata["vote_average"]
+        release_date: str = media_metadata["first_air_date"]
+        self.release_date: datetime = datetime.strptime(
+            release_date, "%Y-%m-%d")
         self.year: int = self.release_date.year
-        self.tagline: str = media_metadata.get("tagline") or ""
-        self.description: str = media_metadata.get("overview") or ""
-        self.cast: List[Dict[str, Any]] = (
-            media_metadata.get("credits", {}).get("cast") or []
-        )[:10]
-        self.crew: List[Dict[str, Any]] = (
-            media_metadata.get("credits", {}).get("crew") or []
-        )[:10]
-        self.collection: Dict[str, Any] = (
-            media_metadata.get("belongs_to_collection") or {}
-        )
-        self.genres: List[Dict[str, Any]] = media_metadata.get("genres") or []
-        self.external_ids: Dict[str, str] = media_metadata.get("external_ids") or {}
-        self.total_episodes: int = media_metadata.get("number_of_episodes") or 0
-        self.total_seasons: int = media_metadata.get("number_of_seasons") or 0
-        self.last_episode_to_air: Dict[str, Any] = (
-            media_metadata.get("last_episode_to_air") or {}
-        )
-        self.next_episode_to_air: Dict[str, Any] = (
-            media_metadata.get("next_episode_to_air") or {}
-        )
+        self.tagline: str = media_metadata["tagline"]
+        self.description: str = media_metadata["overview"]
+        self.cast: list = media_metadata["credits"]["cast"][:10]
+        self.crew: list = self.get_crew(media_metadata["credits"]["crew"])
+        self.genres: list = media_metadata["genres"]
+        self.external_ids: dict = media_metadata["external_ids"]
+        self.total_episodes: int = media_metadata["number_of_episodes"]
+        self.total_seasons: int = media_metadata["number_of_seasons"]
+        self.last_episode_to_air: dict = media_metadata["last_episode_to_air"]
+        self.next_episode_to_air: dict = media_metadata["next_episode_to_air"]
 
         # Media Resources
         self.logo_path: str = self.get_logo(media_metadata)
-        self.homepage: str = media_metadata.get("homepage") or ""
-        self.backdrop_path: str = media_metadata.get("backdrop_path") or ""
-        self.poster_path: str = media_metadata.get("poster_path") or ""
-        self.videos: List[Dict[str, Any]] = (
-            media_metadata.get("videos", {}).get("results") or []
-        )[:10]
-        self.reviews: List[Dict[str, Any]] = (
-            media_metadata.get("reviews", {}).get("results") or []
-        )[:10]
+        self.homepage: str = media_metadata["homepage"]
+        self.backdrop_path: str = media_metadata["backdrop_path"]
+        self.poster_path: str = media_metadata["poster_path"]
+        self.videos: list = media_metadata["videos"]["results"][:10]
+        self.reviews: list = media_metadata["reviews"]["results"][:10]
 
         # Seasons
-        self.seasons: List[Season] = []
-        for season in media_metadata.get("seasons") or []:
-            self.seasons.append(
-                Season(
-                    file_metadata.get("seasons", {}).get(
-                        str(season.get("season_number")), {}
-                    ),
-                    media_metadata.get(
-                        "season/%s" % season.get("season_number", "1"), {}
-                    ),
-                ).__dict__()
-            )
+        self.seasons: dict = {}
+        for key, season in file_metadata["seasons"].items():
+            if f"season/{key}" in media_metadata:
+                self.seasons[key] = Season(season, media_metadata[f"season/{key}"]).__dict__()
 
-    def get_logo(self, media_metadata) -> str:
-        logo: str = ""
+    def get_logo(self, media_metadata: dict) -> str:
         try:
-            logo = (
-                media_metadata.get("images", {}).get("logos", [{}])[0].get("file_path")
-                or ""
-            )
+            logo: str = media_metadata["images"]["logos"][0]["file_path"]
         except BaseException:
-            pass
+            logo: str = ""
         return logo
+
+    def get_crew(self, crew: list) -> list:
+        result = []
+        for member in crew:
+            if member["job"] == "Director":
+                result.append(member)
+            elif member["job"] == "Screenplay":
+                result.append(member)
+        return result

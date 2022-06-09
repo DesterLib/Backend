@@ -35,7 +35,7 @@ def fetch_metadata():
         [("title", TEXT)], background=True, name="title")
     mongo.series_col.delete_many({})
     if len(series_metadata) > 0:
-        mongo.movies_col.bulk_write(series_metadata)
+        mongo.series_col.bulk_write(series_metadata)
     mongo.series_col.create_index(
         [("title", TEXT)], background=True, name="title")
     mongo.series_col.create_index(

@@ -5,7 +5,7 @@ from functools import reduce
 from app.models import Movie, Serie
 from collections import defaultdict
 from typing import Any, Dict, Optional
-from pymongo import TEXT, DESCENDING, InsertOne
+from pymongo import InsertOne
 
 
 def group_by(key, seq):
@@ -120,7 +120,6 @@ def generate_movie_metadata(
     for drive_meta in data:
         original_name = drive_meta["name"]
         cleaned_title = clean_file_name(original_name)
-        logger.debug(f"Identifying: {cleaned_title}")
         name_year = parse_filename(cleaned_title, "movies")
         name = name_year.get("title")
         year = name_year.get("year")
@@ -128,7 +127,6 @@ def generate_movie_metadata(
         if not tmdb_id:
             advanced_search_list.append((name, year))
             logger.info(f"Could not identify: {name}")
-            logger.debug("Skipping and adding to the advanced search list...")
             continue
         logger.info(
             f"Successfully identified: {name} {f'({year})' if year else ''}    ID: {tmdb_id}"
@@ -140,8 +138,6 @@ def generate_movie_metadata(
             movie_info = tmdb.get_details(tmdb_id, "movies")
             curr_metadata: Movie = Movie(drive_meta, movie_info, rclone_index)
             identified_list[tmdb_id] = curr_metadata
-    logger.debug(
-        f"Using advanced search for {len(advanced_search_list)} titles.")
     for name, year in advanced_search_list:
         logger.debug(f"Advanced search identifying: {cleaned_title}")
         tmdb_id = tmdb.find_media_id(name, "movies", year=year, use_api=False)
@@ -171,7 +167,6 @@ def generate_series_metadata(
     for drive_meta in data:
         original_name = drive_meta["name"]
         cleaned_title = clean_file_name(original_name)
-        logger.debug(f"Identifying: {cleaned_title}")
         name_year = parse_filename(cleaned_title, "series")
         name = name_year.get("title")
         year = name_year.get("year")

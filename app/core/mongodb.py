@@ -270,6 +270,7 @@ class MongoDB:
                 upsert=True,
             )
             self.is_config_init = is_config_init
+        return
 
     def set_is_metadata_init(self, is_metadata_init: bool):
         if is_metadata_init != self.is_metadata_init:
@@ -279,6 +280,7 @@ class MongoDB:
                 upsert=True,
             )
             self.is_metadata_init = is_metadata_init
+        return
 
     def set_is_movies_cache_init(self, is_movies_cache_init: bool):
         if is_movies_cache_init != self.is_movies_cache_init:
@@ -291,6 +293,7 @@ class MongoDB:
                 upsert=True,
             )
             self.is_metadata_init = is_movies_cache_init
+        return
 
     def set_is_series_cache_init(self, is_series_cache_init: bool):
         if is_series_cache_init != self.is_series_cache_init:
@@ -303,3 +306,4 @@ class MongoDB:
                 upsert=True,
             )
             self.is_series_cache_init = is_series_cache_init
+        return
