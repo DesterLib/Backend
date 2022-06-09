@@ -1,6 +1,6 @@
 import time
 from fastapi import APIRouter
-from typing import Any, Dict, Union, Optional
+from typing import Any, Dict, Optional
 
 
 router = APIRouter(
@@ -31,7 +31,13 @@ unwanted_keys = {
 
 
 @router.get("/{rclone_index}/{page}", response_model=Dict[str, Any])
-def browse(rclone_index: int, page: int = 0, limit: Optional[int] = 20, sort: Optional[str] = "title:1", media_type: Optional[str] = "movies") -> Dict[str, Any]:
+def browse(
+    rclone_index: int,
+    page: int = 0,
+    limit: Optional[int] = 20,
+    sort: Optional[str] = "title:1",
+    media_type: Optional[str] = "movies",
+) -> Dict[str, Any]:
     start = time.perf_counter()
     from main import mongo, rclone
 
@@ -47,14 +53,16 @@ def browse(rclone_index: int, page: int = 0, limit: Optional[int] = 20, sort: Op
         category_cols = [mongo.metadata[category_id]]
     browse_result = []
     for category_col in category_cols:
-        result = list(category_col.aggregate(
-            [
-                {"$sort": sort_dict},
-                {"$skip": page * 20},
-                {"$limit": limit},
-                {"$project": unwanted_keys},
-            ]
-        ))
+        result = list(
+            category_col.aggregate(
+                [
+                    {"$sort": sort_dict},
+                    {"$skip": page * 20},
+                    {"$limit": limit},
+                    {"$project": unwanted_keys},
+                ]
+            )
+        )
         browse_result.extend(result)
 
     end = time.perf_counter()

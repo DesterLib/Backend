@@ -62,8 +62,15 @@ def home() -> Dict[str, str]:
     newly_added_episodes_data = []
     for category in mongo.config["categories"]:
         category_col = mongo.metadata[category["id"]]
-        sorted_popularity_data = list(category_col.aggregate(
-            [{"$sort": {"popularity": -1}}, {"$limit": data_cap_limit}, {"$project": unwanted_keys}]))
+        sorted_popularity_data = list(
+            category_col.aggregate(
+                [
+                    {"$sort": {"popularity": -1}},
+                    {"$limit": data_cap_limit},
+                    {"$project": unwanted_keys},
+                ]
+            )
+        )
         category["metadata"] = sorted_popularity_data
         categories_data.append(category)
         carousel_data.extend(sorted_popularity_data[:3])
@@ -130,8 +137,7 @@ def home() -> Dict[str, str]:
                 ]
             )
             newly_released_episodes_data.extend(sorted_newly_released_data)
-    carousel_data = sorted(
-        carousel_data, key=lambda k: k["popularity"], reverse=True)
+    carousel_data = sorted(carousel_data, key=lambda k: k["popularity"], reverse=True)
     most_popular_movies_data = sorted(
         most_popular_movies_data, key=lambda k: k["popularity"], reverse=True
     )
