@@ -2,7 +2,6 @@ import requests
 from fastapi import Request, APIRouter
 from fastapi.responses import StreamingResponse
 
-
 router = APIRouter(
     prefix="/stream",
     tags=["internals"],
@@ -20,11 +19,11 @@ excluded_headers = [
 def iter_file(streamable):
     with streamable as stream:
         stream.raise_for_status()
-        for chunk in stream.iter_content(chunk_size=16384):
+        for chunk in stream.iter_content(chunk_size=4096):
             yield chunk
 
 
-@router.get("/{rclone_index}/{full_path:path}")
+@router.get("/{rclone_index}/{full_path:path}", status_code=206)
 def query(request: Request, full_path: str, rclone_index: int):
     from main import rclone
 

@@ -1,6 +1,6 @@
-import time
-from fastapi import APIRouter
-from typing import Dict, Union
+from time import perf_counter
+from fastapi import APIRouter, Response
+from app.models import DResponse
 
 
 router = APIRouter(
@@ -33,17 +33,14 @@ unwanted_keys = {
 }
 
 
-@router.get("", response_model=Dict[str, Union[str, int, float, bool, None, dict]])
-def home() -> Dict[str, str]:
-    start = time.perf_counter()
+@router.get("", response_model=dict, status_code=200)
+def home(response: Response) -> dict:
+    init_time = perf_counter()
     from main import mongo
 
     if not mongo.is_config_init:
-        return {
-            "ok": False,
-            "message": "The config needs to be initialized.",
-            "redirect": "/settings",
-        }
+        response.status_code = 428
+        return DResponse(428, "The config needs to be initialized first.", False, "/settings", init_time).__dict__()
 
     most_popular_movies_data = list(mongo.movies_col.aggregate(
         [{"$sort": {"popularity": -1}}, {"$limit": data_cap_limit}, {"$project": unwanted_keys}]))
@@ -115,20 +112,16 @@ def home() -> Dict[str, str]:
         ]
     )
 
-    end = time.perf_counter()
-    return {
-        "ok": True,
-        "message": "success",
-        "data": {
-            "carousel": carousel_data,
-            "most_popular_movies": most_popular_movies_data,
-            "most_popular_series": most_popular_series_data,
-            "top_rated_movies": list(top_rated_movies_data),
-            "top_rated_series": list(top_rated_series_data),
-            "newly_released_movies": list(newly_released_movies_data),
-            "newly_released_episodes": list(newly_released_episodes_data),
-            "newly_added_movies": list(newly_added_movies_data),
-            "newly_added_episodes": list(newly_added_episodes_data),
-        },
-        "time_taken": end - start,
+    result = {
+        "carousel": carousel_data,
+        "most_popular_movies": most_popular_movies_data,
+        "most_popular_series": most_popular_series_data,
+        "top_rated_movies": list(top_rated_movies_data),
+        "top_rated_series": list(top_rated_series_data),
+        "newly_released_movies": list(newly_released_movies_data),
+        "newly_released_episodes": list(newly_released_episodes_data),
+        "newly_added_movies": list(newly_added_movies_data),
+        "newly_added_episodes": list(newly_added_episodes_data),
     }
+
+    return DResponse(200, "Home page data successfully retrieved.", True, result, init_time).__dict__()

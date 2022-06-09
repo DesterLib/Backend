@@ -8,7 +8,7 @@ from io import TextIOWrapper
 from asyncio.log import logger
 from app.api import main_router
 from app.settings import settings
-from typing import Any, Dict, List
+from typing import Dict
 from fastapi import FastAPI, Request
 from app.core import MongoDB, RCloneAPI
 from app.core.cron import fetch_metadata
@@ -74,7 +74,7 @@ def restart_rclone():
             break
 
 
-def rclone_setup(categories: List[Dict[str, Any]]):
+def rclone_setup(categories: list):
     rclone_conf = ""
     for item in mongo.config["rclone"]:
         rclone_conf += f"\n\n{item}"

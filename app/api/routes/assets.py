@@ -1,14 +1,13 @@
-from typing import Any, Dict
 from httpx import AsyncClient
 from fastapi import Path, APIRouter
 from fastapi.responses import StreamingResponse
 from starlette.background import BackgroundTask
+from app.models import DResponse
+from time import perf_counter
 
 
 router = APIRouter(
     prefix="/assets",
-    # dependencies=[Depends(get_token_header)],
-    responses={404: {"message": "Are you lost?", "ok": False}},
     tags=["internals"],
 )
 
@@ -16,7 +15,7 @@ client = AsyncClient()
 
 
 @router.get(
-    "/image/{quality}/{filename}", response_model=Dict[str, Any], status_code=200
+    "/image/{quality}/{filename}", status_code=200
 )
 async def image_path(
     quality: str = Path(..., title="Quality for the requesting image"),
@@ -32,20 +31,19 @@ async def image_path(
 
 @router.get(
     "/thumbnail/{rclone_index}/{file_id}",
-    response_model=Dict[str, Any],
     status_code=200,
 )
 async def image_path(
-    file_id: str = Path(title := "File ID of the thumbnail that needs to be generated"),
+    file_id: str = Path(
+        title := "File ID of the thumbnail that needs to be generated"),
     rclone_index: int = 0,
 ):
+    init_time = perf_counter()
     from main import rclone
 
-    # need to add a way to identify the correct remote
-    # for now, I'll be using index 0
     thumb_url = rclone[rclone_index].thumbnail(file_id)
     if not thumb_url:
-        return {"ok": False, "message": "Thumbnail not found"}
+        return DResponse(404, "No thumbnail is available for this file.", False, None, init_time).__dict__()
     req = client.build_request("GET", thumb_url)
     r = await client.send(req, stream=True)
     return StreamingResponse(

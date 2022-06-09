@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from time import perf_counter
-from typing import Any, Dict, Optional
+from typing import Optional
+from app.models import DResponse
 
 
 router = APIRouter(
@@ -32,12 +33,12 @@ unwanted_keys = {
 }
 
 
-@router.get("", response_model=Dict[str, Any], status_code=200)
+@router.get("", response_model=dict, status_code=200)
 def query(
     query: Optional[str] = None,
     limit: Optional[int] = 10,
-) -> Dict[str, Any]:
-    start = perf_counter()
+) -> dict:
+    init_time = perf_counter()
     from main import mongo
 
     movies_match = mongo.movies_col.aggregate(
@@ -58,10 +59,5 @@ def query(
             {"$project": unwanted_keys},
         ]
     )
-    results = {"movies": list(movies_match), "series": list(series_match)}
-    return {
-        "ok": True,
-        "message": "success",
-        "results": results,
-        "time_taken": perf_counter() - start,
-    }
+    result = {"movies": list(movies_match), "series": list(series_match)}
+    return DResponse(200, "Successfully retrieved search results for the query '%s'." % query, True, result, init_time).__dict__()

@@ -1,8 +1,8 @@
 import certifi
 from croniter import croniter
-from typing import Any, Dict, List
 from datetime import datetime, timezone
 from pymongo import TEXT, UpdateOne, MongoClient
+from app.models import DResponse
 
 
 class MongoDB:
@@ -49,7 +49,7 @@ class MongoDB:
         self.is_series_cache_init = False
         self.get_is_series_cache_init()
 
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> dict:
         config = {
             "_id": None,
             "app": {},
@@ -109,7 +109,7 @@ class MongoDB:
         else:
             return False
 
-    def get_rclone_conf(self) -> Dict[str, Any]:
+    def get_rclone_conf(self) -> dict:
         result = self.config_col.find_one({"rclone": {"$exists": True}}) or {
             "rclone": []
         }
@@ -117,7 +117,7 @@ class MongoDB:
         self.config["rclone_conf"] = rclone_conf
         return rclone_conf
 
-    def get_categories(self) -> List[Dict[str, Any]]:
+    def get_categories(self) -> list:
         result = self.config_col.find_one({"categories": {"$exists": True}}) or {
             "categories": []
         }
@@ -132,49 +132,47 @@ class MongoDB:
         self.tmdb_api_key = tmdb_api_key
         return tmdb_api_key
 
-    def set_config(self, data: Dict[str, Any]) -> bool:
+    def set_config(self, data: dict) -> int:
         from app.core import build_config
 
-        bulk_action = []
-        config_app = data.get("app", {})
-        config_auth0 = data.get("auth0", {})
-        config_categories = data.get("categories", [])
-        config_gdrive = data.get("gdrive", {})
-        config_tmdb = data.get("tmdb", {})
-        config_build = data.get("build", {})
-        old_category_ids: List[Dict[str, Any]] = []
-        new_category_ids: List[Dict[str, Any]] = []
+        bulk_action: list = []
+        config_app: dict = data.get("app", {})
+        config_auth0: dict = data.get("auth0", {})
+        config_categories: list = data.get("categories", [])
+        config_gdrive: dict = data.get("gdrive", {})
+        config_tmdb: dict = data.get("tmdb", {})
+        config_build: dict = data.get("build", {})
 
         if config_app != self.config["app"]:
             bulk_action.append(self.set_app(config_app))
         if config_auth0 != self.config["auth0"]:
             bulk_action.append(self.set_auth0(config_auth0))
-        if config_categories != self.config["categories"]:
-            new_category_ids = sorted([x["id"] for x in config_categories])
-            old_category_ids = sorted([x["id"] for x in self.config["categories"]])
-            bulk_action.append(self.set_categories(config_categories))
         if config_gdrive != self.config["gdrive"]:
             bulk_action.append(self.set_gdrive(config_gdrive))
         if config_tmdb != self.config["tmdb"]:
             bulk_action.append(self.set_tmdb(config_tmdb))
         if config_build != self.config["build"]:
             bulk_action.append(self.set_build(config_build))
-        if old_category_ids != new_category_ids:
+        if config_categories != self.config["categories"]:
+            bulk_action.append(self.set_categories(config_categories))
             config_rclone = build_config(self.config)
             bulk_action.append(self.set_rclone(config_rclone))
             self.set_is_metadata_init(False)
 
+        if len(bulk_action) == 0:
+            return 0
         self.config_col.bulk_write(bulk_action)
         self.set_is_config_init(True)
 
         if self.is_metadata_init is False:
-            from main import rclone_setup, fetch_metadata
+            from main import rclone_setup
 
             rclone_setup(self.config["categories"])
-            fetch_metadata()
+            return 2
+        return 1
 
-    def set_app(self, data: Dict[str, Any]):
-        update_data: Dict[str, str] = {
+    def set_app(self, data: dict):
+        update_data: dict = {
             "name": data.get("name", "Dester"),
             "title": data.get("title", "Dester"),
             "description": data.get("description", "Dester"),
@@ -186,8 +184,8 @@ class MongoDB:
         self.config["app"] = update_data
         return update_action
 
-    def set_auth0(self, data: Dict[str, Any]):
-        update_data: Dict[str, str] = {
+    def set_auth0(self, data: dict):
+        update_data: dict = {
             "client_id": data.get("client_id", ""),
             "client_secret": data.get("client_secret", ""),
             "domain": data.get("domain", ""),
@@ -198,8 +196,8 @@ class MongoDB:
         self.config["auth0"] = update_data
         return update_action
 
-    def set_categories(self, data: List[Dict[str, Any]]):
-        update_data: List[Dict[str, Any]] = []
+    def set_categories(self, data: list):
+        update_data: list = []
         for item in data:
             update_data.append(
                 {
@@ -221,8 +219,8 @@ class MongoDB:
         self.config["categories"] = update_data
         return update_action
 
-    def set_gdrive(self, data: Dict[str, Any]):
-        update_data: Dict[str, str] = {
+    def set_gdrive(self, data: dict):
+        update_data: dict = {
             "client_id": data.get("client_id", ""),
             "client_secret": data.get("client_secret", ""),
             "access_token": data.get("access_token", ""),
@@ -236,24 +234,24 @@ class MongoDB:
         self.config["gdrive"] = update_data
         return update_action
 
-    def set_tmdb(self, data: Dict[str, Any]):
-        update_data: Dict[str, str] = {"api_key": data.get("api_key", "")}
+    def set_tmdb(self, data: dict):
+        update_data: dict = {"api_key": data.get("api_key", "")}
         update_action: UpdateOne = UpdateOne(
             {"tmdb": {"$exists": True}}, {"$set": {"tmdb": update_data}}, upsert=True
         )
         self.config["tmdb"] = update_data
         return update_action
 
-    def set_build(self, data: Dict[str, Any]):
-        update_data: Dict[str, str] = {"cron": data.get("cron", "*/120 * * * *")}
+    def set_build(self, data: dict):
+        update_data: dict = {"cron": data.get("cron", "*/120 * * * *")}
         update_action: UpdateOne = UpdateOne(
             {"build": {"$exists": True}}, {"$set": {"build": update_data}}, upsert=True
         )
         self.config["build"] = update_data
         return update_action
 
-    def set_rclone(self, data: List[Dict[str, Any]]):
-        update_data: List[Dict[str, Any]] = data
+    def set_rclone(self, data: list):
+        update_data: list = data
         update_action: UpdateOne = UpdateOne(
             {"rclone": {"$exists": True}},
             {"$set": {"rclone": update_data}},

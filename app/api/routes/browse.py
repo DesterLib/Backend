@@ -1,6 +1,7 @@
-import time
+from time import perf_counter
 from fastapi import APIRouter
-from typing import Any, Dict, Optional
+from typing import Optional
+from app.models import DResponse
 
 
 router = APIRouter(
@@ -30,15 +31,15 @@ unwanted_keys = {
 }
 
 
-@router.get("/{rclone_index}/{page}", response_model=Dict[str, Any])
+@router.get("/{rclone_index}/{page}", response_model=dict, status_code=200)
 def browse(
     rclone_index: int,
     page: int = 0,
     limit: Optional[int] = 20,
     sort: Optional[str] = "title:1",
     media_type: Optional[str] = "movies",
-) -> Dict[str, Any]:
-    start = time.perf_counter()
+) -> dict:
+    init_time = perf_counter()
     from main import mongo, rclone
 
     sort_split = sort.split(":")
@@ -78,10 +79,6 @@ def browse(
             ]
         ))
 
-    end = time.perf_counter()
-    return {
-        "ok": True,
-        "message": "success",
-        "result": result,
-        "time_taken": end - start,
-    }
+    message: str = "%s results found sorted by %s %s" % (
+        len(result), sort_split[0], "negatively" if sort_split[1] == 0 else "positively")
+    return DResponse(200, message, True, result, init_time).__dict__()
