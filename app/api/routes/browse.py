@@ -44,26 +44,39 @@ def browse(
     sort_split = sort.split(":")
     sort_dict = {sort_split[0]: int(sort_split[1])}
     if rclone_index == -1:
-        category_cols = []
-        for category in rclone:
+        if media_type == "series":
+            col = mongo.series_col
+        else:
+            col = mongo.movies_col
+        rclone_indexes = []
+        for key, category in rclone.items():
             if media_type == category.data.get("type", "movies"):
-                category_cols.append(mongo.metadata[category.id])
+                rclone_indexes.append(category.index)
+        result = list(col.aggregate(
+            [
+                {"$match": {"rclone_index": {"$in": rclone_indexes}}},
+                {"$sort": sort_dict},
+                {"$skip": page * 20},
+                {"$limit": limit},
+                {"$project": unwanted_keys},
+            ]
+        ))
     else:
-        category_id = rclone[rclone_index].id
-        category_cols = [mongo.metadata[category_id]]
-    browse_result = []
-    for category_col in category_cols:
-        result = list(
-            category_col.aggregate(
-                [
-                    {"$sort": sort_dict},
-                    {"$skip": page * 20},
-                    {"$limit": limit},
-                    {"$project": unwanted_keys},
-                ]
-            )
-        )
-        browse_result.extend(result)
+        for key, category in rclone.items():
+            if category.index == rclone_index:
+                if category.data.get("type") == "series":
+                    col = mongo.series_col
+                else:
+                    col = mongo.movies_col
+        result = list(col.aggregate(
+            [
+                {"$match": {"rclone_index": rclone_index}},
+                {"$sort": sort_dict},
+                {"$skip": page * 20},
+                {"$limit": limit},
+                {"$project": unwanted_keys},
+            ]
+        ))
 
     end = time.perf_counter()
     return {
