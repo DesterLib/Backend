@@ -101,14 +101,14 @@ class Movie:
         self.description: str = media_metadata.get("overview") or ""
         self.cast: List[Dict[str, Any]] = (
             media_metadata.get("credits", {}).get("cast") or []
-        )
+        )[:10]
         self.crew: List[Dict[str, Any]] = (
             media_metadata.get("credits", {}).get("crew") or []
-        )
+        )[:10]
         self.collection: Dict[str, Any] = (
             media_metadata.get("belongs_to_collection") or {}
         )
-        self.genres: List[Dict[str, Any]] = media_metadata.get("genres") or []
+        self.genres: List[Dict[str, Any]] = (media_metadata.get("genres") or [])[:10]
         self.external_ids: Dict[str, str] = media_metadata.get("external_ids") or {}
 
         # Media Resources
@@ -121,10 +121,10 @@ class Movie:
         self.poster_path: str = media_metadata.get("poster_path") or ""
         self.videos: List[Dict[str, Any]] = (
             media_metadata.get("videos", {}).get("results") or []
-        )
+        )[:10]
         self.reviews: List[Dict[str, Any]] = (
             media_metadata.get("reviews", {}).get("results") or []
-        )
+        )[:10]
 
     def append_file(self, file_metadata):
         self.id.append(file_metadata.get("id") or "")

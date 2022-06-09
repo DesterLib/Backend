@@ -40,29 +40,25 @@ def query(
     start = perf_counter()
     from main import mongo
 
-    movies_match = []
-    series_match = []
-    for category in mongo.config["categories"]:
-        result = mongo.metadata[category["id"]].aggregate(
-            [
-                {"$match": {"$text": {"$search": query}}},
-                {"$sort": {"score": {"$meta": "textScore"}}},
-                {"$limit": limit},
-                {"$addFields": {"textScore": {"$meta": "textScore"}}},
-                {"$project": unwanted_keys},
-            ]
-        )
-        if category["type"] == "series":
-            series_match.extend(result)
-        else:
-            movies_match.extend(result)
-    results = {}
-    results["movies"] = sorted(
-        movies_match, key=lambda k: k["textScore"], reverse=True
-    )[:limit]
-    results["series"] = sorted(
-        series_match, key=lambda k: k["textScore"], reverse=True
-    )[:limit]
+    movies_match = mongo.movies_col.aggregate(
+        [
+            {"$match": {"$text": {"$search": query}}},
+            {"$sort": {"score": {"$meta": "textScore"}}},
+            {"$limit": limit},
+            {"$addFields": {"textScore": {"$meta": "textScore"}}},
+            {"$project": unwanted_keys},
+        ]
+    )
+    series_match = mongo.series_col.aggregate(
+        [
+            {"$match": {"$text": {"$search": query}}},
+            {"$sort": {"score": {"$meta": "textScore"}}},
+            {"$limit": limit},
+            {"$addFields": {"textScore": {"$meta": "textScore"}}},
+            {"$project": unwanted_keys},
+        ]
+    )
+    results = {"movies": list(movies_match), "series": list(series_match)}
     return {
         "ok": True,
         "message": "success",

@@ -20,10 +20,13 @@ class MongoDB:
 
         self.config_col = self.db["config"]
         self.history_col = self.db["history"]
-        self.movies_cache_col = self.metadata["_movies_cache"]
         self.other_col = self.db["other"]
-        self.series_cache_col = self.metadata["_series_cache"]
         self.watchlist_col = self.db["watchlist"]
+
+        self.movies_col = self.metadata["movies"]
+        self.movies_cache_col = self.metadata["movies_cache"]
+        self.series_col = self.metadata["series"]
+        self.series_cache_col = self.metadata["series_cache"]
 
         self.config = {
             "app": {},

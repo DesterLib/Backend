@@ -102,10 +102,10 @@ class Serie:
         self.description: str = media_metadata.get("overview") or ""
         self.cast: List[Dict[str, Any]] = (
             media_metadata.get("credits", {}).get("cast") or []
-        )
+        )[:10]
         self.crew: List[Dict[str, Any]] = (
             media_metadata.get("credits", {}).get("crew") or []
-        )
+        )[:10]
         self.collection: Dict[str, Any] = (
             media_metadata.get("belongs_to_collection") or {}
         )
@@ -127,10 +127,10 @@ class Serie:
         self.poster_path: str = media_metadata.get("poster_path") or ""
         self.videos: List[Dict[str, Any]] = (
             media_metadata.get("videos", {}).get("results") or []
-        )
+        )[:10]
         self.reviews: List[Dict[str, Any]] = (
             media_metadata.get("reviews", {}).get("results") or []
-        )
+        )[:10]
 
         # Seasons
         self.seasons: List[Season] = []
