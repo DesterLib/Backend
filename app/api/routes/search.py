@@ -1,6 +1,6 @@
+from typing import Optional
 from fastapi import APIRouter
 from time import perf_counter
-from typing import Optional
 from app.models import DResponse
 
 
@@ -60,4 +60,10 @@ def query(
         ]
     )
     result = {"movies": list(movies_match), "series": list(series_match)}
-    return DResponse(200, "Successfully retrieved search results for the query '%s'." % query, True, result, init_time).__dict__()
+    return DResponse(
+        200,
+        "Successfully retrieved search results for the query '%s'." % query,
+        True,
+        result,
+        init_time,
+    ).__dict__()

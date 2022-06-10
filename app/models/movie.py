@@ -1,6 +1,5 @@
 from datetime import datetime
 from app.settings import settings
-from typing import Any, Dict, List
 from dateutil.parser import isoparse
 
 
@@ -89,8 +88,7 @@ class Movie:
         self.revenue: int = media_metadata["revenue"]
         self.rating: float = media_metadata["vote_average"]
         release_date: str = media_metadata["release_date"]
-        self.release_date: datetime = datetime.strptime(
-            release_date, "%Y-%m-%d")
+        self.release_date: datetime = datetime.strptime(release_date, "%Y-%m-%d")
         self.year: int = self.release_date.year
         self.tagline: str = media_metadata["tagline"]
         self.description: str = media_metadata["overview"]
@@ -102,7 +100,9 @@ class Movie:
         # Media Resources
         self.logo_path: str = self.get_logo(media_metadata)
         self.homepage: str = media_metadata["homepage"]
-        self.thumbnail_path: str = f"{settings.API_V1_STR}/assets/thumbnail/{rclone_index}/{self.id}"
+        self.thumbnail_path: str = (
+            f"{settings.API_V1_STR}/assets/thumbnail/{rclone_index}/{self.id}"
+        )
         self.backdrop_path: str = media_metadata["backdrop_path"]
         self.poster_path: str = media_metadata["poster_path"]
         self.videos: list = media_metadata["videos"]["results"][:10]
@@ -118,9 +118,7 @@ class Movie:
 
     def get_logo(self, media_metadata: dict) -> str:
         try:
-            logo: str = (
-                media_metadata["images"]["logos"][0]["file_path"]
-            )
+            logo: str = media_metadata["images"]["logos"][0]["file_path"]
         except BaseException:
             logo: str = ""
         return logo

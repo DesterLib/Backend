@@ -2,6 +2,7 @@ import requests
 from fastapi import Request, APIRouter
 from fastapi.responses import StreamingResponse
 
+
 router = APIRouter(
     prefix="/stream",
     tags=["internals"],

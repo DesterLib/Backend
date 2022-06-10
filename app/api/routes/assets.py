@@ -1,9 +1,9 @@
 from httpx import AsyncClient
+from time import perf_counter
+from app.models import DResponse
 from fastapi import Path, APIRouter
 from fastapi.responses import StreamingResponse
 from starlette.background import BackgroundTask
-from app.models import DResponse
-from time import perf_counter
 
 
 router = APIRouter(
@@ -14,9 +14,7 @@ router = APIRouter(
 client = AsyncClient()
 
 
-@router.get(
-    "/image/{quality}/{filename}", status_code=200
-)
+@router.get("/image/{quality}/{filename}", status_code=200)
 async def image_path(
     quality: str = Path(..., title="Quality for the requesting image"),
     filename: str = Path(..., title="Filename for the requesting image"),
@@ -34,8 +32,7 @@ async def image_path(
     status_code=200,
 )
 async def image_path(
-    file_id: str = Path(
-        title := "File ID of the thumbnail that needs to be generated"),
+    file_id: str = Path(title := "File ID of the thumbnail that needs to be generated"),
     rclone_index: int = 0,
 ):
     init_time = perf_counter()
@@ -43,7 +40,9 @@ async def image_path(
 
     thumb_url = rclone[rclone_index].thumbnail(file_id)
     if not thumb_url:
-        return DResponse(404, "No thumbnail is available for this file.", False, None, init_time).__dict__()
+        return DResponse(
+            404, "No thumbnail is available for this file.", False, None, init_time
+        ).__dict__()
     req = client.build_request("GET", thumb_url)
     r = await client.send(req, stream=True)
     return StreamingResponse(

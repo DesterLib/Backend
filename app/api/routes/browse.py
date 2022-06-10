@@ -1,6 +1,6 @@
-from time import perf_counter
-from fastapi import APIRouter
 from typing import Optional
+from fastapi import APIRouter
+from time import perf_counter
 from app.models import DResponse
 
 
@@ -53,15 +53,17 @@ def browse(
         for key, category in rclone.items():
             if media_type == category.data.get("type", "movies"):
                 rclone_indexes.append(category.index)
-        result = list(col.aggregate(
-            [
-                {"$match": {"rclone_index": {"$in": rclone_indexes}}},
-                {"$sort": sort_dict},
-                {"$skip": page * 20},
-                {"$limit": limit},
-                {"$project": unwanted_keys},
-            ]
-        ))
+        result = list(
+            col.aggregate(
+                [
+                    {"$match": {"rclone_index": {"$in": rclone_indexes}}},
+                    {"$sort": sort_dict},
+                    {"$skip": page * 20},
+                    {"$limit": limit},
+                    {"$project": unwanted_keys},
+                ]
+            )
+        )
     else:
         for key, category in rclone.items():
             if category.index == rclone_index:
@@ -69,16 +71,21 @@ def browse(
                     col = mongo.series_col
                 else:
                     col = mongo.movies_col
-        result = list(col.aggregate(
-            [
-                {"$match": {"rclone_index": rclone_index}},
-                {"$sort": sort_dict},
-                {"$skip": page * 20},
-                {"$limit": limit},
-                {"$project": unwanted_keys},
-            ]
-        ))
+        result = list(
+            col.aggregate(
+                [
+                    {"$match": {"rclone_index": rclone_index}},
+                    {"$sort": sort_dict},
+                    {"$skip": page * 20},
+                    {"$limit": limit},
+                    {"$project": unwanted_keys},
+                ]
+            )
+        )
 
     message: str = "%s results found sorted by %s %s" % (
-        len(result), sort_split[0], "negatively" if sort_split[1] == 0 else "positively")
+        len(result),
+        sort_split[0],
+        "negatively" if sort_split[1] == 0 else "positively",
+    )
     return DResponse(200, message, True, result, init_time).__dict__()

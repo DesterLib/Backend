@@ -2,7 +2,6 @@ import certifi
 from croniter import croniter
 from datetime import datetime, timezone
 from pymongo import TEXT, UpdateOne, MongoClient
-from app.models import DResponse
 
 
 class MongoDB:

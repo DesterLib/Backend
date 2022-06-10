@@ -1,7 +1,8 @@
 from time import perf_counter
+from app.models import DResponse
 from app.core.cron import fetch_metadata
 from fastapi import APIRouter, BackgroundTasks
-from app.models import DResponse
+
 
 router = APIRouter(
     prefix="/rebuild",
@@ -14,5 +15,6 @@ async def rebuild(background_tasks: BackgroundTasks) -> dict:
     init_time = perf_counter()
     background_tasks.add_task(fetch_metadata)
 
-    return DResponse(200, "Metadata building task started in background.", True, None, init_time).__dict__()
-
+    return DResponse(
+        200, "Metadata building task started in background.", True, None, init_time
+    ).__dict__()

@@ -2,13 +2,13 @@ import os
 import time
 import shlex
 import uvicorn
+from typing import Dict
 from shutil import which
 from sys import platform
 from io import TextIOWrapper
 from asyncio.log import logger
 from app.api import main_router
 from app.settings import settings
-from typing import Dict
 from fastapi import FastAPI, Request
 from app.core import MongoDB, RCloneAPI
 from app.core.cron import fetch_metadata

@@ -1,5 +1,6 @@
 from time import perf_counter
 
+
 class DResponse:
     __slots__ = [
         "code",
@@ -18,7 +19,14 @@ class DResponse:
             "time_taken": self.time_taken,
         }
 
-    def __init__(self, code: int = 200, message: str = "Success.", ok: bool = True, result = None, init_time: float = 0):
+    def __init__(
+        self,
+        code: int = 200,
+        message: str = "Success.",
+        ok: bool = True,
+        result=None,
+        init_time: float = 0,
+    ):
         self.code: int = code
         self.message: str = message
         self.ok: bool = ok

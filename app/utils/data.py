@@ -2,16 +2,15 @@ import re
 from app import logger
 from copy import deepcopy
 from functools import reduce
+from pymongo import InsertOne
 from app.models import Movie, Serie
 from collections import defaultdict
 from typing import Any, Dict, Optional
-from pymongo import InsertOne
 
 
 def group_by(key, seq):
     return reduce(
-        lambda grp, val: grp[key(val)].append(
-            val) or grp, seq, defaultdict(list)
+        lambda grp, val: grp[key(val)].append(val) or grp, seq, defaultdict(list)
     )
 
 
@@ -172,8 +171,7 @@ def generate_series_metadata(
         year = name_year.get("year")
         tmdb_id = tmdb.find_media_id(name, "series", year=year)
         if not tmdb_id:
-            tmdb_id = tmdb.find_media_id(
-                name, "series", year=year, use_api=False)
+            tmdb_id = tmdb.find_media_id(name, "series", year=year, use_api=False)
             if not tmdb_id:
                 logger.info(f"Could not identify: '{name}'")
                 continue

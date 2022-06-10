@@ -1,6 +1,6 @@
 from time import perf_counter
-from fastapi import APIRouter, Response
 from app.models import DResponse
+from fastapi import Response, APIRouter
 
 
 router = APIRouter(
@@ -40,16 +40,34 @@ def home(response: Response) -> dict:
 
     if not mongo.is_config_init:
         response.status_code = 428
-        return DResponse(428, "The config needs to be initialized first.", False, "/settings", init_time).__dict__()
+        return DResponse(
+            428,
+            "The config needs to be initialized first.",
+            False,
+            "/settings",
+            init_time,
+        ).__dict__()
 
-    most_popular_movies_data = list(mongo.movies_col.aggregate(
-        [{"$sort": {"popularity": -1}}, {"$limit": data_cap_limit}, {"$project": unwanted_keys}]))
-    most_popular_series_data = list(mongo.series_col.aggregate(
-        [{"$sort": {"popularity": -1}}, {"$limit": data_cap_limit}, {"$project": unwanted_keys}]))
-    carousel_data = []
-    carousel_data.extend(
-        most_popular_movies_data[:3] + most_popular_series_data[:3]
+    most_popular_movies_data = list(
+        mongo.movies_col.aggregate(
+            [
+                {"$sort": {"popularity": -1}},
+                {"$limit": data_cap_limit},
+                {"$project": unwanted_keys},
+            ]
+        )
     )
+    most_popular_series_data = list(
+        mongo.series_col.aggregate(
+            [
+                {"$sort": {"popularity": -1}},
+                {"$limit": data_cap_limit},
+                {"$project": unwanted_keys},
+            ]
+        )
+    )
+    carousel_data = []
+    carousel_data.extend(most_popular_movies_data[:3] + most_popular_series_data[:3])
 
     top_rated_movies_data = mongo.movies_col.aggregate(
         [
@@ -124,4 +142,6 @@ def home(response: Response) -> dict:
         "newly_added_episodes": list(newly_added_episodes_data),
     }
 
-    return DResponse(200, "Home page data successfully retrieved.", True, result, init_time).__dict__()
+    return DResponse(
+        200, "Home page data successfully retrieved.", True, result, init_time
+    ).__dict__()

@@ -60,8 +60,15 @@ class Episode:
         try:
             episode_metadata = media_metadata["episodes"][episode_number - 1]
         except IndexError:
-            episode_metadata = {"id": "", "name": self.file_name, "overview": "", "air_date": "1900-01-01",
-                                "episode_number": episode_number, "vote_average": 0, "still_path": ""}
+            episode_metadata = {
+                "id": "",
+                "name": self.file_name,
+                "overview": "",
+                "air_date": "1900-01-01",
+                "episode_number": episode_number,
+                "vote_average": 0,
+                "still_path": "",
+            }
 
         # Media Info
         self.tmdb_id: int = episode_metadata["id"]
