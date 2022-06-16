@@ -4,7 +4,7 @@ from dateutil.parser import isoparse
 
 
 class Movie:
-    __slots__ = [
+    __slots__: list = [
         "id",
         "file_name",
         "path",
@@ -36,7 +36,7 @@ class Movie:
         "reviews",
     ]
 
-    def __dict__(self):
+    def __dict__(self) -> dict:
         return {
             "id": self.id,
             "file_name": self.file_name,
@@ -88,12 +88,13 @@ class Movie:
         self.revenue: int = media_metadata["revenue"]
         self.rating: float = media_metadata["vote_average"]
         release_date: str = media_metadata["release_date"]
-        self.release_date: datetime = datetime.strptime(release_date, "%Y-%m-%d")
+        self.release_date: datetime = datetime.strptime(
+            release_date, "%Y-%m-%d")
         self.year: int = self.release_date.year
         self.tagline: str = media_metadata["tagline"]
         self.description: str = media_metadata["overview"]
         self.cast: list = media_metadata["credits"]["cast"][:10]
-        self.crew: list = self.get_crew(media_metadata["credits"]["crew"])
+        self.crew: dict = self.get_crew(media_metadata["credits"]["crew"])
         self.genres: list = media_metadata["genres"]
         self.external_ids: dict = media_metadata["external_ids"]
 
@@ -123,11 +124,14 @@ class Movie:
             logo: str = ""
         return logo
 
-    def get_crew(self, crew: list) -> list:
-        result: list = []
+    def get_crew(self, crew: list) -> dict:
+        result: dict = {"Creator": [], "Director": [], "Screenplay": [],
+                        "Screenplay by": [], "Author": [], "Writer": []}
+        wanted_jobs: list = ["Creator", "Director",
+                             "Screenplay", "Screenplay by", "Author", "Writer"]
         for member in crew:
-            if member["job"] == "Director":
-                result.append(member)
-            elif member["job"] == "Screenplay":
-                result.append(member)
+            if member["job"] in wanted_jobs:
+                result[member["job"]].append(member)
+        result["Screenplay"].extend(result["Screenplay by"])
+        del result["Screenplay by"]
         return result
