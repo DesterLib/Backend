@@ -25,6 +25,7 @@ class Movie:
         "description",
         "cast",
         "crew",
+        "studios",
         "genres",
         "external_ids",
         "logo_path",
@@ -58,6 +59,7 @@ class Movie:
             "description": self.description,
             "cast": self.cast,
             "crew": self.crew,
+            "studios": self.studios,
             "genres": self.genres,
             "external_ids": self.external_ids,
             "logo_path": self.logo_path,
@@ -95,6 +97,7 @@ class Movie:
         self.description: str = media_metadata["overview"]
         self.cast: list = media_metadata["credits"]["cast"][:10]
         self.crew: dict = self.get_crew(media_metadata["credits"]["crew"])
+        self.studios: list = media_metadata["production_companies"]
         self.genres: list = media_metadata["genres"]
         self.external_ids: dict = media_metadata["external_ids"]
 

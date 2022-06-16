@@ -23,6 +23,7 @@ class Serie:
         "description",
         "cast",
         "crew",
+        "studios",
         "genres",
         "external_ids",
         "total_episodes",
@@ -59,6 +60,7 @@ class Serie:
             "description": self.description,
             "cast": self.cast,
             "crew": self.crew,
+            "studios": self.studios,
             "genres": self.genres,
             "external_ids": self.external_ids,
             "total_episodes": self.total_episodes,
@@ -98,6 +100,7 @@ class Serie:
         self.description: str = media_metadata["overview"]
         self.cast: list = media_metadata["credits"]["cast"][:10]
         self.crew: dict = self.get_crew(media_metadata["credits"]["crew"], media_metadata["created_by"])
+        self.studios: list = media_metadata["production_companies"]
         self.genres: list = media_metadata["genres"]
         self.external_ids: dict = media_metadata["external_ids"]
         self.total_episodes: int = media_metadata["number_of_episodes"]
