@@ -1,8 +1,8 @@
-from time import perf_counter, sleep
+from os import path, listdir
 from fastapi import APIRouter
 from app.models import DResponse
+from time import sleep, perf_counter
 from fastapi.responses import StreamingResponse
-from os import path, listdir
 
 
 router = APIRouter(

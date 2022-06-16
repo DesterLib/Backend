@@ -93,13 +93,14 @@ class Serie:
         self.popularity: float = media_metadata["popularity"]
         self.rating: float = media_metadata["vote_average"]
         release_date: str = media_metadata["first_air_date"]
-        self.release_date: datetime = datetime.strptime(
-            release_date, "%Y-%m-%d")
+        self.release_date: datetime = datetime.strptime(release_date, "%Y-%m-%d")
         self.year: int = self.release_date.year
         self.tagline: str = media_metadata["tagline"]
         self.description: str = media_metadata["overview"]
         self.cast: list = media_metadata["credits"]["cast"][:10]
-        self.crew: dict = self.get_crew(media_metadata["credits"]["crew"], media_metadata["created_by"])
+        self.crew: dict = self.get_crew(
+            media_metadata["credits"]["crew"], media_metadata["created_by"]
+        )
         self.studios: list = media_metadata["production_companies"]
         self.genres: list = media_metadata["genres"]
         self.external_ids: dict = media_metadata["external_ids"]
@@ -132,10 +133,25 @@ class Serie:
         return logo
 
     def get_crew(self, crew: list, creators: list) -> dict:
-        result: dict = {"Creator": creators, "Director": [], "Series Director": [], "Screenplay": [],
-                        "Screenplay by": [], "Author": [], "Writer": [], "Series Writer": []}
-        wanted_jobs: list = ["Director", "Series Director",
-                             "Screenplay", "Screenplay by", "Author", "Writer", "Series Writer"]
+        result: dict = {
+            "Creator": creators,
+            "Director": [],
+            "Series Director": [],
+            "Screenplay": [],
+            "Screenplay by": [],
+            "Author": [],
+            "Writer": [],
+            "Series Writer": [],
+        }
+        wanted_jobs: list = [
+            "Director",
+            "Series Director",
+            "Screenplay",
+            "Screenplay by",
+            "Author",
+            "Writer",
+            "Series Writer",
+        ]
         for member in crew:
             if member["job"] in wanted_jobs:
                 result[member["job"]].append(member)

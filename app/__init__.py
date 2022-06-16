@@ -6,11 +6,11 @@ __copyright__ = "Copyright 2022, DesterLib"
 __authors__ = ["Elias Benbourenane", "EverythingSuckz"]
 __credits__ = ["EverythingSuckz", "Elias Benbourenane", "AlkenD"]
 
-from logging import basicConfig, StreamHandler, getLogger, WARNING, DEBUG
-from logging.handlers import TimedRotatingFileHandler
 import os.path
 from os import makedirs
 from datetime import datetime, timezone
+from logging.handlers import TimedRotatingFileHandler
+from logging import DEBUG, WARNING, StreamHandler, getLogger, basicConfig
 
 
 if not os.path.isdir("logs"):
@@ -18,7 +18,9 @@ if not os.path.isdir("logs"):
 if not os.path.isdir("cache"):
     makedirs("cache")
 
-handler = TimedRotatingFileHandler("logs/dester.log", when="m", interval=60, backupCount=5)
+handler = TimedRotatingFileHandler(
+    "logs/dester.log", when="m", interval=60, backupCount=5
+)
 handler.namer = lambda name: name.replace(".log", "") + ".log"
 
 basicConfig(

@@ -90,8 +90,7 @@ class Movie:
         self.revenue: int = media_metadata["revenue"]
         self.rating: float = media_metadata["vote_average"]
         release_date: str = media_metadata["release_date"]
-        self.release_date: datetime = datetime.strptime(
-            release_date, "%Y-%m-%d")
+        self.release_date: datetime = datetime.strptime(release_date, "%Y-%m-%d")
         self.year: int = self.release_date.year
         self.tagline: str = media_metadata["tagline"]
         self.description: str = media_metadata["overview"]
@@ -128,10 +127,22 @@ class Movie:
         return logo
 
     def get_crew(self, crew: list) -> dict:
-        result: dict = {"Creator": [], "Director": [], "Screenplay": [],
-                        "Screenplay by": [], "Author": [], "Writer": []}
-        wanted_jobs: list = ["Creator", "Director",
-                             "Screenplay", "Screenplay by", "Author", "Writer"]
+        result: dict = {
+            "Creator": [],
+            "Director": [],
+            "Screenplay": [],
+            "Screenplay by": [],
+            "Author": [],
+            "Writer": [],
+        }
+        wanted_jobs: list = [
+            "Creator",
+            "Director",
+            "Screenplay",
+            "Screenplay by",
+            "Author",
+            "Writer",
+        ]
         for member in crew:
             if member["job"] in wanted_jobs:
                 result[member["job"]].append(member)
