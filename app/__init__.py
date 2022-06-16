@@ -6,7 +6,8 @@ __copyright__ = "Copyright 2022, DesterLib"
 __authors__ = ["Elias Benbourenane", "EverythingSuckz"]
 __credits__ = ["EverythingSuckz", "Elias Benbourenane", "AlkenD"]
 
-import logging
+from logging import basicConfig, StreamHandler, getLogger, WARNING, DEBUG
+from logging.handlers import TimedRotatingFileHandler
 import os.path
 from os import makedirs
 from datetime import datetime, timezone
@@ -17,23 +18,21 @@ if not os.path.isdir("logs"):
 if not os.path.isdir("cache"):
     makedirs("cache")
 
-logging.basicConfig(
-    level=logging.DEBUG,
+handler = TimedRotatingFileHandler("logs/dester.log", when="m", interval=60, backupCount=5)
+handler.namer = lambda name: name.replace(".log", "") + ".log"
+
+basicConfig(
+    level=DEBUG,
     datefmt="%Y/%m/%d %H:%M:%S",
     format="[%(asctime)s][%(levelname)s] ==> %(message)s",
     handlers=[
-        logging.StreamHandler(),
-        logging.FileHandler(
-            "logs/{}.log".format(
-                datetime.now(timezone.utc).strftime("%Y-%m-%d_%H%M%S")
-            ),
-            mode="w",
-        ),
+        StreamHandler(),
+        handler,
     ],
 )
-logging.getLogger("oauth2client").setLevel(logging.WARNING)
-logging.getLogger("googleapiclient").setLevel(logging.WARNING)
-logging.getLogger("waitress").setLevel(logging.WARNING)
-logging.getLogger("uvicorn").setLevel(logging.WARNING)
-logging.getLogger("httpx").setLevel(logging.WARNING)
-logger = logging.getLogger(__name__)
+getLogger("oauth2client").setLevel(WARNING)
+getLogger("googleapiclient").setLevel(WARNING)
+getLogger("waitress").setLevel(WARNING)
+getLogger("uvicorn").setLevel(WARNING)
+getLogger("httpx").setLevel(WARNING)
+logger = getLogger(__name__)
