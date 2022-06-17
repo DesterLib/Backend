@@ -114,6 +114,7 @@ class RCloneAPI:
             "statsReset": "core/stats-reset",
         }
         self.fs_conf: Dict[str, Any] = self.rc_conf()
+        self.refresh()
 
     def rc_ls(self, options: Optional[dict] = {}) -> List[Dict[str, Any]]:
         rc_data: Dict[str, Any] = {
@@ -128,8 +129,8 @@ class RCloneAPI:
         ).json()
         return result["list"]
 
-    def rc_conf(self) -> Dict[str, Any]:
-        rc_data: Dict[str, str] = {"name": self.fs[:-1]}
+    def rc_conf(self) -> dict:
+        rc_data: dict = {"name": self.fs[:-1]}
         result = requests.post(
             "%s/%s" % (self.RCLONE_RC_URL, self.RCLONE["getConfigForRemote"]),
             data=json.dumps(rc_data),
@@ -221,7 +222,8 @@ class RCloneAPI:
                             "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
+                    parent_dirs[item["Path"]
+                                ]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(
@@ -245,7 +247,7 @@ class RCloneAPI:
                     )
         return metadata
 
-    def refresh(self) -> Dict:
+    def refresh(self) -> dict:
         creds = GoogleCredentials(
             client_id=self.fs_conf["client_id"],
             client_secret=self.fs_conf["client_secret"],
@@ -262,6 +264,7 @@ class RCloneAPI:
             "refresh_token": creds.refresh_token,
             "expiry": creds.token_expiry,
         }
+        self.fs_conf["token"] = result
         return result
 
     def size(self, path: str) -> int:
