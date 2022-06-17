@@ -1,4 +1,4 @@
-import re
+import regex as re
 import requests
 import ujson as json
 from httplib2 import Http
@@ -227,9 +227,9 @@ class RCloneAPI:
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(
-                        r"^s(?:\w+)? ?\-?\.?(\d{0,3})$", item["Name"], flags=2
+                        r"(?<=Season.|season.|S|s)\d{1,3}|^\d{1,3}$", item["Name"]
                     )
-                    season = season.group(1) if season else "1"
+                    season = season.group() if season else "1"
                     if season != "0":
                         season = season.lstrip("0")
                     series_metadata["seasons"][season] = {

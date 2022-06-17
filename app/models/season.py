@@ -49,7 +49,7 @@ class Season:
         self.tmdb_id: int = media_metadata["_id"]
         self.name: str = media_metadata["name"]
         self.overview: str = media_metadata["overview"]
-        air_date: str = media_metadata["air_date"]
+        air_date: str = media_metadata["air_date"] or "1900-01-01"
         self.air_date: datetime = datetime.strptime(air_date, "%Y-%m-%d")
         self.episode_count: int = len(media_metadata["episodes"])
         self.season_number: int = media_metadata["season_number"]

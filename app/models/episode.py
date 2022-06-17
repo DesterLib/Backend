@@ -44,7 +44,7 @@ class Episode:
         self.parent: dict = file_metadata["parent"]
         self.modified_time: datetime = isoparse(file_metadata["modified_time"])
 
-        parsed_data = self.parse_episode_filename(self.file_name)
+        parsed_data = self.parse_episode_filename(self.file_name, media_metadata["season_number"])
         try:
             episode_number = int(parsed_data["episode"])
         except (KeyError, ValueError):
@@ -54,9 +54,10 @@ class Episode:
         except KeyError:
             season_number = media_metadata["season_number"]
         if season_number != media_metadata["season_number"]:
-            logger.debug(
-                f"      Season number mismatch: {season_number} != {media_metadata['season_number']}"
-            )
+            #logger.debug(
+            #    f"      Season number mismatch: {self.file_name} | Season {media_metadata['season_number']}"
+            #)
+            pass
         try:
             episode_metadata = media_metadata["episodes"][episode_number - 1]
         except IndexError:
@@ -74,7 +75,7 @@ class Episode:
         self.tmdb_id: int = episode_metadata["id"]
         self.name: str = episode_metadata["name"]
         self.overview: str = episode_metadata["overview"]
-        air_date: str = media_metadata["air_date"]
+        air_date: str = media_metadata["air_date"] or "1900-01-01"
         self.air_date: datetime = datetime.strptime(air_date, "%Y-%m-%d")
         self.episode_number: int = episode_number
         self.rating: float = episode_metadata["vote_average"]
@@ -82,7 +83,7 @@ class Episode:
         # Media Resources
         self.thumbnail_path: str = episode_metadata["still_path"]
 
-    def parse_episode_filename(self, name: str) -> dict:
+    def parse_episode_filename(self, name: str, season_number: int) -> dict:
         reg_exps = [
             r".+?s ?(?P<season>\d{0,2})e ?(?P<episode>\d{0,4}).+",
             r".+?e ?(?P<episode>\d{0,2})s ?(?P<season>\d{0,4}).+",
@@ -92,9 +93,7 @@ class Episode:
             if match := re.match(exp, name, flags=2):
                 data = match.groupdict()
                 if not data.get("season"):
-                    data["season"] = 1
-                if data.get("episode"):
-                    data["episode"] = int(data["episode"])
+                    data["season"] = season_number
                 data["season"] = int(data["season"])
                 return data
         else:

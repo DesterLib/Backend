@@ -8,40 +8,6 @@ from collections import defaultdict
 from typing import Any, Dict, Optional
 
 
-def group_by(key, seq):
-    return reduce(
-        lambda grp, val: grp[key(val)].append(val) or grp, seq, defaultdict(list)
-    )
-
-
-def try_int(value: str) -> Optional[int]:
-    try:
-        value = int(value)
-    except ValueError:
-        value = None
-    return value
-
-
-def sort_by_type(metadata: Dict[str, Any] = {}) -> Dict[str, Any]:
-    data = {"movies": [], "series": []}
-    ids = deepcopy(data)
-    for category in metadata:
-        meta = category["metadata"]
-        for item in meta:
-            item["category"] = {
-                "id": category.get("id") or category.get("drive_id"),
-                "name": category["name"],
-            }
-            if category["type"] == "movies":
-                if not item["tmdb_id"] in ids["movies"]:
-                    data["movies"].append(item)
-            elif category["type"] == "series":
-                if not item["tmdb_id"] in ids["series"]:
-                    data["series"].append(item)
-            ids[category.get("type")].append(item["tmdb_id"])
-    return data
-
-
 def parse_filename(name: str, data_type: str):
     reg_exps = (
         [
@@ -71,25 +37,6 @@ def parse_filename(name: str, data_type: str):
         if match := re.match(exp, name):
             data = match.groupdict()
             data["title"] = data["title"].strip().replace(".", " ")
-            return data
-    else:
-        return {}
-
-
-def parse_episode_filename(name: str):
-    reg_exps = [
-        r".+?s ?(?P<season>\d{0,2})e ?(?P<episode>\d{0,4}).+",
-        r".+?e ?(?P<episode>\d{0,2})s ?(?P<season>\d{0,4}).+",
-        r".+?e ?(?P<episode>\d{0,4})",
-    ]
-    for exp in reg_exps:
-        if match := re.match(exp, name, flags=2):
-            data = match.groupdict()
-            if not data.get("season"):
-                data["season"] = 1
-            if data.get("episode"):
-                data["episode"] = int(data["episode"])
-            data["season"] = int(data["season"])
             return data
     else:
         return {}
