@@ -1,5 +1,4 @@
 import re
-from app import logger
 from datetime import datetime
 from dateutil.parser import isoparse
 
@@ -44,7 +43,9 @@ class Episode:
         self.parent: dict = file_metadata["parent"]
         self.modified_time: datetime = isoparse(file_metadata["modified_time"])
 
-        parsed_data = self.parse_episode_filename(self.file_name, media_metadata["season_number"])
+        parsed_data = self.parse_episode_filename(
+            self.file_name, media_metadata["season_number"]
+        )
         try:
             episode_number = int(parsed_data["episode"])
         except (KeyError, ValueError):
@@ -54,9 +55,9 @@ class Episode:
         except KeyError:
             season_number = media_metadata["season_number"]
         if season_number != media_metadata["season_number"]:
-            #logger.debug(
+            # logger.debug(
             #    f"      Season number mismatch: {self.file_name} | Season {media_metadata['season_number']}"
-            #)
+            # )
             pass
         try:
             episode_metadata = media_metadata["episodes"][episode_number - 1]

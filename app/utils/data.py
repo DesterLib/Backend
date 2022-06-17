@@ -1,11 +1,8 @@
 import re
 from app import logger
-from copy import deepcopy
-from functools import reduce
+from typing import Any, Dict
 from pymongo import InsertOne
 from app.models import Movie, Serie
-from collections import defaultdict
-from typing import Any, Dict, Optional
 
 
 def parse_filename(name: str, data_type: str):
