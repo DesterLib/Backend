@@ -1,6 +1,7 @@
 import re
 from datetime import datetime
 from dateutil.parser import isoparse
+from app import logger
 
 
 class Episode:
@@ -55,10 +56,9 @@ class Episode:
         except KeyError:
             season_number = media_metadata["season_number"]
         if season_number != media_metadata["season_number"]:
-            # logger.debug(
-            #    f"      Season number mismatch: {self.file_name} | Season {media_metadata['season_number']}"
-            # )
-            pass
+            logger.debug(
+                f"      Season number mismatch: {self.file_name} | Season {media_metadata['season_number']}"
+            )
         try:
             episode_metadata = media_metadata["episodes"][episode_number - 1]
         except IndexError:
