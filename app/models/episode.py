@@ -1,4 +1,4 @@
-import re
+import regex as re
 from app import logger
 from datetime import datetime
 from dateutil.parser import isoparse
