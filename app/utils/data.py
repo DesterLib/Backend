@@ -104,7 +104,7 @@ def generate_movie_metadata(
             identified_list[tmdb_id] = curr_metadata
     metadata = []
     for item in identified_list.values():
-        metadata.append(InsertOne(item.__dict__()))
+        metadata.append(InsertOne(item.__json__()))
     return metadata
 
 
@@ -135,5 +135,5 @@ def generate_series_metadata(
                 series_info["name"], tmdb_id)
         )
         curr_metadata: Serie = Serie(drive_meta, series_info, rclone_index)
-        metadata.append(InsertOne(curr_metadata.__dict__()))
+        metadata.append(InsertOne(curr_metadata.__json__()))
     return metadata

@@ -37,7 +37,7 @@ class Movie:
         "reviews",
     ]
 
-    def __dict__(self) -> dict:
+    def __json__(self) -> dict:
         return {
             "id": self.id,
             "file_name": self.file_name,

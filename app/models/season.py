@@ -20,7 +20,7 @@ class Season:
         "episodes",
     ]
 
-    def __dict__(self):
+    def __json__(self):
         return {
             "id": self.id,
             "file_name": self.file_name,
@@ -59,8 +59,8 @@ class Season:
 
         # Episodes
         index: int = len(file_metadata["episodes"])
-        self.episodes: dict = {}
+        self.episodes: list = []
         for episode in file_metadata["episodes"]:
             episode_meta: Episode = Episode(episode, media_metadata, index)
-            self.episodes[str(episode_meta.episode_number)] = episode_meta.__dict__()
+            self.episodes.append(episode_meta.__json__())
             index -= 1

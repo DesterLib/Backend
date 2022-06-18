@@ -91,14 +91,13 @@ def home(response: Response) -> dict:
             {"$project": unwanted_keys},
         ]
     )
+
     newly_released_episodes_data = mongo.series_col.aggregate(
         [
             {
                 "$addFields": {
                     "last_episode_air_date": {
-                        "$dateFromString": {
-                            "dateString": "$last_episode_to_air.air_date"
-                        }
+                        "$first": {"$max": "$seasons.episodes.air_date"}
                     }
                 }
             },

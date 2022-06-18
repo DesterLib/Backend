@@ -20,7 +20,7 @@ class Episode:
         "thumbnail_path",
     ]
 
-    def __dict__(self):
+    def __json__(self):
         return {
             "id": self.id,
             "file_name": self.file_name,
