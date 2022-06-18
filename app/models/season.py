@@ -61,8 +61,10 @@ class Season:
 
         # Episodes
         index: int = len(file_metadata["episodes"])
-        self.episodes: list = []
+        episodes: list = []
         for episode in file_metadata["episodes"]:
             episode_meta: Episode = Episode(episode, media_metadata, index)
-            self.episodes.append(episode_meta.__json__())
+            episodes.append(episode_meta.__json__())
             index -= 1
+        self.episodes: list = sorted(episodes, key=lambda d: d["episode_number"])
+        del episodes

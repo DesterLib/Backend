@@ -118,12 +118,14 @@ class Serie:
         self.reviews: list = media_metadata["reviews"]["results"][:10]
 
         # Seasons
-        self.seasons: list = []
+        seasons: list = []
         for key, season in file_metadata["seasons"].items():
             if f"season/{key}" in media_metadata:
-                self.seasons.append(
+                seasons.append(
                     Season(season, media_metadata[f"season/{key}"]).__json__()
                 )
+        self.seasons: list = sorted(seasons, key=lambda d: d["season_number"])
+        del seasons
 
     def get_logo(self, media_metadata: dict) -> str:
         """Returns the series logo URL if available"""
