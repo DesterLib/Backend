@@ -1,7 +1,7 @@
 import re
+from app import logger
 from datetime import datetime
 from dateutil.parser import isoparse
-from app import logger
 
 
 class Episode:
