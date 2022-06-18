@@ -88,4 +88,4 @@ def browse(
         sort_split[0],
         "negatively" if sort_split[1] == 0 else "positively",
     )
-    return DResponse(200, message, True, result, init_time).__dict__()
+    return DResponse(200, message, True, result, init_time).__json__()

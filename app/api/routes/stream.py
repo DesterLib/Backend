@@ -55,7 +55,7 @@ def info(rclone_index: int, id: str):
         True,
         streams,
         init_time,
-    ).__dict__()
+    ).__json__()
 
 
 @router.get("/{rclone_index}/{full_path:path}", status_code=206)

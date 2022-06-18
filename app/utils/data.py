@@ -1,11 +1,13 @@
+from typing import Dict, List
+
 import regex as re
 from app import logger
-from typing import Any, Dict
-from pymongo import InsertOne
 from app.models import Movie, Serie
+from pymongo import InsertOne
 
 
 def parse_filename(name: str, data_type: str):
+    """Identifies media names and years from file name"""
     reg_exps = (
         [
             # (2019) The Mandalorian
@@ -35,11 +37,11 @@ def parse_filename(name: str, data_type: str):
             data = match.groupdict()
             data["title"] = data["title"].strip().replace(".", " ")
             return data
-    else:
-        return {}
+    return {}
 
 
 def clean_file_name(name: str) -> str:
+    """Removes common and unnecessary strings from file names"""
     reg_exps = [
         r"\((?:\D.+?|.+?\D)\)|\[(?:\D.+?|.+?\D)\]",  # (2016), [2016], etc
         r"\(?(?:240|360|480|720|1080|1440|2160)p?\)?",  # 1080p, 720p, etc
@@ -51,13 +53,12 @@ def clean_file_name(name: str) -> str:
         r"^(?:https?:\/\/)?(?:www.)?[a-z0-9]+\.[a-z]+(?:\/[a-zA-Z0-9#]+\/?)*$",
     ]
     for reg in reg_exps:
-        name = re.sub(reg, "", name, flags=re.I)
+        name = re.sub(reg, "", name)
     return name.strip().rstrip(".-_")
 
 
-def generate_movie_metadata(
-    tmdb, data: Dict[str, Any], rclone_index: int
-) -> Dict[str, Any]:
+def generate_movie_metadata(tmdb, data: dict, rclone_index: int) -> List[InsertOne]:
+    """Matches and identifies movies by file names and returns a list of MongoDB insert tasks"""
     advanced_search_list = []
     identified_list: Dict[int, Movie] = {}
     for drive_meta in data:
@@ -73,10 +74,10 @@ def generate_movie_metadata(
             tmdb_id = tmdb.find_media_id(name, "movies", year=year)
         if not tmdb_id:
             advanced_search_list.append((name, year))
-            logger.info(f"Could not identify: {name}")
+            logger.info("Could not identify: %s", name)
             continue
         logger.info(
-            f"Successfully identified: {name} {f'({year})' if year else ''}    ID: {tmdb_id}"
+            "Successfully identified: %s %s    ID: %s", name, 'year' if year else '', tmdb_id
         )
         identified_match = identified_list.get(tmdb_id)
         if identified_match:
@@ -86,10 +87,10 @@ def generate_movie_metadata(
             curr_metadata: Movie = Movie(drive_meta, movie_info, rclone_index)
             identified_list[tmdb_id] = curr_metadata
     for name, year in advanced_search_list:
-        logger.debug(f"Advanced search identifying: {cleaned_title}")
+        logger.debug("Advanced search identifying: %s", cleaned_title)
         tmdb_id = tmdb.find_media_id(name, "movies", year=year, use_api=False)
         if not tmdb_id:
-            logger.info(f"Advanced search could not identify: '{name}'")
+            logger.info("Advanced search could not identify: %s", name)
             continue
         identified_match = identified_list.get(tmdb_id)
         if identified_match:
@@ -97,21 +98,19 @@ def generate_movie_metadata(
         else:
             movie_info = tmdb.get_details(tmdb_id, "movies")
             logger.info(
-                "Successfully identified: %s    ID: %s" % (
-                    movie_info["name"], tmdb_id)
+                "Successfully identified: %s    ID: %s", movie_info["name"], tmdb_id
             )
             curr_metadata: Movie = Movie(drive_meta, movie_info, rclone_index)
             identified_list[tmdb_id] = curr_metadata
-    metadata = []
+    metadata: List[InsertOne] = []
     for item in identified_list.values():
         metadata.append(InsertOne(item.__json__()))
     return metadata
 
 
-def generate_series_metadata(
-    tmdb, data: Dict[str, Any], rclone_index: int
-) -> Dict[str, Any]:
-    metadata = []
+def generate_series_metadata(tmdb, data: dict, rclone_index: int) -> List[InsertOne]:
+    """Matches and identifies series by folder names and returns a list of MongoDB insert tasks"""
+    metadata: List[InsertOne] = []
     for drive_meta in data:
         original_name = drive_meta["name"]
         match = re.search(r"{{(tmdb_id|anidb_id):(\d{1,8})}}", original_name)
@@ -127,13 +126,11 @@ def generate_series_metadata(
             tmdb_id = tmdb.find_media_id(
                 name, "series", year=year, use_api=False)
             if not tmdb_id:
-                logger.info(f"Could not identify: '{name}'")
+                logger.info("Could not identify: %s", name)
                 continue
         series_info = tmdb.get_details(tmdb_id, "series")
-        logger.info(
-            "Successfully identified: %s    ID: %s" % (
-                series_info["name"], tmdb_id)
-        )
+        logger.info("Successfully identified: %s    ID: %s",
+                    series_info["name"], tmdb_id)
         curr_metadata: Serie = Serie(drive_meta, series_info, rclone_index)
         metadata.append(InsertOne(curr_metadata.__json__()))
     return metadata

@@ -4,6 +4,7 @@ from dateutil.parser import isoparse
 
 
 class Movie:
+    """Movie class"""
     __slots__: list = [
         "id",
         "file_name",
@@ -112,6 +113,7 @@ class Movie:
         self.reviews: list = media_metadata["reviews"]["results"][:10]
 
     def append_file(self, file_metadata):
+        """Pushes a new file to the class"""
         self.id.append(file_metadata["id"])
         self.file_name.append(file_metadata["name"])
         self.path.append(file_metadata["path"])
@@ -120,6 +122,7 @@ class Movie:
         self.number_of_files += 1
 
     def get_logo(self, media_metadata: dict) -> str:
+        """Returns the movie logo URL if available"""
         try:
             logo: str = media_metadata["images"]["logos"][0]["file_path"]
         except BaseException:
@@ -127,6 +130,7 @@ class Movie:
         return logo
 
     def get_crew(self, crew: list) -> dict:
+        """Finds and curates features crew members of a movie"""
         result: dict = {
             "Creator": [],
             "Director": [],

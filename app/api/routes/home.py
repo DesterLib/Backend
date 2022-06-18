@@ -46,7 +46,7 @@ def home(response: Response) -> dict:
             False,
             "/settings",
             init_time,
-        ).__dict__()
+        ).__json__()
 
     most_popular_movies_data = list(
         mongo.movies_col.aggregate(
@@ -143,4 +143,4 @@ def home(response: Response) -> dict:
 
     return DResponse(
         200, "Home page data successfully retrieved.", True, result, init_time
-    ).__dict__()
+    ).__json__()

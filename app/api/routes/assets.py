@@ -42,7 +42,7 @@ async def image_path(
     if not thumb_url:
         return DResponse(
             404, "No thumbnail is available for this file.", False, None, init_time
-        ).__dict__()
+        ).__json__()
     req = client.build_request("GET", thumb_url)
     r = await client.send(req, stream=True)
     return StreamingResponse(

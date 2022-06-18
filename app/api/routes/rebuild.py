@@ -17,4 +17,4 @@ async def rebuild(background_tasks: BackgroundTasks) -> dict:
 
     return DResponse(
         200, "Metadata building task started in background.", True, None, init_time
-    ).__dict__()
+    ).__json__()

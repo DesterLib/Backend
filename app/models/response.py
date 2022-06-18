@@ -2,6 +2,7 @@ from time import perf_counter
 
 
 class DResponse:
+    """A template response for the API"""
     __slots__ = [
         "code",
         "message",
@@ -10,7 +11,7 @@ class DResponse:
         "time_taken",
     ]
 
-    def __dict__(self):
+    def __json__(self):
         return {
             "code": self.code,
             "message": self.message,

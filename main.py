@@ -37,23 +37,27 @@ rclone: Dict[int, RCloneAPI] = {}
 
 
 def restart_rclone():
+    """Force closes any running instances of the Rclone port then starts an Rclone RC server"""
     if platform in ["win32", "cygwin", "msys"]:
         run(
             shlex.split(
                 f"powershell.exe Stop-Process -Id (Get-NetTCPConnection -LocalPort {settings.RCLONE_LISTEN_PORT}).OwningProcess -Force"
             ),
+            check=False,
             stdout=DEVNULL,
             stderr=STDOUT,
         )
     elif platform in ["linux", "linux2"]:
         run(
             shlex.split(f"bash kill $(lsof -t -i:{settings.RCLONE_LISTEN_PORT})"),
+            check=False,
             stdout=DEVNULL,
             stderr=STDOUT,
         )
     elif platform in ["darwin"]:
         run(
             shlex.split(f"kill $(lsof -t -i:{settings.RCLONE_LISTEN_PORT})"),
+            check=False,
             stdout=DEVNULL,
             stderr=STDOUT,
         )
@@ -75,10 +79,11 @@ def restart_rclone():
 
 
 def rclone_setup(categories: list):
+    """Initializes the rclone.conf file"""
     rclone_conf = ""
     for item in mongo.config["rclone"]:
         rclone_conf += f"\n\n{item}"
-    with open("rclone.conf", "w+") as w:
+    with open("rclone.conf", "w+", encoding="utf-8") as w:
         w.write(rclone_conf)
 
     restart_rclone()
@@ -88,6 +93,7 @@ def rclone_setup(categories: list):
 
 
 def startup():
+    """Initializes MongoDB and Rclone instances"""
     logger.info("Starting up...")
 
     logger.debug("Initializing core modules...")
@@ -108,6 +114,7 @@ app = FastAPI(title="DesterLib", openapi_url=f"{settings.API_V1_STR}/openapi.jso
 
 @app.exception_handler(StarletteHTTPException)
 async def static(request: Request, exception: StarletteHTTPException):
+    """Returns the static build of the Frontend if available"""
     if exception.status_code == 404:
         if os.path.exists("build/index.html"):
             return FileResponse("build/index.html", media_type="text/html")

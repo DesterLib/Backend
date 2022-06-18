@@ -3,12 +3,12 @@ import regex as re
 import ujson as json
 from httplib2 import Http
 from app.settings import settings
-from typing import Any, Dict, List, Optional
 from oauth2client.client import GoogleCredentials
 
 
-def build_config(config) -> List[str]:
-    rclone_conf = []
+def build_config(config) -> list:
+    """Generates an rclone config"""
+    rclone_conf: list = []
     for category in config["categories"]:
         provider = category.get("provider", "gdrive")
         if provider == "gdrive":
@@ -69,14 +69,14 @@ def build_config(config) -> List[str]:
 
 
 class RCloneAPI:
-    def __init__(self, data: Dict[str, Any], index: int):
-        self.data: Dict[str, Any] = data
+    def __init__(self, data: dict, index: int):
+        self.data: dict = data
         self.index: int = index
         self.id: str = data.get("id") or data.get("drive_id") or ""
         self.fs: str = "".join(c for c in self.id if c.isalnum()) + ":"
         self.provider: str = data.get("provider") or "gdrive"
         self.RCLONE_RC_URL: str = "http://localhost:35530"
-        self.RCLONE: Dict[str, str] = {
+        self.RCLONE: dict = {
             "mkdir": "operations/mkdir",
             "purge": "operations/purge",
             "deleteFile": "operations/deletefile",
@@ -113,35 +113,36 @@ class RCloneAPI:
             "statsDelete": "core/stats-delete",
             "statsReset": "core/stats-reset",
         }
-        self.fs_conf: Dict[str, Any] = self.rc_conf()
+        self.fs_conf: dict = self.rc_conf()
         self.refresh()
 
-    def rc_ls(self, options: Optional[dict] = {}) -> List[Dict[str, Any]]:
-        rc_data: Dict[str, Any] = {
+    def rc_ls(self, options: dict = {}) -> list:
+        """Returns a recursive list of files"""
+        rc_data: dict = {
             "fs": self.fs,
             "remote": "",
             "opt": options,
         }
-        result = requests.post(
-            "%s/%s" % (self.RCLONE_RC_URL, self.RCLONE["getFilesList"]),
+        result = requests.post(self.RCLONE_RC_URL + "/" + self.RCLONE["getFilesList"],
             data=json.dumps(rc_data),
             headers={"Content-Type": "application/json"},
         ).json()
         return result["list"]
 
     def rc_conf(self) -> dict:
+        """Retrieves the Rclone config of the current remote"""
         rc_data: dict = {"name": self.fs[:-1]}
-        result = requests.post(
-            "%s/%s" % (self.RCLONE_RC_URL, self.RCLONE["getConfigForRemote"]),
-            data=json.dumps(rc_data),
-            headers={"Content-Type": "application/json"},
-        ).json()
+        result = requests.post(self.RCLONE_RC_URL + "/" + self.RCLONE["getConfigForRemote"],
+                               data=json.dumps(rc_data),
+                               headers={"Content-Type": "application/json"},
+                               ).json()
         result["token"] = json.loads(result.get("token", "{}"))
         return result
 
-    def fetch_movies(self) -> List[Dict[str, Any]]:
+    def fetch_movies(self) -> list:
+        """Returns movie files"""
         rc_ls_result = self.rc_ls({"recurse": True, "filesOnly": False})
-        metadata: List[Dict[str, Any]] = []
+        metadata: list = []
         dirs = {}
         for item in rc_ls_result:
             if item["IsDir"] is False and (
@@ -173,10 +174,11 @@ class RCloneAPI:
                 pass
         return metadata
 
-    def fetch_series(self) -> List[Dict[str, Any]]:
+    def fetch_series(self) -> list:
+        """Returns series files"""
         rc_ls_result = self.rc_ls({"recurse": True, "maxDepth": 2})
-        metadata: List[Dict[str, Any]] = []
-        parent_dirs: Dict[str, Dict[str, Any]] = {
+        metadata: list = []
+        parent_dirs: dict = {
             "": {
                 "path": "",
                 "depth": 0,
@@ -222,7 +224,8 @@ class RCloneAPI:
                             "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
+                    parent_dirs[item["Path"]
+                                ]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(
@@ -247,6 +250,7 @@ class RCloneAPI:
         return metadata
 
     def refresh(self) -> dict:
+        "Refreshes Google Drive credentials"
         creds = GoogleCredentials(
             client_id=self.fs_conf["client_id"],
             client_secret=self.fs_conf["client_secret"],
@@ -267,11 +271,12 @@ class RCloneAPI:
         return result
 
     def size(self, path: str) -> int:
+        """Retrieves the size of a folder or file"""
         options = {
             "no-modtime": True,
             "no-mimetype": True,
         }
-        rc_data: Dict[str, Any] = {
+        rc_data: dict = {
             "fs": self.fs,
             "remote": path,
             "opt": options,
@@ -284,24 +289,12 @@ class RCloneAPI:
         return result["item"]["Size"]
 
     def stream(self, path: str):
+        """Generates the stream URL for a file"""
         stream_url = (
             f"http://localhost:{settings.RCLONE_LISTEN_PORT}/[{self.fs}]/{path}"
         )
         return stream_url
 
-    def thumbnail(self, id) -> Optional[str]:
-        """
-        if parse(
-            self.fs_conf.get("token", {}).get("expiry", "2022-03-27T00:00:00.000+00:00")
-        ) <= datetime.now(timezone.utc):
-            self.fs_conf["token"] = self.refresh()
-        result = requests.get(
-            f"https://www.googleapis.com/drive/v3/files/{id}?supportsAllDrives=true&fields=thumbnailLink",
-            headers={
-                "Authorization": "Bearer %s" % self.fs_conf["token"]["access_token"]
-            },
-        ).json()
-        if thumb := result.get("thumbnailLink"):
-            return re.sub(r"=s\\d+$", "", thumb)
-        """
+    def thumbnail(self, id) -> str:
+        """Returns a thumbnail for a video file"""
         return ""

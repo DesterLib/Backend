@@ -23,7 +23,7 @@ def movie(response: Response, id: int) -> dict:
             True,
             result,
             init_time,
-        ).__dict__()
+        ).__json__()
     else:
         response.status_code = 404
         return DResponse(
@@ -32,4 +32,4 @@ def movie(response: Response, id: int) -> dict:
             False,
             None,
             init_time,
-        ).__dict__()
+        ).__json__()

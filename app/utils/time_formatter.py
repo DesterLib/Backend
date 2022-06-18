@@ -1,4 +1,5 @@
 def time_formatter(seconds: float) -> str:
+    """Returns time in a human-readable format"""
     minutes, seconds = divmod(int(seconds), 60)
     hours, minutes = divmod(minutes, 60)
     days, hours = divmod(hours, 24)

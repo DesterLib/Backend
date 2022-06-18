@@ -4,6 +4,7 @@ from dateutil.parser import isoparse
 
 
 class Serie:
+    "Serie class"
     __slots__ = [
         "id",
         "file_name",
@@ -126,6 +127,7 @@ class Serie:
                 ).__json__())
 
     def get_logo(self, media_metadata: dict) -> str:
+        """Returns the series logo URL if available"""
         try:
             logo: str = media_metadata["images"]["logos"][0]["file_path"]
         except BaseException:
@@ -133,6 +135,7 @@ class Serie:
         return logo
 
     def get_crew(self, crew: list, creators: list) -> dict:
+        """Finds and curates features crew members of a movie"""
         result: dict = {
             "Creator": creators,
             "Director": [],

@@ -5,6 +5,7 @@ from pymongo import TEXT, UpdateOne, MongoClient
 
 
 class MongoDB:
+    """MongoDB class"""
     def __init__(self, domain: str, username: str, password: str):
         self.domain = domain
         self.username = username
@@ -49,6 +50,7 @@ class MongoDB:
         self.get_is_series_cache_init()
 
     def get_config(self) -> dict:
+        """Returns the entire MongoDB config"""
         config = {
             "_id": None,
             "app": {},
@@ -66,6 +68,7 @@ class MongoDB:
         return config
 
     def get_is_config_init(self) -> bool:
+        "Checks whether the config has been initialized"
         result = self.other_col.find_one({"is_config_init": {"$exists": True}}) or {
             "is_config_init": False
         }
@@ -73,6 +76,7 @@ class MongoDB:
         return result["is_config_init"]
 
     def get_is_metadata_init(self) -> bool:
+        "Checks whether the metadata has been initialized"
         result = self.other_col.find_one({"is_metadata_init": {"$exists": True}}) or {
             "is_metadata_init": False
         }
@@ -80,6 +84,7 @@ class MongoDB:
         return result["is_metadata_init"]
 
     def get_is_movies_cache_init(self) -> bool:
+        "Checks whether the movie cache has been initialized"
         result = self.other_col.find_one(
             {"is_movies_cache_init": {"$exists": True}}
         ) or {"is_movies_cache_init": False}
@@ -87,6 +92,7 @@ class MongoDB:
         return result["is_movies_cache_init"]
 
     def get_is_series_cache_init(self) -> bool:
+        "Checks whether the series cache has been initialized"
         result = self.other_col.find_one(
             {"is_series_cache_init": {"$exists": True}}
         ) or {"is_series_cache_init": False}
@@ -94,14 +100,15 @@ class MongoDB:
         return result["is_series_cache_init"]
 
     def get_is_build_time(self) -> bool:
-        build_config = self.config_col.find_one({"build": {"$exists": True}}) or {
+        "Checks whether metadata should be regenerated now"
+        buildconfig = self.config_col.find_one({"build": {"$exists": True}}) or {
             "build": {"cron": "*/120 * * * *"}
         }
         last_build_time = self.other_col.find_one(
             {"last_build_time": {"$exists": True}}
         ) or {"last_build_time": datetime.fromtimestamp(1, tz=timezone.utc)}
         cron = croniter(
-            build_config["build"].get("cron", "*/120 * * * *"), last_build_time
+            buildconfig["build"].get("cron", "*/120 * * * *"), last_build_time
         )
         if datetime.now(timezone.utc) > cron.get_next(datetime):
             return True
@@ -109,6 +116,7 @@ class MongoDB:
             return False
 
     def get_rclone_conf(self) -> dict:
+        "Returns the rclone config"
         result = self.config_col.find_one({"rclone": {"$exists": True}}) or {
             "rclone": []
         }
@@ -117,23 +125,15 @@ class MongoDB:
         return rclone_conf
 
     def get_categories(self) -> list:
+        "Returns the categories config"
         result = self.config_col.find_one({"categories": {"$exists": True}}) or {
             "categories": []
         }
         self.config["categories"] = result["categories"]
         return result["categories"]
 
-    def get_tmbd_api_key(self) -> str:
-        result = self.config_col.find_one({"tmdb": {"$exists": True}}) or {
-            "tmdb": {"api_key": ""}
-        }
-        tmdb_api_key = result["tmdb"].get("api_key", "")
-        self.tmdb_api_key = tmdb_api_key
-        return tmdb_api_key
-
     def set_config(self, data: dict) -> int:
-        from app.core import build_config
-
+        """Updates the config with one supplied by the user"""
         bulk_action: list = []
         config_app: dict = data.get("app", {})
         config_auth0: dict = data.get("auth0", {})
@@ -154,6 +154,7 @@ class MongoDB:
             bulk_action.append(self.set_build(config_build))
         if config_categories != self.config["categories"]:
             bulk_action.append(self.set_categories(config_categories))
+            from app.core import build_config
             config_rclone = build_config(self.config)
             bulk_action.append(self.set_rclone(config_rclone))
             self.set_is_metadata_init(False)
@@ -165,12 +166,12 @@ class MongoDB:
 
         if self.is_metadata_init is False:
             from main import rclone_setup
-
             rclone_setup(self.config["categories"])
             return 2
         return 1
 
     def set_app(self, data: dict):
+        """Updates the app config with one supplied by the user"""
         update_data: dict = {
             "name": data.get("name", "Dester"),
             "title": data.get("title", "Dester"),
@@ -184,6 +185,7 @@ class MongoDB:
         return update_action
 
     def set_auth0(self, data: dict):
+        """Updates the auth0 config with one supplied by the user"""
         update_data: dict = {
             "client_id": data.get("client_id", ""),
             "client_secret": data.get("client_secret", ""),
@@ -196,6 +198,7 @@ class MongoDB:
         return update_action
 
     def set_categories(self, data: list):
+        """Updates the categories config with one supplied by the user"""
         update_data: list = []
         for item in data:
             update_data.append(
@@ -219,6 +222,7 @@ class MongoDB:
         return update_action
 
     def set_gdrive(self, data: dict):
+        """Updates the app gdrive with one supplied by the user"""
         update_data: dict = {
             "client_id": data.get("client_id", ""),
             "client_secret": data.get("client_secret", ""),
@@ -234,6 +238,7 @@ class MongoDB:
         return update_action
 
     def set_tmdb(self, data: dict):
+        """Updates the TMDB config with one supplied by the user"""
         update_data: dict = {"api_key": data.get("api_key", "")}
         update_action: UpdateOne = UpdateOne(
             {"tmdb": {"$exists": True}}, {"$set": {"tmdb": update_data}}, upsert=True
@@ -242,6 +247,7 @@ class MongoDB:
         return update_action
 
     def set_build(self, data: dict):
+        """Updates the build config with one supplied by the user"""
         update_data: dict = {"cron": data.get("cron", "*/120 * * * *")}
         update_action: UpdateOne = UpdateOne(
             {"build": {"$exists": True}}, {"$set": {"build": update_data}}, upsert=True
@@ -250,6 +256,7 @@ class MongoDB:
         return update_action
 
     def set_rclone(self, data: list):
+        """Updates the rclone config with one supplied by the user"""
         update_data: list = data
         update_action: UpdateOne = UpdateOne(
             {"rclone": {"$exists": True}},
@@ -260,6 +267,7 @@ class MongoDB:
         return update_action
 
     def set_is_config_init(self, is_config_init: bool):
+        """Sets the config as initialized"""
         if is_config_init != self.is_config_init:
             self.other_col.update_one(
                 {"is_config_init": {"$exists": True}},
@@ -270,6 +278,7 @@ class MongoDB:
         return
 
     def set_is_metadata_init(self, is_metadata_init: bool):
+        """Sets the metadata as initialized"""
         if is_metadata_init != self.is_metadata_init:
             self.other_col.update_one(
                 {"is_metadata_init": {"$exists": True}},
@@ -280,6 +289,7 @@ class MongoDB:
         return
 
     def set_is_movies_cache_init(self, is_movies_cache_init: bool):
+        """Sets the movie cache as initialized"""
         if is_movies_cache_init != self.is_movies_cache_init:
             self.movies_cache_col.create_index(
                 [("original_title", TEXT)], background=True, name="original_title"
@@ -293,6 +303,7 @@ class MongoDB:
         return
 
     def set_is_series_cache_init(self, is_series_cache_init: bool):
+        """Sets the series cache as initialized"""
         if is_series_cache_init != self.is_series_cache_init:
             self.series_cache_col.create_index(
                 [("original_title", TEXT)], background=True, name="original_title"

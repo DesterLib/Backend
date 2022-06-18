@@ -5,6 +5,7 @@ from app.utils import generate_movie_metadata, generate_series_metadata
 
 
 def fetch_metadata():
+    """Generates the metadata for each category"""
     from main import mongo, rclone
 
     tmdb = TMDB(api_key=mongo.config["tmdb"]["api_key"])
@@ -18,8 +19,8 @@ def fetch_metadata():
             "name": category.data.get("name"),
             "include_in_homepage": category.data.get("include_in_homepage", True),
         }
-        logger.info("Generating metadata: " + category_metadata["name"])
-        logger.debug("Category type: " + category_metadata["type"])
+        logger.info("Generating metadata: %s", category_metadata["name"])
+        logger.debug("Category type: %s", category_metadata["type"])
         if category_metadata["type"] == "series":
             series_metadata.extend(
                 generate_series_metadata(tmdb, rclone[key].fetch_series(), key)

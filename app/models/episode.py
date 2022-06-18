@@ -5,6 +5,7 @@ from dateutil.parser import isoparse
 
 
 class Episode:
+    """Episode class"""
     __slots__ = [
         "id",
         "file_name",
@@ -57,7 +58,8 @@ class Episode:
             season_number = media_metadata["season_number"]
         if season_number != media_metadata["season_number"]:
             logger.debug(
-                f"      Season number mismatch: {self.file_name} | Season {media_metadata['season_number']}"
+                "      Season number mismatch: %s | Season %s", self.file_name, media_metadata[
+                    "season_number"]
             )
         try:
             episode_metadata = media_metadata["episodes"][episode_number - 1]
@@ -85,6 +87,7 @@ class Episode:
         self.thumbnail_path: str = episode_metadata["still_path"]
 
     def parse_episode_filename(self, name: str, season_number: int) -> dict:
+        """Identifies the season and episode numbers from an episode's file name"""
         reg_exps = [
             r".+?s ?(?P<season>\d{0,2})e ?(?P<episode>\d{0,4}).+",
             r".+?e ?(?P<episode>\d{0,2})s ?(?P<season>\d{0,4}).+",
@@ -97,5 +100,4 @@ class Episode:
                     data["season"] = season_number
                 data["season"] = int(data["season"])
                 return data
-        else:
-            return {}
+        return {}

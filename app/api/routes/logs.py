@@ -19,11 +19,11 @@ def logs() -> dict:
             result = r.read()
         return DResponse(
             200, "Most recent log file successfully retrieved.", True, result, init_time
-        ).__dict__()
+        ).__json__()
     else:
         return DResponse(
             404, "The log file could not be found.", False, None, init_time
-        ).__dict__()
+        ).__json__()
 
 
 @router.get("/list", response_model=dict, status_code=200)
@@ -32,7 +32,7 @@ def list_logs() -> dict:
     result = [f for f in listdir("logs") if f.endswith(".log")]
     return DResponse(
         200, "List of log files successfully generated.", True, result, init_time
-    ).__dict__()
+    ).__json__()
 
 
 @router.get("/live", response_model=dict, status_code=200)
@@ -54,8 +54,8 @@ def old_logs(date) -> dict:
             result = r.read()
         return DResponse(
             200, "Most recent log file successfully retrieved.", True, result, init_time
-        ).__dict__()
+        ).__json__()
     else:
         return DResponse(
             404, "The log file could not be found.", False, None, init_time
-        ).__dict__()
+        ).__json__()

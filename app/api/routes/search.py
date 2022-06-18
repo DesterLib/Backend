@@ -66,4 +66,4 @@ def query(
         True,
         result,
         init_time,
-    ).__dict__()
+    ).__json__()

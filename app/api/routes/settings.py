@@ -18,7 +18,7 @@ def settings_get() -> dict:
     result = mongo.get_config()
     return DResponse(
         200, "Config successfully retrieved from database.", True, result, init_time
-    ).__dict__()
+    ).__json__()
 
 
 @router.post("", response_model=dict, status_code=200)
@@ -34,11 +34,11 @@ async def settings_post(
         response.status_code = 409
         return DResponse(
             409, "No changes were made to the config.", False, None, init_time
-        ).__dict__()
+        ).__json__()
     elif condition == 1:
         return DResponse(
             200, "Config successfully uploaded to database.", True, None, init_time
-        ).__dict__()
+        ).__json__()
     elif condition == 2:
         background_tasks.add_task(fetch_metadata)
         return DResponse(
@@ -47,4 +47,4 @@ async def settings_post(
             True,
             None,
             init_time,
-        ).__dict__()
+        ).__json__()
