@@ -1,9 +1,8 @@
-from typing import Dict, List
-
 import regex as re
 from app import logger
-from app.models import Movie, Serie
 from pymongo import InsertOne
+from typing import Dict, List
+from app.models import Movie, Serie
 
 
 def parse_filename(name: str, data_type: str):
@@ -77,7 +76,10 @@ def generate_movie_metadata(tmdb, data: dict, rclone_index: int) -> List[InsertO
             logger.info("Could not identify: %s", name)
             continue
         logger.info(
-            "Successfully identified: %s %s    ID: %s", name, 'year' if year else '', tmdb_id
+            "Successfully identified: %s %s    ID: %s",
+            name,
+            "year" if year else "",
+            tmdb_id,
         )
         identified_match = identified_list.get(tmdb_id)
         if identified_match:
@@ -123,14 +125,14 @@ def generate_series_metadata(tmdb, data: dict, rclone_index: int) -> List[Insert
             year = name_year.get("year")
             tmdb_id = tmdb.find_media_id(name, "series", year=year)
         if not tmdb_id:
-            tmdb_id = tmdb.find_media_id(
-                name, "series", year=year, use_api=False)
+            tmdb_id = tmdb.find_media_id(name, "series", year=year, use_api=False)
             if not tmdb_id:
                 logger.info("Could not identify: %s", name)
                 continue
         series_info = tmdb.get_details(tmdb_id, "series")
-        logger.info("Successfully identified: %s    ID: %s",
-                    series_info["name"], tmdb_id)
+        logger.info(
+            "Successfully identified: %s    ID: %s", series_info["name"], tmdb_id
+        )
         curr_metadata: Serie = Serie(drive_meta, series_info, rclone_index)
         metadata.append(InsertOne(curr_metadata.__json__()))
     return metadata

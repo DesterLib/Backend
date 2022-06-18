@@ -93,8 +93,7 @@ class Serie:
         self.popularity: float = media_metadata["popularity"]
         self.rating: float = media_metadata["vote_average"]
         release_date: str = media_metadata["first_air_date"] or "1900-01-01"
-        self.release_date: datetime = datetime.strptime(
-            release_date, "%Y-%m-%d")
+        self.release_date: datetime = datetime.strptime(release_date, "%Y-%m-%d")
         self.year: int = self.release_date.year
         self.tagline: str = media_metadata["tagline"]
         self.description: str = media_metadata["overview"]
@@ -122,9 +121,9 @@ class Serie:
         self.seasons: list = []
         for key, season in file_metadata["seasons"].items():
             if f"season/{key}" in media_metadata:
-                self.seasons.append(Season(
-                    season, media_metadata[f"season/{key}"]
-                ).__json__())
+                self.seasons.append(
+                    Season(season, media_metadata[f"season/{key}"]).__json__()
+                )
 
     def get_logo(self, media_metadata: dict) -> str:
         """Returns the series logo URL if available"""

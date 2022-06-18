@@ -5,6 +5,7 @@ from dateutil.parser import isoparse
 
 class Season:
     """Season class"""
+
     __slots__ = [
         "id",
         "file_name",

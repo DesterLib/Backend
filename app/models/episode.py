@@ -6,6 +6,7 @@ from dateutil.parser import isoparse
 
 class Episode:
     """Episode class"""
+
     __slots__ = [
         "id",
         "file_name",
@@ -58,8 +59,9 @@ class Episode:
             season_number = media_metadata["season_number"]
         if season_number != media_metadata["season_number"]:
             logger.debug(
-                "      Season number mismatch: %s | Season %s", self.file_name, media_metadata[
-                    "season_number"]
+                "      Season number mismatch: %s | Season %s",
+                self.file_name,
+                media_metadata["season_number"],
             )
         try:
             episode_metadata = media_metadata["episodes"][episode_number - 1]

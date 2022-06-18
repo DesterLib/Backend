@@ -3,6 +3,7 @@ from time import perf_counter
 
 class DResponse:
     """A template response for the API"""
+
     __slots__ = [
         "code",
         "message",

@@ -6,6 +6,7 @@ from pymongo import TEXT, UpdateOne, MongoClient
 
 class MongoDB:
     """MongoDB class"""
+
     def __init__(self, domain: str, username: str, password: str):
         self.domain = domain
         self.username = username
@@ -155,6 +156,7 @@ class MongoDB:
         if config_categories != self.config["categories"]:
             bulk_action.append(self.set_categories(config_categories))
             from app.core import build_config
+
             config_rclone = build_config(self.config)
             bulk_action.append(self.set_rclone(config_rclone))
             self.set_is_metadata_init(False)
@@ -166,6 +168,7 @@ class MongoDB:
 
         if self.is_metadata_init is False:
             from main import rclone_setup
+
             rclone_setup(self.config["categories"])
             return 2
         return 1

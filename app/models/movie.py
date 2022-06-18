@@ -5,6 +5,7 @@ from dateutil.parser import isoparse
 
 class Movie:
     """Movie class"""
+
     __slots__: list = [
         "id",
         "file_name",

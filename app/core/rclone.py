@@ -123,7 +123,8 @@ class RCloneAPI:
             "remote": "",
             "opt": options,
         }
-        result = requests.post(self.RCLONE_RC_URL + "/" + self.RCLONE["getFilesList"],
+        result = requests.post(
+            self.RCLONE_RC_URL + "/" + self.RCLONE["getFilesList"],
             data=json.dumps(rc_data),
             headers={"Content-Type": "application/json"},
         ).json()
@@ -132,10 +133,11 @@ class RCloneAPI:
     def rc_conf(self) -> dict:
         """Retrieves the Rclone config of the current remote"""
         rc_data: dict = {"name": self.fs[:-1]}
-        result = requests.post(self.RCLONE_RC_URL + "/" + self.RCLONE["getConfigForRemote"],
-                               data=json.dumps(rc_data),
-                               headers={"Content-Type": "application/json"},
-                               ).json()
+        result = requests.post(
+            self.RCLONE_RC_URL + "/" + self.RCLONE["getConfigForRemote"],
+            data=json.dumps(rc_data),
+            headers={"Content-Type": "application/json"},
+        ).json()
         result["token"] = json.loads(result.get("token", "{}"))
         return result
 
@@ -224,8 +226,7 @@ class RCloneAPI:
                             "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]
-                                ]["json_path"] = f"[{len(metadata) - 1}]"
+                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(
