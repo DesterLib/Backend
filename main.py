@@ -17,6 +17,10 @@ from starlette.middleware.cors import CORSMiddleware
 from subprocess import PIPE, STDOUT, DEVNULL, Popen, run
 from fastapi.responses import FileResponse, UJSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from apscheduler.triggers.combining import AndTrigger
+from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.cron import CronTrigger
+from apscheduler.schedulers.background import BackgroundScheduler
 
 
 if not settings.MONGODB_DOMAIN:
@@ -49,7 +53,8 @@ def restart_rclone():
         )
     elif platform in ["linux", "linux2"]:
         run(
-            shlex.split(f"bash kill $(lsof -t -i:{settings.RCLONE_LISTEN_PORT})"),
+            shlex.split(
+                f"bash kill $(lsof -t -i:{settings.RCLONE_LISTEN_PORT})"),
             check=False,
             stdout=DEVNULL,
             stderr=STDOUT,
@@ -103,13 +108,21 @@ def startup():
         rclone_setup(categories)
         if mongo.get_is_metadata_init() is False:
             fetch_metadata()
+        else:
+            scheduler = BackgroundScheduler()
+            trigger = CronTrigger.from_crontab(
+                mongo.config["build"].get("cron", "0 */8 * * *"))
+            scheduler.add_job(fetch_metadata, trigger,
+                              name="fetch_metadata", id="fetch_metadata")
+            scheduler.start()
         logger.debug("Done.")
     else:
         # logic for first time setup
         pass
 
 
-app = FastAPI(title="Dester", openapi_url=f"{settings.API_V1_STR}/openapi.json")
+app = FastAPI(title="Dester",
+              openapi_url=f"{settings.API_V1_STR}/openapi.json")
 
 
 @app.exception_handler(StarletteHTTPException)

@@ -2,8 +2,6 @@ from typing import Optional
 from fastapi import APIRouter
 from time import perf_counter
 from app.models import DResponse
-import regex as re
-
 
 router = APIRouter(
     prefix="/browse",

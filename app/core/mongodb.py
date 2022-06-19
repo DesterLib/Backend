@@ -18,6 +18,7 @@ class MongoDB:
         )
         self.db = self.client["main"]
         self.metadata = self.client["metadata"]
+        self.accounts = self.client["accounts"]
 
         self.config_col = self.db["config"]
         self.history_col = self.db["history"]
@@ -103,13 +104,13 @@ class MongoDB:
     def get_is_build_time(self) -> bool:
         "Checks whether metadata should be regenerated now"
         buildconfig = self.config_col.find_one({"build": {"$exists": True}}) or {
-            "build": {"cron": "*/120 * * * *"}
+            "build": {"cron": "0 */8 * * *"}
         }
         last_build_time = self.other_col.find_one(
             {"last_build_time": {"$exists": True}}
         ) or {"last_build_time": datetime.fromtimestamp(1, tz=timezone.utc)}
         cron = croniter(
-            buildconfig["build"].get("cron", "*/120 * * * *"), last_build_time
+            buildconfig["build"].get("cron", "0 */8 * * *"), last_build_time
         )
         if datetime.now(timezone.utc) > cron.get_next(datetime):
             return True
@@ -251,7 +252,7 @@ class MongoDB:
 
     def set_build(self, data: dict):
         """Updates the build config with one supplied by the user"""
-        update_data: dict = {"cron": data.get("cron", "*/120 * * * *")}
+        update_data: dict = {"cron": data.get("cron", "0 */8 * * *")}
         update_action: UpdateOne = UpdateOne(
             {"build": {"$exists": True}}, {"$set": {"build": update_data}}, upsert=True
         )
