@@ -100,7 +100,7 @@ def generate_movie_metadata(tmdb, data: dict, rclone_index: int) -> List[InsertO
         else:
             movie_info = tmdb.get_details(tmdb_id, "movies")
             logger.info(
-                "Successfully identified: %s    ID: %s", movie_info["name"], tmdb_id
+                "Successfully identified: %s    ID: %s", movie_info["title"], tmdb_id
             )
             curr_metadata: Movie = Movie(drive_meta, movie_info, rclone_index)
             identified_list[tmdb_id] = curr_metadata
