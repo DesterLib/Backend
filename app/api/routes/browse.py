@@ -2,6 +2,7 @@ from typing import Optional
 from fastapi import APIRouter
 from time import perf_counter
 from app.models import DResponse
+import regex as re
 
 
 router = APIRouter(
@@ -36,6 +37,7 @@ def browse(
     rclone_index: int,
     page: Optional[int] = 0,
     limit: Optional[int] = 20,
+    query: Optional[str] = "",
     sort: Optional[str] = "title:1",
     year: Optional[int] = 0,
     genre: Optional[str] = "",
@@ -56,6 +58,8 @@ def browse(
             if media_type == category.data.get("type", "movies"):
                 rclone_indexes.append(category.index)
         match = {"rclone_index": {"$in": rclone_indexes}}
+        if query != "":
+            match["title"] = {'$regex': f".*{query}.*", '$options': 'i'}
         if year != 0:
             match["year"] = year
         if genre != "":
@@ -95,9 +99,19 @@ def browse(
             )
         )
 
-    message: str = "%s results found sorted by %s %s" % (
+    message: str = "Results found: %s. Sorted by: %s %s. Page: %s. Limit: %s." % (
         len(result),
         sort_split[0],
         "negatively" if sort_split[1] == 0 else "positively",
+        page,
+        limit,
     )
+    if query != "":
+        message += f" Query: {query}."
+    if year != 0:
+        message += f" Year: {year}."
+    if genre != "":
+        message += f" Genre: {genre}."
+    if rclone_index == -1:
+        message += f" Media type: {media_type}."
     return DResponse(200, message, True, result, init_time).__json__()
