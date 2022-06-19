@@ -15,8 +15,6 @@ from logging import DEBUG, WARNING, StreamHandler, getLogger, basicConfig
 
 if not os.path.isdir("logs"):
     makedirs("logs")
-if not os.path.isdir("cache"):
-    makedirs("cache")
 
 handler = TimedRotatingFileHandler(
     "logs/dester.log", when="m", interval=60, backupCount=5

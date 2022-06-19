@@ -5,7 +5,7 @@ from math import ceil
 from app import logger
 from pymongo import InsertOne
 from difflib import SequenceMatcher
-from typing import Any, Dict, Optional
+from typing import Optional
 from datetime import datetime, timezone, timedelta
 
 
@@ -23,7 +23,7 @@ class TMDB:
         self.config = self.get_server_config()
         self.image_base_url = self.config["images"]["secure_base_url"]
 
-    def get_server_config(self) -> Dict[str, Any]:
+    def get_server_config(self) -> dict:
         """Get the server config from the API
 
         Returns:
@@ -35,21 +35,25 @@ class TMDB:
 
     @staticmethod
     def export_data(data_type: str):
+        """Generates media cache for MongoDB"""
         from main import mongo
 
-        date_str = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%m_%d_%Y")
+        date_str = (datetime.now(timezone.utc) -
+                    timedelta(days=1)).strftime("%m_%d_%Y")
         type_name = "tv_series" if data_type == "series" else "movie"
         export_url = (
             f"http://files.tmdb.org/p/exports/{type_name}_ids_{date_str}.json.gz"
         )
         lines = (
-            gzip.decompress(httpx.get(export_url).content).decode("utf-8").splitlines()
+            gzip.decompress(httpx.get(export_url).content).decode(
+                "utf-8").splitlines()
         )
         bulk_action = []
-        chunks = [lines[i : i + 100000] for i in range(0, len(lines), 100000)]
+        chunks = [lines[i: i + 100000] for i in range(0, len(lines), 100000)]
         total_chunks = len(chunks)
         x = 1
-        logger.debug("Splitting %s items into chunks of 100,000 items" % len(lines))
+        logger.debug(
+            "Splitting %s items into chunks of 100,000 items", len(lines))
         for chunk in chunks:
             for line in chunk:
                 try:
@@ -60,7 +64,7 @@ class TMDB:
                 mongo.series_cache_col.bulk_write(bulk_action)
             else:
                 mongo.movies_cache_col.bulk_write(bulk_action)
-            logger.debug(f"Chunk {x}/{total_chunks}")
+            logger.debug("Chunk %s/%s", x, total_chunks)
             chunks[x - 1] = None
             x += 1
             bulk_action = []
@@ -71,7 +75,7 @@ class TMDB:
 
     def get_episode_details(
         self, tmdb_id: int, episode_number: int, season_number: int = 1
-    ) -> Dict[str, Any]:
+    ) -> dict:
         """Get the details of a specific episode from the API
 
         Args:
@@ -114,11 +118,12 @@ class TMDB:
         original_title = title
         title = clean_file_name(title)
         if not title:
-            logger.debug(f"The parsed title returned an empty string. Skipping...")
-            logger.debug(f"Original Title: {original_title}")
+            logger.debug(
+                "The parsed title returned an empty string. Skipping...")
+            logger.debug("Original Title: %s", original_title)
             return None
         if use_api:
-            logger.debug(f"Trying search using API for '{title}'")
+            logger.debug("Trying search using API for '%s'", title)
             type_name = "tv" if data_type == "series" else "movie"
             resp = self.client.get(
                 f"https://api.themoviedb.org/3/search/{type_name}",
@@ -135,13 +140,14 @@ class TMDB:
                     return data[0]["id"]
             else:
                 logger.warning(
-                    f"API search failed for '{title}' - The API said '{resp.json()['errors']}' with status code {resp.status_code}"
+                    "API search failed for '%s' - The API said '{resp.json()['errors']}' with status code %s", title, resp.status_code
                 )
                 return
         else:
             from main import mongo
 
-            logger.debug(f"Trying search using key-value search for '{title}'")
+            logger.debug(
+                "Trying search using key-value search for '%s'", title)
             if data_type == "series":
                 cache_col = mongo.series_cache_col
             else:
@@ -159,7 +165,8 @@ class TMDB:
             max_ratio, match = 0, None
             matcher = SequenceMatcher(b=title)
             for each in result:
-                matcher.set_seq1(each.get("original_title", "").lower().strip())
+                matcher.set_seq1(
+                    each.get("original_title", "").lower().strip())
                 ratio = matcher.ratio()
                 if ratio > 0.99:
                     return each
@@ -168,9 +175,9 @@ class TMDB:
                     match = each
             if match:
                 return match["id"]
-            logger.debug(f"Advanced difflib search failed for '{title}'")
+            logger.debug("Advanced difflib search failed for '%s'", title)
 
-    def get_details(self, tmdb_id: int, data_type: str) -> Dict[str, Any]:
+    def get_details(self, tmdb_id: int, data_type: str) -> dict:
         """Get the details of a movie / series from the API
 
         Args:
@@ -194,14 +201,16 @@ class TMDB:
         while x < n_of_appends:
             append_seasons.append("")
             for n in range((x * 20), ((x + 1) * 20)):
-                append_seasons[x] = append_seasons[x] + "season/" + str(n) + ","
+                append_seasons[x] = append_seasons[x] + \
+                    "season/" + str(n) + ","
             append_seasons[x] = append_seasons[x][:-1]
             x += 1
         if type_name == "tv":
             for n, append_season in enumerate(append_seasons):
                 params = {"append_to_response": append_season}
                 tmp_response = self.client.get(url, params=params).json()
-                season_keys = [k for k in tmp_response.keys() if "season/" in k]
+                season_keys = [k for k in tmp_response.keys()
+                               if "season/" in k]
                 for k in season_keys:
                     response[k] = tmp_response[k]
         else:
