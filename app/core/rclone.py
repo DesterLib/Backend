@@ -162,6 +162,7 @@ class RCloneAPI:
                         "path": item["Path"],
                         "parent": parent,
                         "mime_type": item["MimeType"],
+                        "size": item["Size"],
                         "modified_time": item["ModTime"],
                     }
                 )
@@ -203,6 +204,7 @@ class RCloneAPI:
                             "path": item["Path"],
                             "parent": parent,
                             "mime_type": item["MimeType"],
+                            "size": item["Size"],
                             "modified_time": item["ModTime"],
                         }
                     )

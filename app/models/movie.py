@@ -6,7 +6,7 @@ from dateutil.parser import isoparse
 class Movie:
     """Movie class"""
 
-    __slots__: list = [
+    __slots__: list[str] = [
         "id",
         "file_name",
         "path",
@@ -14,6 +14,7 @@ class Movie:
         "modified_time",
         "number_of_files",
         "rclone_index",
+        "size",
         "tmdb_id",
         "title",
         "original_title",
@@ -48,6 +49,7 @@ class Movie:
             "modified_time": self.modified_time,
             "number_of_files": self.number_of_files,
             "rclone_index": self.rclone_index,
+            "size": self.size,
             "tmdb_id": self.tmdb_id,
             "title": self.title,
             "original_title": self.original_title,
@@ -75,13 +77,14 @@ class Movie:
 
     def __init__(self, file_metadata, media_metadata, rclone_index):
         # File Info
-        self.id: list = [file_metadata["id"]]
-        self.file_name: list = [file_metadata["name"]]
-        self.path: list = [file_metadata["path"]]
-        self.parent: list = [file_metadata["parent"]]
-        self.modified_time: list = [isoparse(file_metadata["modified_time"])]
+        self.id: list[str] = [file_metadata["id"]]
+        self.file_name: list[str] = [file_metadata["name"]]
+        self.path: list[str] = [file_metadata["path"]]
+        self.parent: list[dict] = [file_metadata["parent"]]
+        self.modified_time: list[datetime] = [isoparse(file_metadata["modified_time"])]
         self.number_of_files: int = 1
         self.rclone_index: int = rclone_index
+        self.size: list[int] = [file_metadata["size"]]
 
         # Media Info
         self.tmdb_id: int = media_metadata["id"]
@@ -96,11 +99,11 @@ class Movie:
         self.year: int = self.release_date.year
         self.tagline: str = media_metadata["tagline"]
         self.description: str = media_metadata["overview"]
-        self.cast: list = media_metadata["credits"]["cast"][:10]
+        self.cast: list[dict] = media_metadata["credits"]["cast"][:10]
         self.crew: dict = self.get_crew(media_metadata["credits"]["crew"])
-        self.studios: list = media_metadata["production_companies"]
-        self.genres: list = media_metadata["genres"]
-        self.external_ids: dict = media_metadata["external_ids"]
+        self.studios: list[dict] = media_metadata["production_companies"]
+        self.genres: list[dict] = media_metadata["genres"]
+        self.external_ids: dict[dict] = media_metadata["external_ids"]
 
         # Media Resources
         self.logo_path: str = self.get_logo(media_metadata)
@@ -110,8 +113,8 @@ class Movie:
         )
         self.backdrop_path: str = media_metadata["backdrop_path"]
         self.poster_path: str = media_metadata["poster_path"]
-        self.videos: list = media_metadata["videos"]["results"][:10]
-        self.reviews: list = media_metadata["reviews"]["results"][:10]
+        self.videos: list[dict] = media_metadata["videos"]["results"][:10]
+        self.reviews: list[dict] = media_metadata["reviews"]["results"][:10]
 
     def append_file(self, file_metadata):
         """Pushes a new file to the class"""
@@ -121,6 +124,7 @@ class Movie:
         self.parent.append(file_metadata["parent"])
         self.modified_time.append(isoparse(file_metadata["modified_time"]))
         self.number_of_files += 1
+        self.size.append(file_metadata["size"])
 
     def get_logo(self, media_metadata: dict) -> str:
         """Returns the movie logo URL if available"""
@@ -130,7 +134,7 @@ class Movie:
             logo: str = ""
         return logo
 
-    def get_crew(self, crew: list) -> dict:
+    def get_crew(self, crew: list[dict]) -> dict:
         """Finds and curates features crew members of a movie"""
         result: dict = {
             "Creator": [],
@@ -140,7 +144,7 @@ class Movie:
             "Author": [],
             "Writer": [],
         }
-        wanted_jobs: list = [
+        wanted_jobs: list[str] = [
             "Creator",
             "Director",
             "Screenplay",

@@ -12,6 +12,7 @@ class Season:
         "path",
         "parent",
         "modified_time",
+        "size",
         "tmdb_id",
         "name",
         "overview",
@@ -29,6 +30,7 @@ class Season:
             "path": self.path,
             "parent": self.parent,
             "modified_time": self.modified_time,
+            "size": self.size,
             "tmdb_id": self.tmdb_id,
             "name": self.name,
             "overview": self.overview,
@@ -46,6 +48,7 @@ class Season:
         self.path: str = file_metadata["path"]
         self.parent: dict = file_metadata["parent"]
         self.modified_time: datetime = isoparse(file_metadata["modified_time"])
+        self.size: int = 0
 
         # Media Info
         self.tmdb_id: int = media_metadata["_id"]
@@ -61,10 +64,11 @@ class Season:
 
         # Episodes
         index: int = len(file_metadata["episodes"])
-        episodes: list = []
+        episodes: list[dict] = []
         for episode in file_metadata["episodes"]:
             episode_meta: Episode = Episode(episode, media_metadata, index)
             episodes.append(episode_meta.__json__())
+            self.size += episode_meta.size
             index -= 1
-        self.episodes: list = sorted(episodes, key=lambda d: d["episode_number"])
+        self.episodes: list[dict] = sorted(episodes, key=lambda d: d["episode_number"])
         del episodes

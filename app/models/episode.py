@@ -13,6 +13,7 @@ class Episode:
         "path",
         "parent",
         "modified_time",
+        "size",
         "tmdb_id",
         "name",
         "overview",
@@ -29,6 +30,7 @@ class Episode:
             "path": self.path,
             "parent": self.parent,
             "modified_time": self.modified_time,
+            "size": self.size,
             "tmdb_id": self.tmdb_id,
             "name": self.name,
             "overview": self.overview,
@@ -45,18 +47,19 @@ class Episode:
         self.path: str = file_metadata["path"]
         self.parent: dict = file_metadata["parent"]
         self.modified_time: datetime = isoparse(file_metadata["modified_time"])
+        self.size: int = file_metadata["size"]
 
-        parsed_data = self.parse_episode_filename(
+        parsed_data: dict = self.parse_episode_filename(
             self.file_name, media_metadata["season_number"]
         )
         try:
-            episode_number = int(parsed_data["episode"])
+            episode_number: int = int(parsed_data["episode"])
         except (KeyError, ValueError):
-            episode_number = index
+            episode_number: int = index
         try:
-            season_number = parsed_data["season"]
+            season_number: int = parsed_data["season"]
         except KeyError:
-            season_number = media_metadata["season_number"]
+            season_number: int = media_metadata["season_number"]
         if season_number != media_metadata["season_number"]:
             logger.debug(
                 "      Season number mismatch: %s | Season %s",
@@ -64,9 +67,9 @@ class Episode:
                 media_metadata["season_number"],
             )
         try:
-            episode_metadata = media_metadata["episodes"][episode_number - 1]
+            episode_metadata: dict = media_metadata["episodes"][episode_number - 1]
         except IndexError:
-            episode_metadata = {
+            episode_metadata: dict = {
                 "id": "",
                 "name": self.file_name,
                 "overview": "",
