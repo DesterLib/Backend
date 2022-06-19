@@ -36,6 +36,7 @@ class MongoDB:
             "categories": [],
             "gdrive": {},
             "tmdb": {},
+            "subtitles": {},
             "build": {},
             "rclone": [],
         }
@@ -60,6 +61,7 @@ class MongoDB:
             "categories": [],
             "gdrive": {},
             "tmdb": {},
+            "subtitles": {},
             "build": {},
             "rclone": [],
         }
@@ -248,6 +250,15 @@ class MongoDB:
             {"tmdb": {"$exists": True}}, {"$set": {"tmdb": update_data}}, upsert=True
         )
         self.config["tmdb"] = update_data
+        return update_action
+
+    def set_subtitles(self, data: dict):
+        """Updates the subtitles config with one supplied by the user"""
+        update_data: dict = {"api_key": data.get("api_key", ""), "local": data.get("local", True)}
+        update_action: UpdateOne = UpdateOne(
+            {"subtitles": {"$exists": True}}, {"$set": {"subtitles": update_data}}, upsert=True
+        )
+        self.config["subtitles"] = update_data
         return update_action
 
     def set_build(self, data: dict):
