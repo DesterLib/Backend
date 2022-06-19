@@ -2,7 +2,7 @@ __license__ = "MIT"
 __status__ = "Development"
 __version__ = "1.0.0"
 __email__ = "contact@dester.gq"
-__copyright__ = "Copyright 2022, DesterLib"
+__copyright__ = "Copyright 2022, Dester"
 __authors__ = ["Elias Benbourenane", "EverythingSuckz"]
 __credits__ = ["EverythingSuckz", "Elias Benbourenane", "AlkenD"]
 

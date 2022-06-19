@@ -362,7 +362,7 @@ class Auth0Manager:
             client = self.create_client(
                 {
                     "app_type": "spa",
-                    "name": "Single Page App [DesterLib]",
+                    "name": "Single Page App [Dester]",
                     "callbacks": [self.api_identifier],
                     "web_origins": [self.api_identifier],
                     "allowed_logout_urls": [self.api_identifier],

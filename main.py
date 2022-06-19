@@ -109,7 +109,7 @@ def startup():
         pass
 
 
-app = FastAPI(title="DesterLib", openapi_url=f"{settings.API_V1_STR}/openapi.json")
+app = FastAPI(title="Dester", openapi_url=f"{settings.API_V1_STR}/openapi.json")
 
 
 @app.exception_handler(StarletteHTTPException)
