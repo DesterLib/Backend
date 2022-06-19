@@ -34,9 +34,11 @@ unwanted_keys = {
 @router.get("/{rclone_index}/{page}", response_model=dict, status_code=200)
 def browse(
     rclone_index: int,
-    page: int = 0,
+    page: Optional[int] = 0,
     limit: Optional[int] = 20,
     sort: Optional[str] = "title:1",
+    year: Optional[int] = 0,
+    genre: Optional[str] = "",
     media_type: Optional[str] = "movies",
 ) -> dict:
     init_time = perf_counter()
@@ -53,10 +55,15 @@ def browse(
         for key, category in rclone.items():
             if media_type == category.data.get("type", "movies"):
                 rclone_indexes.append(category.index)
+        match = {"rclone_index": {"$in": rclone_indexes}}
+        if year != 0:
+            match["year"] = year
+        if genre != "":
+            match["genres.name"] = genre
         result = list(
             col.aggregate(
                 [
-                    {"$match": {"rclone_index": {"$in": rclone_indexes}}},
+                    {"$match": match},
                     {"$sort": sort_dict},
                     {"$skip": page * 20},
                     {"$limit": limit},
@@ -71,10 +78,15 @@ def browse(
                     col = mongo.series_col
                 else:
                     col = mongo.movies_col
+        match = {"rclone_index": rclone_index}
+        if year != 0:
+            match["year"] = year
+        if genre != "":
+            match["genres.name"] = genre
         result = list(
             col.aggregate(
                 [
-                    {"$match": {"rclone_index": rclone_index}},
+                    {"$match": match},
                     {"$sort": sort_dict},
                     {"$skip": page * 20},
                     {"$limit": limit},
