@@ -145,6 +145,7 @@ class MongoDB:
         config_gdrive: dict = data.get("gdrive", {})
         config_tmdb: dict = data.get("tmdb", {})
         config_build: dict = data.get("build", {})
+        config_subtitles: dict = data.get("subtitles", {})
 
         if config_app != self.config["app"]:
             bulk_action.append(self.set_app(config_app))
@@ -156,6 +157,8 @@ class MongoDB:
             bulk_action.append(self.set_tmdb(config_tmdb))
         if config_build != self.config["build"]:
             bulk_action.append(self.set_build(config_build))
+        if config_subtitles != self.config["subtitles"]:
+            bulk_action.append(self.set_subtitles(config_subtitles))
         if config_categories != self.config["categories"]:
             bulk_action.append(self.set_categories(config_categories))
             from app.core import build_config
