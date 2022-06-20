@@ -3,6 +3,7 @@ from fastapi import APIRouter
 from time import perf_counter
 from app.models import DResponse
 
+
 router = APIRouter(
     prefix="/browse",
     tags=["internals"],
@@ -57,7 +58,7 @@ def browse(
                 rclone_indexes.append(category.index)
         match = {"rclone_index": {"$in": rclone_indexes}}
         if query != "":
-            match["title"] = {'$regex': f".*{query}.*", '$options': 'i'}
+            match["title"] = {"$regex": f".*{query}.*", "$options": "i"}
         if year != 0:
             match["year"] = year
         if genre != "":

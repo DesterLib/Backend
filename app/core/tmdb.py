@@ -3,9 +3,9 @@ import httpx
 import ujson as json
 from math import ceil
 from app import logger
+from typing import Optional
 from pymongo import InsertOne
 from difflib import SequenceMatcher
-from typing import Optional
 from datetime import datetime, timezone, timedelta
 
 
@@ -38,22 +38,19 @@ class TMDB:
         """Generates media cache for MongoDB"""
         from main import mongo
 
-        date_str = (datetime.now(timezone.utc) -
-                    timedelta(days=1)).strftime("%m_%d_%Y")
+        date_str = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%m_%d_%Y")
         type_name = "tv_series" if data_type == "series" else "movie"
         export_url = (
             f"http://files.tmdb.org/p/exports/{type_name}_ids_{date_str}.json.gz"
         )
         lines = (
-            gzip.decompress(httpx.get(export_url).content).decode(
-                "utf-8").splitlines()
+            gzip.decompress(httpx.get(export_url).content).decode("utf-8").splitlines()
         )
         bulk_action = []
-        chunks = [lines[i: i + 100000] for i in range(0, len(lines), 100000)]
+        chunks = [lines[i : i + 100000] for i in range(0, len(lines), 100000)]
         total_chunks = len(chunks)
         x = 1
-        logger.debug(
-            "Splitting %s items into chunks of 100,000 items", len(lines))
+        logger.debug("Splitting %s items into chunks of 100,000 items", len(lines))
         for chunk in chunks:
             for line in chunk:
                 try:
@@ -118,8 +115,7 @@ class TMDB:
         original_title = title
         title = clean_file_name(title)
         if not title:
-            logger.debug(
-                "The parsed title returned an empty string. Skipping...")
+            logger.debug("The parsed title returned an empty string. Skipping...")
             logger.debug("Original Title: %s", original_title)
             return None
         if use_api:
@@ -140,14 +136,15 @@ class TMDB:
                     return data[0]["id"]
             else:
                 logger.warning(
-                    "API search failed for '%s' - The API said '{resp.json()['errors']}' with status code %s", title, resp.status_code
+                    "API search failed for '%s' - The API said '{resp.json()['errors']}' with status code %s",
+                    title,
+                    resp.status_code,
                 )
                 return
         else:
             from main import mongo
 
-            logger.debug(
-                "Trying search using key-value search for '%s'", title)
+            logger.debug("Trying search using key-value search for '%s'", title)
             if data_type == "series":
                 cache_col = mongo.series_cache_col
             else:
@@ -165,8 +162,7 @@ class TMDB:
             max_ratio, match = 0, None
             matcher = SequenceMatcher(b=title)
             for each in result:
-                matcher.set_seq1(
-                    each.get("original_title", "").lower().strip())
+                matcher.set_seq1(each.get("original_title", "").lower().strip())
                 ratio = matcher.ratio()
                 if ratio > 0.99:
                     return each
@@ -201,16 +197,14 @@ class TMDB:
         while x < n_of_appends:
             append_seasons.append("")
             for n in range((x * 20), ((x + 1) * 20)):
-                append_seasons[x] = append_seasons[x] + \
-                    "season/" + str(n) + ","
+                append_seasons[x] = append_seasons[x] + "season/" + str(n) + ","
             append_seasons[x] = append_seasons[x][:-1]
             x += 1
         if type_name == "tv":
             for n, append_season in enumerate(append_seasons):
                 params = {"append_to_response": append_season}
                 tmp_response = self.client.get(url, params=params).json()
-                season_keys = [k for k in tmp_response.keys()
-                               if "season/" in k]
+                season_keys = [k for k in tmp_response.keys() if "season/" in k]
                 for k in season_keys:
                     response[k] = tmp_response[k]
         else:

@@ -1,6 +1,5 @@
-from time import perf_counter
-
 import requests
+from time import perf_counter
 from app.models import DResponse
 from fastapi import Response, APIRouter
 
@@ -21,8 +20,14 @@ def movie(response: Response, id: int) -> dict:
         result = results[0]
         os_api_key = mongo.config["subtitles"].get("api_key")
         if os_api_key:
-            subs = requests.get(f"https://api.opensubtitles.com/api/v1/subtitles?tmdb_id={id}&order_by=votes", headers={
-                                "Api-Key": os_api_key}).json().get("data", [])[:5]
+            subs = (
+                requests.get(
+                    f"https://api.opensubtitles.com/api/v1/subtitles?tmdb_id={id}&order_by=votes",
+                    headers={"Api-Key": os_api_key},
+                )
+                .json()
+                .get("data", [])[:5]
+            )
             result["subtitles"] = subs
         return DResponse(
             200,

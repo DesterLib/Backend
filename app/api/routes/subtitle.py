@@ -1,5 +1,5 @@
-from fastapi import APIRouter
 import requests
+from fastapi import APIRouter
 from time import perf_counter
 from app.models import DResponse
 
@@ -16,8 +16,11 @@ def subtitle(id: int) -> dict:
     from main import mongo
 
     os_api_key = mongo.config["subtitles"].get("api_key")
-    result = requests.post("https://api.opensubtitles.com/api/v1/download",
-                           headers={"Api-Key": os_api_key}, data={"file_id": id}).json()
+    result = requests.post(
+        "https://api.opensubtitles.com/api/v1/download",
+        headers={"Api-Key": os_api_key},
+        data={"file_id": id},
+    ).json()
 
     return DResponse(
         200,

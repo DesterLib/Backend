@@ -1,9 +1,10 @@
-from os import path, listdir
 import regex as re
+from os import path, listdir
 from fastapi import APIRouter
 from app.models import DResponse
 from time import sleep, perf_counter
 from fastapi.responses import StreamingResponse
+
 
 router = APIRouter(
     prefix="/logs",
@@ -40,6 +41,7 @@ def list_logs() -> dict:
 @router.get("/live", response_model=dict, status_code=200)
 def live_logs() -> dict:
     """Returns a stream of live logs"""
+
     def stream(file: str):
         if path.exists(file):
             with open(file, "r", encoding="utf-8") as r:
@@ -49,8 +51,7 @@ def live_logs() -> dict:
                     if old_line != new_line:
                         result = ""
                         for line in new_line.splitlines()[-100:]:
-                            match = re.search(
-                                r"(.*)\[(INFO|DEBUG|ERROR)\](.*)", line)
+                            match = re.search(r"(.*)\[(INFO|DEBUG|ERROR)\](.*)", line)
                             if match:
                                 severity = match.group(2)
                                 if severity == "INFO":
