@@ -35,6 +35,7 @@ def movie(response: Response, id: int) -> dict:
             True,
             result,
             init_time,
+            result["title"],
         ).__json__()
     else:
         response.status_code = 404

@@ -10,6 +10,8 @@ class DResponse:
         "ok",
         "result",
         "time_taken",
+        "title",
+        "description",
     ]
 
     def __json__(self):
@@ -19,6 +21,8 @@ class DResponse:
             "ok": self.ok,
             "result": self.result,
             "time_taken": self.time_taken,
+            "title": self.title,
+            "description": self.description,
         }
 
     def __init__(
@@ -28,9 +32,16 @@ class DResponse:
         ok: bool = True,
         result=None,
         init_time: float = 0,
+        extra_title: str = ""
     ):
+        from main import mongo
         self.code: int = code
         self.message: str = message
         self.ok: bool = ok
         self.result = result
         self.time_taken: float = perf_counter() - init_time
+        title: str = mongo.config["app"].get("title", "Dester")
+        if extra_title != "":
+            title += " | " + extra_title
+        self.title: str = title
+        self.description: str = mongo.config["app"].get("description", "Dester")
