@@ -4,6 +4,7 @@ import ujson as json
 from httplib2 import Http
 from app.settings import settings
 from oauth2client.client import GoogleCredentials
+from os import path
 
 
 def build_config(config) -> list:
@@ -145,7 +146,9 @@ class RCloneAPI:
         """Returns movie files"""
         rc_ls_result = self.rc_ls({"recurse": True, "filesOnly": False})
         metadata: list = []
-        dirs = {}
+        dirs: dict = {}
+        file_names: dict = {}
+        sub_index: int = 0
         for item in rc_ls_result:
             if item["IsDir"] is False and (
                 "video" in item["MimeType"]
@@ -155,26 +158,53 @@ class RCloneAPI:
             ):
                 parent_path = item["Path"].replace("/" + item["Name"], "")
                 parent = dirs.get(parent_path)
-                metadata.append(
-                    {
-                        "id": item["ID"],
-                        "name": item["Name"],
-                        "path": item["Path"],
-                        "parent": parent,
-                        "mime_type": item["MimeType"],
-                        "size": item["Size"],
-                        "modified_time": item["ModTime"],
-                    }
-                )
+                curr_metadata = {
+                    "id": item["ID"],
+                    "name": item["Name"],
+                    "path": item["Path"],
+                    "parent": parent,
+                    "mime_type": item["MimeType"],
+                    "size": item["Size"],
+                    "subtitles": [],
+                    "modified_time": item["ModTime"],
+                }
+                path_without_extention = path.splitext(item["Path"])[0]
+                file_name = file_names.get(path_without_extention)
+                if file_name:
+                    curr_metadata["subtitles"] = file_name["subtitles"]
+                    file_names[path_without_extention]["found"] = True
+                    file_names[path_without_extention]["index"] = sub_index
+                else:
+                    file_names[path_without_extention] = {
+                        "found": True, "index": sub_index, "subtitles": []}
+                metadata.append(curr_metadata)
+                sub_index += 1
             elif item["IsDir"] is True:
                 dirs[item["Path"]] = {
                     "id": item["ID"],
                     "name": item["Name"],
                     "path": item["Path"],
                 }
-            elif item["IsDir"] is False and item["Name"].endswith((".srt", ".vtt")):
-                # Subtitle management
-                pass
+            elif item["IsDir"] is False and item["Name"].endswith((".vtt", ".srt", ".ass", ".ssa")):
+                path_without_extention = path.splitext(item["Path"])[0]
+                if path_without_extention[-3] == ".":
+                    path_without_extention = path_without_extention[:-3]
+                elif path_without_extention[-4] == ".":
+                    path_without_extention = path_without_extention[:-4]
+                sub_metadata = {
+                    "id": item["ID"], "name": item["Name"], "path": item["Path"]}
+                file_name = file_names.get(path_without_extention)
+                if file_name:
+                    if file_name["found"] is True:
+                        metadata[file_name["index"]
+                                 ]["subtitles"].append(sub_metadata)
+                    else:
+                        file_names[path_without_extention]["subtitles"].append(
+                            sub_metadata)
+                else:
+                    file_names[path_without_extention] = {
+                        "found": False, "index": None, "subtitles": [sub_metadata]}
+
         return metadata
 
     def fetch_series(self) -> list:
@@ -228,7 +258,8 @@ class RCloneAPI:
                             "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
+                    parent_dirs[item["Path"]
+                                ]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(

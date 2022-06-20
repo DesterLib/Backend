@@ -15,6 +15,7 @@ class Movie:
         "number_of_files",
         "rclone_index",
         "size",
+        "subtitles",
         "tmdb_id",
         "title",
         "original_title",
@@ -50,6 +51,7 @@ class Movie:
             "number_of_files": self.number_of_files,
             "rclone_index": self.rclone_index,
             "size": self.size,
+            "subtitles": self.subtitles,
             "tmdb_id": self.tmdb_id,
             "title": self.title,
             "original_title": self.original_title,
@@ -85,6 +87,7 @@ class Movie:
         self.number_of_files: int = 1
         self.rclone_index: int = rclone_index
         self.size: list[int] = [file_metadata["size"]]
+        self.subtitles: list[dict] = file_metadata["subtitles"]
 
         # Media Info
         self.tmdb_id: int = media_metadata["id"]
@@ -125,6 +128,7 @@ class Movie:
         self.modified_time.append(isoparse(file_metadata["modified_time"]))
         self.number_of_files += 1
         self.size.append(file_metadata["size"])
+        self.subtitles.extend(file_metadata["subtitles"])
 
     def get_logo(self, media_metadata: dict) -> str:
         """Returns the movie logo URL if available"""
