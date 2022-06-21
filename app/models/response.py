@@ -32,9 +32,10 @@ class DResponse:
         ok: bool = True,
         result=None,
         init_time: float = 0,
-        extra_title: str = ""
+        extra_title: str = "",
     ):
         from main import mongo
+
         self.code: int = code
         self.message: str = message
         self.ok: bool = ok

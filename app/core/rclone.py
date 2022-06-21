@@ -1,10 +1,10 @@
 import requests
 import regex as re
 import ujson as json
+from os import path
 from httplib2 import Http
 from app.settings import settings
 from oauth2client.client import GoogleCredentials
-from os import path
 
 
 def build_config(config) -> list:
@@ -176,7 +176,10 @@ class RCloneAPI:
                     file_names[path_without_extention]["index"] = sub_index
                 else:
                     file_names[path_without_extention] = {
-                        "found": True, "index": sub_index, "subtitles": []}
+                        "found": True,
+                        "index": sub_index,
+                        "subtitles": [],
+                    }
                 metadata.append(curr_metadata)
                 sub_index += 1
             elif item["IsDir"] is True:
@@ -185,25 +188,33 @@ class RCloneAPI:
                     "name": item["Name"],
                     "path": item["Path"],
                 }
-            elif item["IsDir"] is False and item["Name"].endswith((".vtt", ".srt", ".ass", ".ssa")):
+            elif item["IsDir"] is False and item["Name"].endswith(
+                (".vtt", ".srt", ".ass", ".ssa")
+            ):
                 path_without_extention = path.splitext(item["Path"])[0]
                 if path_without_extention[-3] == ".":
                     path_without_extention = path_without_extention[:-3]
                 elif path_without_extention[-4] == ".":
                     path_without_extention = path_without_extention[:-4]
                 sub_metadata = {
-                    "id": item["ID"], "name": item["Name"], "path": item["Path"]}
+                    "id": item["ID"],
+                    "name": item["Name"],
+                    "path": item["Path"],
+                }
                 file_name = file_names.get(path_without_extention)
                 if file_name:
                     if file_name["found"] is True:
-                        metadata[file_name["index"]
-                                 ]["subtitles"].append(sub_metadata)
+                        metadata[file_name["index"]]["subtitles"].append(sub_metadata)
                     else:
                         file_names[path_without_extention]["subtitles"].append(
-                            sub_metadata)
+                            sub_metadata
+                        )
                 else:
                     file_names[path_without_extention] = {
-                        "found": False, "index": None, "subtitles": [sub_metadata]}
+                        "found": False,
+                        "index": None,
+                        "subtitles": [sub_metadata],
+                    }
 
         return metadata
 
@@ -258,8 +269,7 @@ class RCloneAPI:
                             "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]
-                                ]["json_path"] = f"[{len(metadata) - 1}]"
+                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(

@@ -44,4 +44,8 @@ def fetch_metadata():
     )
     mongo.set_is_metadata_init(True)
 
-    logger.info("METADATA BUILDING COMPLETE! %s movies and %s series identified.", len(movies_metadata), len(series_metadata))
+    logger.info(
+        "METADATA BUILDING COMPLETE! %s movies and %s series identified.",
+        len(movies_metadata),
+        len(series_metadata),
+    )

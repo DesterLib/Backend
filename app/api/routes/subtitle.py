@@ -1,9 +1,9 @@
-from typing import Union, Optional
-from xmlrpc.client import boolean
 import requests
 from fastapi import APIRouter
 from time import perf_counter
 from app.models import DResponse
+from xmlrpc.client import boolean
+from typing import Union, Optional
 from fastapi.responses import RedirectResponse
 
 
@@ -14,7 +14,9 @@ router = APIRouter(
 
 
 @router.get("/{id}", status_code=200)
-def subtitle(id: int, permanent: Optional[boolean] = True) -> Union[dict, RedirectResponse]:
+def subtitle(
+    id: int, permanent: Optional[boolean] = True
+) -> Union[dict, RedirectResponse]:
     init_time = perf_counter()
     from main import mongo
 
