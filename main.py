@@ -19,7 +19,8 @@ from subprocess import PIPE, STDOUT, DEVNULL, Popen, run
 from fastapi.responses import FileResponse, UJSONResponse
 from apscheduler.schedulers.background import BackgroundScheduler
 from starlette.exceptions import HTTPException as StarletteHTTPException
-
+from app.utils import time_formatter
+from app import __version__
 
 if not settings.MONGODB_DOMAIN:
     logger.error("No MongoDB domain found! Exiting.")
@@ -155,6 +156,10 @@ app.add_middleware(
 app.include_router(main_router, prefix=settings.API_V1_STR)
 if os.path.exists("build/index.html"):
     app.mount("/", StaticFiles(directory="build/", html=True), name="static")
+else:
+    app.add_api_route("/", lambda: 
+    {"ok": True, "message": "Backend is working.", "version": __version__, "uptime": time_formatter(time.time() - start_time)}
+)
 
 startup()
 if __name__ == "__main__":
