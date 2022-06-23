@@ -23,6 +23,7 @@ class Serie:
         "year",
         "tagline",
         "description",
+        "runtime",
         "cast",
         "crew",
         "studios",
@@ -60,6 +61,7 @@ class Serie:
             "year": self.year,
             "tagline": self.tagline,
             "description": self.description,
+            "runtime": self.runtime,
             "cast": self.cast,
             "crew": self.crew,
             "studios": self.studios,
@@ -100,6 +102,11 @@ class Serie:
         self.year: int = self.release_date.year
         self.tagline: str = media_metadata["tagline"]
         self.description: str = media_metadata["overview"]
+        runtime: str = media_metadata["episode_run_time"]
+        if len(runtime) == 0:
+            self.runtime = 0
+        else:
+            self.runtime: int = media_metadata["episode_run_time"][0]
         self.cast: list[dict] = media_metadata["credits"]["cast"][:10]
         self.crew: dict = self.get_crew(
             media_metadata["credits"]["crew"], media_metadata["created_by"]

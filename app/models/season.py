@@ -15,7 +15,7 @@ class Season:
         "size",
         "tmdb_id",
         "name",
-        "overview",
+        "description",
         "air_date",
         "episode_count",
         "season_number",
@@ -33,7 +33,7 @@ class Season:
             "size": self.size,
             "tmdb_id": self.tmdb_id,
             "name": self.name,
-            "overview": self.overview,
+            "description": self.description,
             "air_date": self.air_date,
             "episode_count": self.episode_count,
             "season_number": self.season_number,
@@ -53,7 +53,7 @@ class Season:
         # Media Info
         self.tmdb_id: int = media_metadata["_id"]
         self.name: str = media_metadata["name"]
-        self.overview: str = media_metadata["overview"]
+        self.description: str = media_metadata["overview"]
         air_date: str = media_metadata["air_date"] or "1900-01-01"
         self.air_date: datetime = datetime.strptime(air_date, "%Y-%m-%d")
         self.episode_count: int = len(media_metadata["episodes"])

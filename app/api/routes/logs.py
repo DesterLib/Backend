@@ -50,7 +50,7 @@ def live_logs() -> dict:
                     new_line = r.read()
                     if old_line != new_line:
                         result = ""
-                        for line in new_line.splitlines()[-100:]:
+                        for line in new_line.splitlines()[-50:]:
                             match = re.search(r"(.*)\[(INFO|DEBUG|ERROR)\](.*)", line)
                             if match:
                                 severity = match.group(2)
@@ -67,8 +67,8 @@ def live_logs() -> dict:
                                 line = f"<p>{line}</p>"
                                 result += line
                                 yield result
-                    old_line = new_line
-                    sleep(1)
+                        old_line = new_line
+                        sleep(1)
 
     return StreamingResponse(stream("logs/dester.log"), media_type="text/plain")
 

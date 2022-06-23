@@ -27,6 +27,7 @@ class Movie:
         "year",
         "tagline",
         "description",
+        "runtime",
         "cast",
         "crew",
         "studios",
@@ -63,6 +64,7 @@ class Movie:
             "year": self.year,
             "tagline": self.tagline,
             "description": self.description,
+            "runtime": self.runtime,
             "cast": self.cast,
             "crew": self.crew,
             "studios": self.studios,
@@ -102,6 +104,7 @@ class Movie:
         self.year: int = self.release_date.year
         self.tagline: str = media_metadata["tagline"]
         self.description: str = media_metadata["overview"]
+        self.runtime: int = media_metadata["runtime"]
         self.cast: list[dict] = media_metadata["credits"]["cast"][:10]
         self.crew: dict = self.get_crew(media_metadata["credits"]["crew"])
         self.studios: list[dict] = media_metadata["production_companies"]

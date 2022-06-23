@@ -16,7 +16,7 @@ class Episode:
         "size",
         "tmdb_id",
         "name",
-        "overview",
+        "description",
         "air_date",
         "episode_number",
         "rating",
@@ -33,7 +33,7 @@ class Episode:
             "size": self.size,
             "tmdb_id": self.tmdb_id,
             "name": self.name,
-            "overview": self.overview,
+            "description": self.description,
             "air_date": self.air_date,
             "episode_number": self.episode_number,
             "rating": self.rating,
@@ -82,7 +82,7 @@ class Episode:
         # Media Info
         self.tmdb_id: int = episode_metadata["id"]
         self.name: str = episode_metadata["name"]
-        self.overview: str = episode_metadata["overview"]
+        self.description: str = episode_metadata["overview"]
         air_date: str = media_metadata["air_date"] or "1900-01-01"
         self.air_date: datetime = datetime.strptime(air_date, "%Y-%m-%d")
         self.episode_number: int = episode_number
