@@ -161,7 +161,7 @@ class MongoDB:
             bulk_action.append(self.set_subtitles(config_subtitles))
         if config_categories != self.config["categories"]:
             bulk_action.append(self.set_categories(config_categories))
-            from app.core import build_config
+            from app.core.rclone import build_config
 
             config_rclone = build_config(self.config)
             bulk_action.append(self.set_rclone(config_rclone))

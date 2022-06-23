@@ -2,6 +2,7 @@ from typing import Optional
 from fastapi import APIRouter
 from time import perf_counter
 from app.models import DResponse
+from app.apis import mongo
 
 
 router = APIRouter(
@@ -39,7 +40,6 @@ def query(
     limit: Optional[int] = 10,
 ) -> dict:
     init_time = perf_counter()
-    from main import mongo
 
     movies_match = mongo.movies_col.aggregate(
         [

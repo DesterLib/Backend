@@ -4,6 +4,7 @@ from app.models import DResponse
 from fastapi import Path, APIRouter
 from fastapi.responses import StreamingResponse
 from starlette.background import BackgroundTask
+from app.apis import rclone
 
 
 router = APIRouter(
@@ -36,7 +37,6 @@ async def image_path(
     rclone_index: int = 0,
 ):
     init_time = perf_counter()
-    from main import rclone
 
     thumb_url = rclone[rclone_index].thumbnail(file_id)
     if not thumb_url:

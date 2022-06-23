@@ -43,7 +43,7 @@ def browse(
     media_type: Optional[str] = "movies",
 ) -> dict:
     init_time = perf_counter()
-    from main import mongo, rclone
+    from app.apis import mongo, rclone
 
     sort_split = sort.split(":")
     sort_dict = {sort_split[0]: int(sort_split[1])}

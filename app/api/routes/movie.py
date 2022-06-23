@@ -2,6 +2,7 @@ import requests
 from time import perf_counter
 from app.models import DResponse
 from fastapi import Response, APIRouter
+from app.apis import mongo
 
 
 router = APIRouter(
@@ -13,7 +14,6 @@ router = APIRouter(
 @router.get("/{id}", response_model=dict, status_code=200)
 def movie(response: Response, id: int) -> dict:
     init_time = perf_counter()
-    from main import mongo
 
     results = list(mongo.movies_col.find({"tmdb_id": id}, {"_id": 0}))
     if len(results) > 0:

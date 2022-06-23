@@ -2,6 +2,7 @@ import requests
 from fastapi import APIRouter
 from time import perf_counter
 from app.models import DResponse
+from app.apis import mongo
 from xmlrpc.client import boolean
 from typing import Union, Optional
 from fastapi.responses import RedirectResponse
@@ -18,7 +19,6 @@ def subtitle(
     id: int, permanent: Optional[boolean] = True
 ) -> Union[dict, RedirectResponse]:
     init_time = perf_counter()
-    from main import mongo
 
     os_api_key = mongo.config["subtitles"].get("api_key")
     if os_api_key:

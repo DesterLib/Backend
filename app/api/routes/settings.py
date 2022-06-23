@@ -1,6 +1,7 @@
 from time import perf_counter
 from app.models import DResponse
 from app.core.cron import fetch_metadata
+from app.apis import mongo
 from fastapi import Request, Response, APIRouter, BackgroundTasks
 
 
@@ -13,7 +14,6 @@ router = APIRouter(
 @router.get("", response_model=dict, status_code=200)
 def settings_get() -> dict:
     init_time = perf_counter()
-    from main import mongo
 
     result = mongo.get_config()
     return DResponse(
@@ -26,7 +26,6 @@ async def settings_post(
     request: Request, response: Response, background_tasks: BackgroundTasks
 ) -> dict:
     init_time = perf_counter()
-    from main import mongo
 
     data = await request.json()
     condition = mongo.set_config(data)

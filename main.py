@@ -2,7 +2,7 @@ import os
 import time
 import shlex
 import uvicorn
-from typing import Dict
+from app.apis import rclone, mongo
 from shutil import which
 from sys import platform
 from io import TextIOWrapper
@@ -10,7 +10,8 @@ from asyncio.log import logger
 from app.api import main_router
 from app.settings import settings
 from fastapi import FastAPI, Request
-from app.core import MongoDB, RCloneAPI
+from app.core.mongodb import MongoDB
+from app.core.rclone import RCloneAPI
 from app.core.cron import fetch_metadata
 from fastapi.staticfiles import StaticFiles
 from apscheduler.triggers.cron import CronTrigger
@@ -33,11 +34,6 @@ if not settings.MONGODB_PASSWORD:
     exit()
 
 start_time = time.time()
-mongo = MongoDB(
-    settings.MONGODB_DOMAIN, settings.MONGODB_USERNAME, settings.MONGODB_PASSWORD
-)
-rclone: Dict[int, RCloneAPI] = {}
-
 
 def restart_rclone():
     """Force closes any running instances of the Rclone port then starts an Rclone RC server"""

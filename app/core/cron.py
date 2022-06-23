@@ -1,12 +1,12 @@
 from app import logger
-from app.core import TMDB
 from pymongo import TEXT, DESCENDING
+from app.apis import mongo, rclone
+from app.core.tmdb import TMDB
 from app.utils import generate_movie_metadata, generate_series_metadata
 
 
 def fetch_metadata():
     """Generates the metadata for each category"""
-    from main import mongo, rclone
 
     tmdb = TMDB(api_key=mongo.config["tmdb"]["api_key"])
     series_metadata = []

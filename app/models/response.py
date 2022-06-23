@@ -1,4 +1,5 @@
 from time import perf_counter
+from app.apis import mongo
 
 
 class DResponse:
@@ -34,8 +35,6 @@ class DResponse:
         init_time: float = 0,
         extra_title: str = "",
     ):
-        from main import mongo
-
         self.code: int = code
         self.message: str = message
         self.ok: bool = ok

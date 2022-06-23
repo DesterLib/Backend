@@ -7,12 +7,11 @@ from typing import Optional
 from pymongo import InsertOne
 from difflib import SequenceMatcher
 from datetime import datetime, timezone, timedelta
+from app.apis import mongo
 
 
 class TMDB:
     def __init__(self, api_key: str):
-        from main import mongo
-
         if mongo.is_series_cache_init is False:
             mongo.series_cache_col.delete_many({})
             self.export_data("series")
@@ -36,7 +35,6 @@ class TMDB:
     @staticmethod
     def export_data(data_type: str):
         """Generates media cache for MongoDB"""
-        from main import mongo
 
         date_str = (datetime.now(timezone.utc) - timedelta(days=1)).strftime("%m_%d_%Y")
         type_name = "tv_series" if data_type == "series" else "movie"
@@ -142,8 +140,6 @@ class TMDB:
                 )
                 return
         else:
-            from main import mongo
-
             logger.debug("Trying search using key-value search for '%s'", title)
             if data_type == "series":
                 cache_col = mongo.series_cache_col

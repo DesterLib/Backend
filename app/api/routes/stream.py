@@ -3,6 +3,7 @@ from datetime import datetime
 from time import perf_counter
 from app.models import DResponse
 from urllib.parse import parse_qs
+from app.apis import rclone
 from fastapi import Request, APIRouter
 from fastapi.responses import StreamingResponse
 
@@ -31,7 +32,6 @@ def iter_file(streamable):
 @router.get("/info/{rclone_index}/{id}", status_code=200)
 def info(rclone_index: int, id: str):
     init_time = perf_counter()
-    from main import rclone
 
     rc = rclone[rclone_index]
     qualities = {"37": "1080p HD", "22": "720p HD", "59": "480p SD", "18": "360p SD"}
@@ -60,8 +60,6 @@ def info(rclone_index: int, id: str):
 
 @router.get("/{rclone_index}/{full_path:path}", status_code=206)
 def query(request: Request, full_path: str, rclone_index: int):
-    from main import rclone
-
     rc = rclone[rclone_index]
     stream_url = rc.stream(full_path)
 

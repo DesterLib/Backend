@@ -1,6 +1,7 @@
 from time import perf_counter
 from app.models import DResponse
 from fastapi import Response, APIRouter
+from app.apis import mongo
 
 
 router = APIRouter(
@@ -36,7 +37,6 @@ unwanted_keys = {
 @router.get("", response_model=dict, status_code=200)
 def home(response: Response) -> dict:
     init_time = perf_counter()
-    from main import mongo
 
     if not mongo.is_config_init:
         response.status_code = 428

@@ -12,7 +12,7 @@ router = APIRouter(
 
 @router.get("", response_model=dict, status_code=200)
 def auth() -> dict:
-    from main import start_time
+    from app.apis import start_time
 
     return {
         "message": "Backend is working.",
