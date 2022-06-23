@@ -1,5 +1,5 @@
-from time import perf_counter
 from app.apis import mongo
+from time import perf_counter
 
 
 class DResponse:

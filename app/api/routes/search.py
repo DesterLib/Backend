@@ -1,8 +1,8 @@
+from app.apis import mongo
 from typing import Optional
 from fastapi import APIRouter
 from time import perf_counter
 from app.models import DResponse
-from app.apis import mongo
 
 
 router = APIRouter(

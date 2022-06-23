@@ -1,7 +1,7 @@
+from app.apis import mongo
 from time import perf_counter
 from app.models import DResponse
 from app.core.cron import fetch_metadata
-from app.apis import mongo
 from fastapi import Request, Response, APIRouter, BackgroundTasks
 
 

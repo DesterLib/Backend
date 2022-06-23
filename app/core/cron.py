@@ -1,7 +1,7 @@
 from app import logger
-from pymongo import TEXT, DESCENDING
-from app.apis import mongo, rclone
 from app.core.tmdb import TMDB
+from app.apis import mongo, rclone
+from pymongo import TEXT, DESCENDING
 from app.utils import generate_movie_metadata, generate_series_metadata
 
 

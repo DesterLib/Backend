@@ -3,11 +3,11 @@ import httpx
 import ujson as json
 from math import ceil
 from app import logger
+from app.apis import mongo
 from typing import Optional
 from pymongo import InsertOne
 from difflib import SequenceMatcher
 from datetime import datetime, timezone, timedelta
-from app.apis import mongo
 
 
 class TMDB:

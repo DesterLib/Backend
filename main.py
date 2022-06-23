@@ -2,15 +2,16 @@ import os
 import time
 import shlex
 import uvicorn
-from app.apis import rclone, mongo
 from shutil import which
 from sys import platform
+from app import __version__
 from io import TextIOWrapper
 from asyncio.log import logger
 from app.api import main_router
 from app.settings import settings
+from app.apis import mongo, rclone
+from app.utils import time_formatter
 from fastapi import FastAPI, Request
-from app.core.mongodb import MongoDB
 from app.core.rclone import RCloneAPI
 from app.core.cron import fetch_metadata
 from fastapi.staticfiles import StaticFiles
@@ -20,8 +21,7 @@ from subprocess import PIPE, STDOUT, DEVNULL, Popen, run
 from fastapi.responses import FileResponse, UJSONResponse
 from apscheduler.schedulers.background import BackgroundScheduler
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from app.utils import time_formatter
-from app import __version__
+
 
 if not settings.MONGODB_DOMAIN:
     logger.error("No MongoDB domain found! Exiting.")
@@ -34,6 +34,7 @@ if not settings.MONGODB_PASSWORD:
     exit()
 
 start_time = time.time()
+
 
 def restart_rclone():
     """Force closes any running instances of the Rclone port then starts an Rclone RC server"""
@@ -153,9 +154,15 @@ app.include_router(main_router, prefix=settings.API_V1_STR)
 if os.path.exists("build/index.html"):
     app.mount("/", StaticFiles(directory="build/", html=True), name="static")
 else:
-    app.add_api_route("/", lambda: 
-    {"ok": True, "message": "Backend is working.", "version": __version__, "uptime": time_formatter(time.time() - start_time)}
-)
+    app.add_api_route(
+        "/",
+        lambda: {
+            "ok": True,
+            "message": "Backend is working.",
+            "version": __version__,
+            "uptime": time_formatter(time.time() - start_time),
+        },
+    )
 
 startup()
 if __name__ == "__main__":

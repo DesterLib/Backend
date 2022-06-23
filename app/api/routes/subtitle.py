@@ -1,8 +1,8 @@
 import requests
+from app.apis import mongo
 from fastapi import APIRouter
 from time import perf_counter
 from app.models import DResponse
-from app.apis import mongo
 from xmlrpc.client import boolean
 from typing import Union, Optional
 from fastapi.responses import RedirectResponse
