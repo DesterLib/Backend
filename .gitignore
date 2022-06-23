@@ -167,3 +167,5 @@ cache/*
 test.py
 .vscode/*
 config.json
+.vscode/
+logs/
