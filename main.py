@@ -63,7 +63,14 @@ async def restart_rclone():
         )
     else:
         exit("Unsupported platform")
-    rclone_bin = which("rclone")
+    if not os.path.isdir("bin"): os.mkdir("bin")
+    rclone_bin = f"bin/rclone{'.exe' if platform in ['win32', 'cygwin', 'msys'] else ''}"
+    if not os.path.exists(rclone_bin):
+        rclone_bin = which("rclone")
+    if not rclone_bin:
+        logger.error("Couldn't find rclone executable")
+        logger.error("Please download a suitable executable of rclone from 'rclone.org' and move it to the 'bin' folder.")
+        quit(1)
     rclone_process = await asyncio.create_subprocess_exec(
         *shlex.split(
             f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-level INFO",
