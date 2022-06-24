@@ -1,6 +1,8 @@
+from datetime import datetime, timezone
 import os
 import time
 import shlex
+import asyncio
 import uvicorn
 from shutil import which
 from sys import platform
@@ -36,7 +38,7 @@ if not settings.MONGODB_PASSWORD:
 start_time = time.time()
 
 
-def restart_rclone():
+async def restart_rclone():
     """Force closes any running instances of the Rclone port then starts an Rclone RC server"""
     if platform in ["win32", "cygwin", "msys"]:
         run(
@@ -64,21 +66,28 @@ def restart_rclone():
     else:
         exit("Unsupported platform")
     rclone_bin = which("rclone")
-    rclone_process = Popen(
-        shlex.split(
-            f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf",
+    rclone_process = await asyncio.create_subprocess_exec(
+        *shlex.split(
+            f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-file 'logs/rclone.log' --log-level INFO",
             posix=(platform not in ["win32", "cygwin", "msys"]),
         ),
         stdout=PIPE,
         stderr=STDOUT,
     )
-    for line in TextIOWrapper(rclone_process.stdout, encoding="utf-8"):
-        if "Serving remote control on" in line:
-            time.sleep(1)
+    while True:
+        out_line = await rclone_process.stdout.readline()
+        if out_line == b"" and rclone_process.returncode == 0:
+            err = await rclone_process.stderr.readline()
+            logger.error("Failed to start rclone subprocess")
+            logger.error(err.decode())
             break
+        if "Serving remote control on" in out_line.decode():
+            await asyncio.sleep(1)
+            break
+    logger.info("Started rclone")
 
 
-def rclone_setup(categories: list):
+async def rclone_setup(categories: list):
     """Initializes the rclone.conf file"""
     rclone_conf = ""
     for item in mongo.config["rclone"]:
@@ -86,13 +95,21 @@ def rclone_setup(categories: list):
     with open("rclone.conf", "w+", encoding="utf-8") as w:
         w.write(rclone_conf)
 
-    restart_rclone()
+    await restart_rclone()
 
     for i, category in enumerate(categories):
         rclone[i] = RCloneAPI(category, i)
 
 
-def startup():
+async def build_metadata():
+    while True:
+        trigger = mongo.get_next_build_time()
+        sleep_seconds = abs(datetime.now(tz=timezone.utc) - trigger).total_seconds()
+        logger.info("Next run on %s", trigger.strftime('%d/%m/%Y, %H:%M:%S'))
+        await asyncio.sleep(sleep_seconds)
+        fetch_metadata()
+
+async def startup():
     """Initializes MongoDB and Rclone instances"""
     logger.info("Starting up...")
 
@@ -100,18 +117,7 @@ def startup():
 
     if mongo.get_is_config_init() is True:
         categories = mongo.get_categories()
-        rclone_setup(categories)
-        if mongo.get_is_metadata_init() is False:
-            fetch_metadata()
-        else:
-            scheduler = BackgroundScheduler()
-            trigger = CronTrigger.from_crontab(
-                mongo.config["build"].get("cron", "0 */8 * * *")
-            )
-            scheduler.add_job(
-                fetch_metadata, trigger, name="fetch_metadata", id="fetch_metadata"
-            )
-            scheduler.start()
+        await rclone_setup(categories)
         logger.debug("Done.")
     else:
         # logic for first time setup
@@ -122,7 +128,7 @@ app = FastAPI(title="Dester", openapi_url=f"{settings.API_V1_STR}/openapi.json")
 
 
 @app.exception_handler(StarletteHTTPException)
-async def static(request: Request, exception: StarletteHTTPException):
+async def static(_, exception: StarletteHTTPException):
     """Returns the static build of the Frontend if available"""
     if exception.status_code == 404:
         if os.path.exists("build/index.html"):
@@ -164,6 +170,11 @@ else:
         },
     )
 
-startup()
+# asyncio.new_event_loop()
+loop = asyncio.get_event_loop()
+loop.create_task(startup())
+loop.create_task(build_metadata())
+
+
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=settings.PORT, reload=False)

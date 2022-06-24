@@ -28,7 +28,7 @@ async def settings_post(
     init_time = perf_counter()
 
     data = await request.json()
-    condition = mongo.set_config(data)
+    condition = await mongo.set_config(data)
     if condition == 0:
         response.status_code = 409
         return DResponse(

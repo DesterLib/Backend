@@ -1,3 +1,4 @@
+from typing import Optional
 import requests
 import regex as re
 import ujson as json
@@ -70,13 +71,13 @@ def build_config(config) -> list:
 
 
 class RCloneAPI:
-    def __init__(self, data: dict, index: int):
+    def __init__(self, data: dict, index: int, port=35530):
         self.data: dict = data
         self.index: int = index
         self.id: str = data.get("id") or data.get("drive_id") or ""
         self.fs: str = "".join(c for c in self.id if c.isalnum()) + ":"
         self.provider: str = data.get("provider") or "gdrive"
-        self.RCLONE_RC_URL: str = "http://localhost:35530"
+        self.RCLONE_RC_URL: str = f"http://localhost:{port}"
         self.RCLONE: dict = {
             "mkdir": "operations/mkdir",
             "purge": "operations/purge",
@@ -117,7 +118,7 @@ class RCloneAPI:
         self.fs_conf: dict = self.rc_conf()
         self.refresh()
 
-    def rc_ls(self, options: dict = {}) -> list:
+    def rc_ls(self, options: Optional[dict] = None) -> list:
         """Returns a recursive list of files"""
         rc_data: dict = {
             "fs": self.fs,
@@ -168,14 +169,14 @@ class RCloneAPI:
                     "subtitles": [],
                     "modified_time": item["ModTime"],
                 }
-                path_without_extention = path.splitext(item["Path"])[0]
-                file_name = file_names.get(path_without_extention)
+                path_without_extension = path.splitext(item["Path"])[0]
+                file_name = file_names.get(path_without_extension)
                 if file_name:
                     curr_metadata["subtitles"] = file_name["subtitles"]
-                    file_names[path_without_extention]["found"] = True
-                    file_names[path_without_extention]["index"] = sub_index
+                    file_names[path_without_extension]["found"] = True
+                    file_names[path_without_extension]["index"] = sub_index
                 else:
-                    file_names[path_without_extention] = {
+                    file_names[path_without_extension] = {
                         "found": True,
                         "index": sub_index,
                         "subtitles": [],
@@ -191,26 +192,26 @@ class RCloneAPI:
             elif item["IsDir"] is False and item["Name"].endswith(
                 (".vtt", ".srt", ".ass", ".ssa")
             ):
-                path_without_extention = path.splitext(item["Path"])[0]
-                if path_without_extention[-3] == ".":
-                    path_without_extention = path_without_extention[:-3]
-                elif path_without_extention[-4] == ".":
-                    path_without_extention = path_without_extention[:-4]
+                path_without_extension = path.splitext(item["Path"])[0]
+                if path_without_extension[-3] == ".":
+                    path_without_extension = path_without_extension[:-3]
+                elif path_without_extension[-4] == ".":
+                    path_without_extension = path_without_extension[:-4]
                 sub_metadata = {
                     "id": item["ID"],
                     "name": item["Name"],
                     "path": item["Path"],
                 }
-                file_name = file_names.get(path_without_extention)
+                file_name = file_names.get(path_without_extension)
                 if file_name:
                     if file_name["found"] is True:
                         metadata[file_name["index"]]["subtitles"].append(sub_metadata)
                     else:
-                        file_names[path_without_extention]["subtitles"].append(
+                        file_names[path_without_extension]["subtitles"].append(
                             sub_metadata
                         )
                 else:
-                    file_names[path_without_extention] = {
+                    file_names[path_without_extension] = {
                         "found": False,
                         "index": None,
                         "subtitles": [sub_metadata],

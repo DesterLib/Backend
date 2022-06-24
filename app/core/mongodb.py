@@ -103,21 +103,23 @@ class MongoDB:
         self.is_series_cache_init = result["is_series_cache_init"]
         return result["is_series_cache_init"]
 
-    def get_is_build_time(self) -> bool:
-        "Checks whether metadata should be regenerated now"
-        buildconfig = self.config_col.find_one({"build": {"$exists": True}}) or {
+    def get_next_build_time(self) -> datetime:
+        "Gets the next time for the cron job"
+        build_config = self.config_col.find_one({"build": {"$exists": True}}) or {
             "build": {"cron": "0 */8 * * *"}
         }
         last_build_time = self.other_col.find_one(
             {"last_build_time": {"$exists": True}}
-        ) or {"last_build_time": datetime.fromtimestamp(1, tz=timezone.utc)}
+        ) or datetime.now(tz=timezone.utc)
+        cron_expr = build_config["build"].get("cron", "0 */8 * * *")
         cron = croniter(
-            buildconfig["build"].get("cron", "0 */8 * * *"), last_build_time
+            cron_expr, last_build_time
         )
-        if datetime.now(timezone.utc) > cron.get_next(datetime):
-            return True
-        else:
-            return False
+        return cron.get_next(datetime)
+
+    def get_is_build_time(self) -> bool:
+        "Checks whether metadata should be regenerated now"
+        return datetime.now(timezone.utc) > self.get_next_build_time()
 
     def get_rclone_conf(self) -> dict:
         "Returns the rclone config"
@@ -136,7 +138,7 @@ class MongoDB:
         self.config["categories"] = result["categories"]
         return result["categories"]
 
-    def set_config(self, data: dict) -> int:
+    async def set_config(self, data: dict) -> int:
         """Updates the config with one supplied by the user"""
         bulk_action: list = []
         config_app: dict = data.get("app", {})
@@ -175,7 +177,7 @@ class MongoDB:
         if self.is_metadata_init is False:
             from main import rclone_setup
 
-            rclone_setup(self.config["categories"])
+            await rclone_setup(self.config["categories"])
             return 2
         return 1
 
