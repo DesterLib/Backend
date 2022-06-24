@@ -24,7 +24,7 @@ handler.namer = lambda name: name.replace(".log", "") + ".log"
 basicConfig(
     level=DEBUG,
     datefmt="%Y/%m/%d %H:%M:%S",
-    format="[%(asctime)s][%(levelname)s] ==> %(message)s",
+    format="[%(asctime)s][%(name)s][%(levelname)s] ==> %(message)s",
     handlers=[
         StreamHandler(),
         handler,
@@ -36,3 +36,4 @@ getLogger("waitress").setLevel(WARNING)
 getLogger("uvicorn").setLevel(WARNING)
 getLogger("httpx").setLevel(WARNING)
 logger = getLogger(__name__)
+rclone_logger = getLogger("rclone")

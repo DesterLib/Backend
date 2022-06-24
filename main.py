@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 import os
+import re
 import time
 import shlex
 import asyncio
@@ -8,7 +9,7 @@ from shutil import which
 from sys import platform
 from app import __version__
 from io import TextIOWrapper
-from asyncio.log import logger
+from app import logger, rclone_logger
 from app.api import main_router
 from app.settings import settings
 from app.apis import mongo, rclone
@@ -68,7 +69,7 @@ async def restart_rclone():
     rclone_bin = which("rclone")
     rclone_process = await asyncio.create_subprocess_exec(
         *shlex.split(
-            f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-file 'logs/rclone.log' --log-level INFO",
+            f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-level INFO",
             posix=(platform not in ["win32", "cygwin", "msys"]),
         ),
         stdout=PIPE,
@@ -85,7 +86,30 @@ async def restart_rclone():
             await asyncio.sleep(1)
             break
     logger.info("Started rclone")
+    loop.create_task(log_rclone(rclone_process))
 
+
+async def log_rclone(rclone_process: asyncio.subprocess.Process):
+    rclone_logger.info("Starting rclone logger")
+    while True:
+        out_line = await rclone_process.stdout.readline()
+        if out_line == b"" and rclone_process.returncode == 0:
+            err = await rclone_process.stderr.readline()
+            logger.error("An error occurred with rclone subprocess")
+            logger.error(err.decode())
+            break
+        match = re.match(r"(?:[\d\/])+ (?:[\d:]+) (?P<level>\w+) ? ? :? (?P<message>.*)$", out_line.decode(), flags=2)
+        data = match.groupdict()
+        levels = {
+            'CRITICAL': 50,
+            'FATAL': 50,
+            'ERROR': 40,
+            'WARNING': 30,
+            'WARN': 30,
+            'INFO': 20,
+            'DEBUG': 10,
+        }
+        rclone_logger.log(levels.get(data.get("levels", "INFO").upper()), data.get("message"))
 
 async def rclone_setup(categories: list):
     """Initializes the rclone.conf file"""
@@ -120,8 +144,8 @@ async def startup():
         await rclone_setup(categories)
         logger.debug("Done.")
     else:
+        logger.warning("The site's configuration is not set up")
         # logic for first time setup
-        pass
 
 
 app = FastAPI(title="Dester", openapi_url=f"{settings.API_V1_STR}/openapi.json")
