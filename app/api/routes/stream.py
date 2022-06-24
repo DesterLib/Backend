@@ -2,12 +2,14 @@ import requests
 from app.apis import rclone
 from datetime import datetime
 from time import perf_counter
+from httpx import AsyncClient
 from app.models import DResponse
 from urllib.parse import parse_qs
 from fastapi import Request, APIRouter
 from fastapi.responses import StreamingResponse
 
 
+stream_client = AsyncClient()
 router = APIRouter(
     prefix="/stream",
     tags=["internals"],
@@ -20,13 +22,6 @@ excluded_headers = [
     "connection",
     "host",
 ]
-
-
-def iter_file(streamable):
-    with streamable as stream:
-        stream.raise_for_status()
-        for chunk in stream.iter_content(chunk_size=4096):
-            yield chunk
 
 
 @router.get("/info/{rclone_index}/{id}", status_code=200)
@@ -59,20 +54,13 @@ def info(rclone_index: int, id: str):
 
 
 @router.get("/{rclone_index}/{full_path:path}", status_code=206)
-def query(request: Request, full_path: str, rclone_index: int):
+async def stream_route(request: Request, full_path: str, rclone_index: int):
     rc = rclone[rclone_index]
     stream_url = rc.stream(full_path)
-
-    result = requests.request(
-        method=request.method,
-        url=stream_url,
-        headers=request.headers,
-        allow_redirects=True,
-        stream=True,
-    )
-    headers = result.headers
+    req = stream_client.build_request("GET", stream_url, headers=request.headers.raw)
+    resp = await stream_client.send(req, stream=True)
+    headers = resp.headers
     headers["content-disposition"] = "inline"
-
     return StreamingResponse(
-        iter_file(result), headers=headers, status_code=result.status_code
+        resp.aiter_raw(), headers=headers, status_code=resp.status_code
     )
