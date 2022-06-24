@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 import os
 import re
 import time
@@ -8,21 +7,19 @@ import uvicorn
 from shutil import which
 from sys import platform
 from app import __version__
-from io import TextIOWrapper
-from app import logger, rclone_logger
+from fastapi import FastAPI
 from app.api import main_router
 from app.settings import settings
 from app.apis import mongo, rclone
 from app.utils import time_formatter
-from fastapi import FastAPI, Request
+from app import logger, rclone_logger
 from app.core.rclone import RCloneAPI
+from datetime import datetime, timezone
 from app.core.cron import fetch_metadata
 from fastapi.staticfiles import StaticFiles
-from apscheduler.triggers.cron import CronTrigger
+from subprocess import PIPE, STDOUT, DEVNULL, run
 from starlette.middleware.cors import CORSMiddleware
-from subprocess import PIPE, STDOUT, DEVNULL, Popen, run
 from fastapi.responses import FileResponse, UJSONResponse
-from apscheduler.schedulers.background import BackgroundScheduler
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 

@@ -1,6 +1,6 @@
 from typing import Optional
 import requests
-import regex as re
+import re
 import ujson as json
 from os import path
 from httplib2 import Http
