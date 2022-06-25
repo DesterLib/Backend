@@ -1,7 +1,7 @@
-import re
 import requests
-import ujson as json
+import regex as re
 from os import path
+import ujson as json
 from httplib2 import Http
 from typing import Optional
 from app.settings import settings
