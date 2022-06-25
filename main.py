@@ -6,18 +6,17 @@ import asyncio
 import uvicorn
 from shutil import which
 from sys import platform
-from app import __version__
 from fastapi import FastAPI
 from app.api import main_router
 from app.settings import settings
 from app.apis import mongo, rclone
 from app.utils import time_formatter
-from app import logger, rclone_logger
 from app.core.rclone import RCloneAPI
 from datetime import datetime, timezone
 from app.core.cron import fetch_metadata
 from fastapi.staticfiles import StaticFiles
 from subprocess import PIPE, STDOUT, DEVNULL, run
+from app import logger, __version__, rclone_logger
 from starlette.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, UJSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
@@ -63,13 +62,18 @@ async def restart_rclone():
         )
     else:
         exit("Unsupported platform")
-    if not os.path.isdir("bin"): os.mkdir("bin")
-    rclone_bin = f"bin/rclone{'.exe' if platform in ['win32', 'cygwin', 'msys'] else ''}"
+    if not os.path.isdir("bin"):
+        os.mkdir("bin")
+    rclone_bin = (
+        f"bin/rclone{'.exe' if platform in ['win32', 'cygwin', 'msys'] else ''}"
+    )
     if not os.path.exists(rclone_bin):
         rclone_bin = which("rclone")
     if not rclone_bin:
         logger.error("Couldn't find rclone executable")
-        logger.error("Please download a suitable executable of rclone from 'rclone.org' and move it to the 'bin' folder.")
+        logger.error(
+            "Please download a suitable executable of rclone from 'rclone.org' and move it to the 'bin' folder."
+        )
         quit(1)
     rclone_process = await asyncio.create_subprocess_exec(
         *shlex.split(
@@ -102,18 +106,25 @@ async def log_rclone(rclone_process: asyncio.subprocess.Process):
             logger.error("An error occurred with rclone subprocess")
             logger.error(err.decode())
             break
-        match = re.match(r"(?:[\d\/])+ (?:[\d:]+) (?P<level>\w+) ? ? :? (?P<message>.*)$", out_line.decode(), flags=2)
+        match = re.match(
+            r"(?:[\d\/])+ (?:[\d:]+) (?P<level>\w+) ? ? :? (?P<message>.*)$",
+            out_line.decode(),
+            flags=2,
+        )
         data = match.groupdict()
         levels = {
-            'CRITICAL': 50,
-            'FATAL': 50,
-            'ERROR': 40,
-            'WARNING': 30,
-            'WARN': 30,
-            'INFO': 20,
-            'DEBUG': 10,
+            "CRITICAL": 50,
+            "FATAL": 50,
+            "ERROR": 40,
+            "WARNING": 30,
+            "WARN": 30,
+            "INFO": 20,
+            "DEBUG": 10,
         }
-        rclone_logger.log(levels.get(data.get("levels", "INFO").upper()), data.get("message"))
+        rclone_logger.log(
+            levels.get(data.get("levels", "INFO").upper()), data.get("message")
+        )
+
 
 async def rclone_setup(categories: list):
     """Initializes the rclone.conf file"""
@@ -133,9 +144,10 @@ async def build_metadata():
     while True:
         trigger = mongo.get_next_build_time()
         sleep_seconds = abs(datetime.now(tz=timezone.utc) - trigger).total_seconds()
-        logger.info("Next run on %s", trigger.strftime('%d/%m/%Y, %H:%M:%S'))
+        logger.info("Next run on %s", trigger.strftime("%d/%m/%Y, %H:%M:%S"))
         await asyncio.sleep(sleep_seconds)
         fetch_metadata()
+
 
 async def startup():
     """Initializes MongoDB and Rclone instances"""

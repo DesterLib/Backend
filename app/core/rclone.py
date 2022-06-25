@@ -1,9 +1,9 @@
-from typing import Optional
-import requests
 import re
+import requests
 import ujson as json
 from os import path
 from httplib2 import Http
+from typing import Optional
 from app.settings import settings
 from oauth2client.client import GoogleCredentials
 

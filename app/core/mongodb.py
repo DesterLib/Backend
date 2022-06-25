@@ -112,9 +112,7 @@ class MongoDB:
             {"last_build_time": {"$exists": True}}
         ) or datetime.now(tz=timezone.utc)
         cron_expr = build_config["build"].get("cron", "0 */8 * * *")
-        cron = croniter(
-            cron_expr, last_build_time
-        )
+        cron = croniter(cron_expr, last_build_time)
         return cron.get_next(datetime)
 
     def get_is_build_time(self) -> bool:
