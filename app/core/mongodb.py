@@ -186,6 +186,7 @@ class MongoDB:
             "title": data.get("title", "Dester"),
             "description": data.get("description", "Dester"),
             "domain": data.get("domain", ""),
+            "secret_key": data.get("secret_key", "")
         }
         update_action: UpdateOne = UpdateOne(
             {"app": {"$exists": True}}, {"$set": {"app": update_data}}, upsert=True

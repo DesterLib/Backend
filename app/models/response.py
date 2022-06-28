@@ -33,7 +33,6 @@ class DResponse:
         ok: bool = True,
         result=None,
         init_time: float = 0,
-        extra_title: str = "",
     ):
         self.code: int = code
         self.message: str = message
@@ -41,7 +40,5 @@ class DResponse:
         self.result = result
         self.time_taken: float = perf_counter() - init_time
         title: str = mongo.config["app"].get("title", "Dester")
-        if extra_title != "":
-            title += " | " + extra_title
         self.title: str = title
         self.description: str = mongo.config["app"].get("description", "Dester")
