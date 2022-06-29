@@ -12,16 +12,8 @@ def fetch_metadata():
     series_metadata = []
     movies_metadata = []
     for key, category in rclone.items():
-        category_id = category.data.get("id") or category.data.get("drive_id")
-        category_metadata = {
-            "id": category_id,
-            "type": category.data.get("type", "movies"),
-            "name": category.data.get("name"),
-            "include_in_homepage": category.data.get("include_in_homepage", True),
-        }
-        logger.info("Generating metadata: %s", category_metadata["name"])
-        logger.debug("Category type: %s", category_metadata["type"])
-        if category_metadata["type"] == "series":
+        logger.info("Generating metadata: %s", category.data.get("name"))
+        if category.data.get("type", "movies") == "series":
             series_metadata.extend(
                 generate_series_metadata(tmdb, rclone[key].fetch_series(), key)
             )

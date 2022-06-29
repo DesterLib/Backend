@@ -1,6 +1,5 @@
 import requests
 from app.apis import rclone
-from datetime import datetime
 from httpx import AsyncClient
 from time import perf_counter
 from app.models import DResponse
@@ -29,12 +28,12 @@ def info(rclone_index: int, id: str):
     init_time = perf_counter()
 
     rc = rclone[rclone_index]
-    qualities = {"37": "1080p HD", "22": "720p HD", "59": "480p SD", "18": "360p SD"}
-    if rc.fs_conf["token"]["expiry"] <= datetime.now():
-        rc.refresh()
+    qualities = {"37": "1080p HD", "22": "720p HD",
+                 "59": "480p SD", "18": "360p SD"}
     transcoded_request = requests.get(
         "https://drive.google.com/get_video_info?docid=%s" % (id),
-        headers={"Authorization": "Bearer %s" % (rc.fs_conf["token"]["access_token"])},
+        headers={"Authorization": "Bearer %s" %
+                 (rc.fs_conf["token"]["access_token"])},
     )
     transcoded_data = parse_qs(transcoded_request.text)
     streams = []
@@ -57,7 +56,8 @@ def info(rclone_index: int, id: str):
 async def stream_route(request: Request, full_path: str, rclone_index: int):
     rc = rclone[rclone_index]
     stream_url = rc.stream(full_path)
-    req = stream_client.build_request("GET", stream_url, headers=request.headers.raw)
+    req = stream_client.build_request(
+        "GET", stream_url, headers=request.headers.raw)
     resp = await stream_client.send(req, stream=True)
     headers = resp.headers
     headers["content-disposition"] = "inline"

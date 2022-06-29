@@ -92,6 +92,7 @@ class TMDB:
         use_api: bool = True,
         year: Optional[int] = None,
         adult: bool = False,
+        language: str = "en",
     ) -> Optional[int]:
         """The legacy way to get TMDB ID for a title
         it consumes a bit more memory and it's slower
@@ -126,7 +127,7 @@ class TMDB:
                     "primary_release_year": year,
                     "include_adult": adult,
                     "page": 1,
-                    "language": "en-US",
+                    "language": language,
                 },
             )
             if resp.status_code == 200:

@@ -2,11 +2,8 @@ import requests
 import regex as re
 import ujson as json
 from os import path
-from httplib2 import Http
 from typing import Optional
 from app.settings import settings
-from oauth2client.client import GoogleCredentials
-
 
 def build_config(config) -> list:
     """Generates an rclone config"""
@@ -67,6 +64,13 @@ def build_config(config) -> list:
                 rclone_conf.append(
                     f"[{safe_fs}]\ntype = onedrive\ntoken = {token}\ndrive_id = {drive_id}\ndrive_type = documentLibrary"
                 )
+        elif provider == "local":
+            fs_path = category.get("id")
+            if fs_path is not None:
+                safe_fs = "".join(c for c in fs_path if c.isalnum())
+                rclone_conf.append(
+                    f"[{safe_fs}]\ntype = alias\nremote = {fs_path}"
+                )
     return rclone_conf
 
 
@@ -116,7 +120,6 @@ class RCloneAPI:
             "statsReset": "core/stats-reset",
         }
         self.fs_conf: dict = self.rc_conf()
-        self.refresh()
 
     def rc_ls(self, options: Optional[dict] = None) -> list:
         """Returns a recursive list of files"""
@@ -140,7 +143,8 @@ class RCloneAPI:
             data=json.dumps(rc_data),
             headers={"Content-Type": "application/json"},
         ).json()
-        result["token"] = json.loads(result.get("token", "{}"))
+        if result.get("token"):
+            result["token"] = json.loads(result.get("token", "{}"))
         return result
 
     def fetch_movies(self) -> list:
@@ -160,7 +164,7 @@ class RCloneAPI:
                 parent_path = item["Path"].replace("/" + item["Name"], "")
                 parent = dirs.get(parent_path)
                 curr_metadata = {
-                    "id": item["ID"],
+                    "id": item.get("ID", item["Path"]),
                     "name": item["Name"],
                     "path": item["Path"],
                     "parent": parent,
@@ -185,7 +189,7 @@ class RCloneAPI:
                 sub_index += 1
             elif item["IsDir"] is True:
                 dirs[item["Path"]] = {
-                    "id": item["ID"],
+                    "id": item.get("ID", item["Path"]),
                     "name": item["Name"],
                     "path": item["Path"],
                 }
@@ -198,14 +202,15 @@ class RCloneAPI:
                 elif path_without_extension[-4] == ".":
                     path_without_extension = path_without_extension[:-4]
                 sub_metadata = {
-                    "id": item["ID"],
+                    "id": item.get("ID", item["Path"]),
                     "name": item["Name"],
                     "path": item["Path"],
                 }
                 file_name = file_names.get(path_without_extension)
                 if file_name:
                     if file_name["found"] is True:
-                        metadata[file_name["index"]]["subtitles"].append(sub_metadata)
+                        metadata[file_name["index"]
+                                 ]["subtitles"].append(sub_metadata)
                     else:
                         file_names[path_without_extension]["subtitles"].append(
                             sub_metadata
@@ -241,7 +246,7 @@ class RCloneAPI:
                     season_metadata = eval("metadata" + parent["json_path"])
                     season_metadata["episodes"].append(
                         {
-                            "id": item["ID"],
+                            "id": item.get("ID", item["Path"]),
                             "name": item["Name"],
                             "path": item["Path"],
                             "parent": parent,
@@ -252,7 +257,7 @@ class RCloneAPI:
                     )
             else:
                 parent_dirs[item["Path"]] = {
-                    "id": item["ID"],
+                    "id": item.get("ID", item["Path"]),
                     "name": item["Name"],
                     "path": item["Path"],
                     "depth": parent["depth"] + 1,
@@ -260,7 +265,7 @@ class RCloneAPI:
                 if parent["depth"] == 0:
                     metadata.append(
                         {
-                            "id": item["ID"],
+                            "id": item.get("ID", item["Path"]),
                             "name": item["Name"],
                             "path": item["Path"],
                             "parent": parent,
@@ -270,7 +275,8 @@ class RCloneAPI:
                             "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
+                    parent_dirs[item["Path"]
+                                ]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(
@@ -280,7 +286,7 @@ class RCloneAPI:
                     if season != "0":
                         season = season.lstrip("0")
                     series_metadata["seasons"][season] = {
-                        "id": item["ID"],
+                        "id": item.get("ID", item["Path"]),
                         "name": item["Name"],
                         "path": item["Path"],
                         "parent": parent,
@@ -293,27 +299,6 @@ class RCloneAPI:
                         parent["json_path"] + f'["seasons"]["{season}"]'
                     )
         return metadata
-
-    def refresh(self) -> dict:
-        "Refreshes Google Drive credentials"
-        creds = GoogleCredentials(
-            client_id=self.fs_conf["client_id"],
-            client_secret=self.fs_conf["client_secret"],
-            access_token=self.fs_conf["token"]["access_token"],
-            refresh_token=self.fs_conf["token"]["refresh_token"],
-            token_uri="https://accounts.google.com/o/oauth2/token",
-            token_expiry=None,
-            user_agent=None,
-        )
-        creds.refresh(creds.authorize(Http()))
-        result = {
-            "access_token": creds.access_token,
-            "token_type": "Bearer",
-            "refresh_token": creds.refresh_token,
-            "expiry": creds.token_expiry,
-        }
-        self.fs_conf["token"] = result
-        return result
 
     def size(self, path: str) -> int:
         """Retrieves the size of a folder or file"""
