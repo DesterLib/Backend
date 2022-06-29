@@ -27,7 +27,12 @@ def settings_get(secret_key: str = "") -> dict:
 
 
 @router.post("", response_model=dict, status_code=200)
-async def settings_post(request: Request, response: Response, background_tasks: BackgroundTasks, secret_key: str = "") -> dict:
+async def settings_post(
+    request: Request,
+    response: Response,
+    background_tasks: BackgroundTasks,
+    secret_key: str = "",
+) -> dict:
     init_time = perf_counter()
 
     if mongo.config["app"].get("secret_key", "") == secret_key:
