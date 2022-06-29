@@ -2,6 +2,7 @@ from typing import Optional
 from fastapi import APIRouter
 from time import perf_counter
 from app.models import DResponse
+from app.apis import mongo, rclone
 
 
 router = APIRouter(
@@ -43,7 +44,6 @@ def browse(
     media_type: Optional[str] = "movies",
 ) -> dict:
     init_time = perf_counter()
-    from app.apis import mongo, rclone
 
     sort_split = sort.split(":")
     sort_dict = {sort_split[0]: int(sort_split[1])}
@@ -114,3 +114,14 @@ def browse(
     if rclone_index == -1:
         message += f" Media type: {media_type}."
     return DResponse(200, message, True, result, init_time).__json__()
+
+
+@router.get("/categories", response_model=dict, status_code=200)
+def rclone_indeces():
+    init_time = perf_counter()
+
+    result = {}
+    categories = mongo.config["categories"]
+    for rclone_index, category in enumerate(categories):
+        result[category["name"]] = rclone_index
+    return DResponse(200, "A map of categories and rclone indeces was successfully generated.", True, result, init_time).__json__()
