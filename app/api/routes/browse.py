@@ -124,4 +124,10 @@ def rclone_indeces():
     categories = mongo.config["categories"]
     for rclone_index, category in enumerate(categories):
         result[category["name"]] = rclone_index
-    return DResponse(200, "A map of categories and rclone indeces was successfully generated.", True, result, init_time).__json__()
+    return DResponse(
+        200,
+        "A map of categories and rclone indeces was successfully generated.",
+        True,
+        result,
+        init_time,
+    ).__json__()

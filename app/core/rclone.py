@@ -5,6 +5,7 @@ from os import path
 from typing import Optional
 from app.settings import settings
 
+
 def build_config(config) -> list:
     """Generates an rclone config"""
     rclone_conf: list = []
@@ -68,9 +69,7 @@ def build_config(config) -> list:
             fs_path = category.get("id")
             if fs_path is not None:
                 safe_fs = "".join(c for c in fs_path if c.isalnum())
-                rclone_conf.append(
-                    f"[{safe_fs}]\ntype = alias\nremote = {fs_path}"
-                )
+                rclone_conf.append(f"[{safe_fs}]\ntype = alias\nremote = {fs_path}")
     return rclone_conf
 
 
@@ -209,8 +208,7 @@ class RCloneAPI:
                 file_name = file_names.get(path_without_extension)
                 if file_name:
                     if file_name["found"] is True:
-                        metadata[file_name["index"]
-                                 ]["subtitles"].append(sub_metadata)
+                        metadata[file_name["index"]]["subtitles"].append(sub_metadata)
                     else:
                         file_names[path_without_extension]["subtitles"].append(
                             sub_metadata
@@ -275,8 +273,7 @@ class RCloneAPI:
                             "json_path": f"[{len(metadata)}]",
                         }
                     )
-                    parent_dirs[item["Path"]
-                                ]["json_path"] = f"[{len(metadata) - 1}]"
+                    parent_dirs[item["Path"]]["json_path"] = f"[{len(metadata) - 1}]"
                 elif parent["depth"] == 1:
                     series_metadata = eval("metadata" + parent["json_path"])
                     season = re.search(
