@@ -35,6 +35,8 @@ class MongoDB:
             "auth0": {},
             "categories": [],
             "gdrive": {},
+            "onedrive": {},
+            "sharepoint": {},
             "tmdb": {},
             "subtitles": {},
             "build": {},
@@ -60,6 +62,8 @@ class MongoDB:
             "auth0": {},
             "categories": [],
             "gdrive": {},
+            "onedrive": {},
+            "sharepoint": {},
             "tmdb": {},
             "subtitles": {},
             "build": {},
@@ -143,6 +147,8 @@ class MongoDB:
         config_auth0: dict = data.get("auth0", {})
         config_categories: list = data.get("categories", [])
         config_gdrive: dict = data.get("gdrive", {})
+        config_onedrive: dict = data.get("onedrive", {})
+        config_sharepoint: dict = data.get("sharepoint", {})
         config_tmdb: dict = data.get("tmdb", {})
         config_build: dict = data.get("build", {})
         config_subtitles: dict = data.get("subtitles", {})
@@ -153,6 +159,10 @@ class MongoDB:
             bulk_action.append(self.set_auth0(config_auth0))
         if config_gdrive != self.config["gdrive"]:
             bulk_action.append(self.set_gdrive(config_gdrive))
+        if config_onedrive != self.config["onedrive"]:
+            bulk_action.append(self.set_onedrive(config_onedrive))
+        if config_sharepoint != self.config["sharepoint"]:
+            bulk_action.append(self.set_sharepoint(config_sharepoint))
         if config_tmdb != self.config["tmdb"]:
             bulk_action.append(self.set_tmdb(config_tmdb))
         if config_build != self.config["build"]:
@@ -245,6 +255,38 @@ class MongoDB:
             upsert=True,
         )
         self.config["gdrive"] = update_data
+        return update_action
+
+    def set_onedrive(self, data: dict):
+        """Updates the app onedrive with one supplied by the user"""
+        update_data: dict = {
+            "client_id": data.get("client_id", ""),
+            "client_secret": data.get("client_secret", ""),
+            "access_token": data.get("access_token", ""),
+            "refresh_token": data.get("refresh_token", ""),
+        }
+        update_action: UpdateOne = UpdateOne(
+            {"onedrive": {"$exists": True}},
+            {"$set": {"onedrive": update_data}},
+            upsert=True,
+        )
+        self.config["onedrive"] = update_data
+        return update_action
+
+    def set_sharepoint(self, data: dict):
+        """Updates the app sharepoint with one supplied by the user"""
+        update_data: dict = {
+            "client_id": data.get("client_id", ""),
+            "client_secret": data.get("client_secret", ""),
+            "access_token": data.get("access_token", ""),
+            "refresh_token": data.get("refresh_token", ""),
+        }
+        update_action: UpdateOne = UpdateOne(
+            {"sharepoint": {"$exists": True}},
+            {"$set": {"sharepoint": update_data}},
+            upsert=True,
+        )
+        self.config["sharepoint"] = update_data
         return update_action
 
     def set_tmdb(self, data: dict):
