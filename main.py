@@ -77,7 +77,7 @@ async def restart_rclone():
         quit(1)
     rclone_process = await asyncio.create_subprocess_exec(
         *shlex.split(
-            f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-level DEBUG",
+            f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-level INFO",
             posix=(platform not in ["win32", "cygwin", "msys"]),
         ),
         stdout=PIPE,
