@@ -77,7 +77,7 @@ async def restart_rclone():
         quit(1)
     rclone_process = await asyncio.create_subprocess_exec(
         *shlex.split(
-            f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-level INFO",
+            f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-level DEBUG",
             posix=(platform not in ["win32", "cygwin", "msys"]),
         ),
         stdout=PIPE,
@@ -94,7 +94,7 @@ async def restart_rclone():
             await asyncio.sleep(1)
             break
     logger.info("Started rclone")
-    loop.create_task(log_rclone(rclone_process))
+    asyncio.create_task(log_rclone(rclone_process))
 
 
 async def log_rclone(rclone_process: asyncio.subprocess.Process):
@@ -210,10 +210,8 @@ else:
         },
     )
 
-# asyncio.new_event_loop()
-loop = asyncio.get_event_loop()
-loop.create_task(startup())
-loop.create_task(build_metadata())
+asyncio.create_task(startup())
+asyncio.create_task(build_metadata())
 
 
 if __name__ == "__main__":
