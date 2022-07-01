@@ -1,3 +1,5 @@
+#!/bin/bash
+
 if [ ! -d "build" ]
 then
     dir_name=$(pwd)
