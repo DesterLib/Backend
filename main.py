@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import time
 import shlex
 import asyncio
@@ -34,6 +35,10 @@ if not settings.MONGODB_PASSWORD:
 
 start_time = time.time()
 
+if sys.version_info[1] > 9:
+    loop = asyncio
+else:
+    loop = asyncio.get_event_loop()
 
 async def restart_rclone():
     """Force closes any running instances of the Rclone port then starts an Rclone RC server"""
@@ -94,7 +99,7 @@ async def restart_rclone():
             await asyncio.sleep(1)
             break
     logger.info("Started rclone")
-    asyncio.create_task(log_rclone(rclone_process))
+    loop.create_task(log_rclone(rclone_process))
 
 
 async def log_rclone(rclone_process: asyncio.subprocess.Process):
@@ -210,8 +215,8 @@ else:
         },
     )
 
-asyncio.create_task(startup())
-asyncio.create_task(build_metadata())
+loop.create_task(startup())
+loop.create_task(build_metadata())
 
 
 if __name__ == "__main__":
