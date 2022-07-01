@@ -4,7 +4,7 @@ then
     current_folder="${dir_name%"${dir_name##*[!/]}"}"
     current_folder="${current_folder##*/}"
     current_folder=${current_folder:-/}  
-    if [ "$current_folder" == "scripts" ]
+    if [[ "$current_folder" == "scripts" ]]
     then
         echo -e "\e[31m[ERROR]: Please run this script from the root directory of the project.\e[0m"
         exit 1
