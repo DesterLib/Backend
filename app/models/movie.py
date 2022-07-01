@@ -100,7 +100,7 @@ class Movie:
         self.popularity: float = media_metadata["popularity"]
         self.revenue: int = media_metadata["revenue"]
         self.rating: float = media_metadata["vote_average"]
-        release_date: str = media_metadata["release_date"]
+        release_date: str = media_metadata["release_date"] or "1900-01-01"
         self.release_date: datetime = datetime.strptime(release_date, "%Y-%m-%d")
         self.year: int = self.release_date.year
         self.tagline: str = media_metadata["tagline"]
