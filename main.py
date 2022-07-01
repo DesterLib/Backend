@@ -36,9 +36,9 @@ if not settings.MONGODB_PASSWORD:
 start_time = time.time()
 
 if sys.version_info[1] > 9:
-    loop = asyncio
-else:
     loop = asyncio.get_event_loop()
+else:
+    loop = asyncio
 
 async def restart_rclone():
     """Force closes any running instances of the Rclone port then starts an Rclone RC server"""
