@@ -1,11 +1,12 @@
+from typing import List
 from app.models import Season
 from datetime import datetime
 from dateutil.parser import isoparse
 
 
-class Serie:
-    "Serie class"
-    __slots__: list[str] = [
+class Series:
+    "Series class"
+    __slots__: List[str] = [
         "id",
         "file_name",
         "path",
@@ -107,12 +108,12 @@ class Serie:
             self.runtime = 0
         else:
             self.runtime: int = media_metadata["episode_run_time"][0]
-        self.cast: list[dict] = media_metadata["credits"]["cast"][:10]
+        self.cast: List[dict] = media_metadata["credits"]["cast"][:10]
         self.crew: dict = self.get_crew(
             media_metadata["credits"]["crew"], media_metadata["created_by"]
         )
-        self.studios: list[dict] = media_metadata["production_companies"]
-        self.genres: list[dict] = media_metadata["genres"]
+        self.studios: List[dict] = media_metadata["production_companies"]
+        self.genres: List[dict] = media_metadata["genres"]
         self.external_ids: dict = media_metadata["external_ids"]
         self.total_episodes: int = media_metadata["number_of_episodes"]
         self.total_seasons: int = media_metadata["number_of_seasons"]
@@ -124,17 +125,17 @@ class Serie:
         self.homepage: str = media_metadata["homepage"]
         self.backdrop_path: str = media_metadata["backdrop_path"]
         self.poster_path: str = media_metadata["poster_path"]
-        self.videos: list[dict] = media_metadata["videos"]["results"][:10]
-        self.reviews: list[dict] = media_metadata["reviews"]["results"][:10]
+        self.videos: List[dict] = media_metadata["videos"]["results"][:10]
+        self.reviews: List[dict] = media_metadata["reviews"]["results"][:10]
 
         # Seasons
-        seasons: list[dict] = []
+        seasons: List[dict] = []
         for key, season in file_metadata["seasons"].items():
             if f"season/{key}" in media_metadata:
                 season_meta: Season = Season(season, media_metadata[f"season/{key}"])
                 seasons.append(season_meta.__json__())
                 self.size += season_meta.size
-        self.seasons: list[dict] = sorted(seasons, key=lambda d: d["season_number"])
+        self.seasons: List[dict] = sorted(seasons, key=lambda d: d["season_number"])
         del seasons
 
     def get_logo(self, media_metadata: dict) -> str:
@@ -145,7 +146,7 @@ class Serie:
             logo: str = ""
         return logo
 
-    def get_crew(self, crew: list[dict], creators: list[dict]) -> dict:
+    def get_crew(self, crew: List[dict], creators: List[dict]) -> dict:
         """Finds and curates features crew members of a movie"""
         result: dict = {
             "Creator": creators,
@@ -157,7 +158,7 @@ class Serie:
             "Writer": [],
             "Series Writer": [],
         }
-        wanted_jobs: list[str] = [
+        wanted_jobs: List[str] = [
             "Director",
             "Series Director",
             "Screenplay",

@@ -1,3 +1,4 @@
+from typing import Dict, List
 from datetime import datetime
 from app.settings import settings
 from dateutil.parser import isoparse
@@ -6,7 +7,7 @@ from dateutil.parser import isoparse
 class Movie:
     """Movie class"""
 
-    __slots__: list[str] = [
+    __slots__: List[str] = [
         "id",
         "file_name",
         "path",
@@ -81,15 +82,15 @@ class Movie:
 
     def __init__(self, file_metadata, media_metadata, rclone_index):
         # File Info
-        self.id: list[str] = [file_metadata["id"]]
-        self.file_name: list[str] = [file_metadata["name"]]
-        self.path: list[str] = [file_metadata["path"]]
-        self.parent: list[dict] = [file_metadata["parent"]]
-        self.modified_time: list[datetime] = [isoparse(file_metadata["modified_time"])]
+        self.id: List[str] = [file_metadata["id"]]
+        self.file_name: List[str] = [file_metadata["name"]]
+        self.path: List[str] = [file_metadata["path"]]
+        self.parent: List[dict] = [file_metadata["parent"]]
+        self.modified_time: List[datetime] = [isoparse(file_metadata["modified_time"])]
         self.number_of_files: int = 1
         self.rclone_index: int = rclone_index
-        self.size: list[int] = [file_metadata["size"]]
-        self.subtitles: list[dict] = file_metadata["subtitles"]
+        self.size: List[int] = [file_metadata["size"]]
+        self.subtitles: List[dict] = file_metadata["subtitles"]
 
         # Media Info
         self.tmdb_id: int = media_metadata["id"]
@@ -105,11 +106,11 @@ class Movie:
         self.tagline: str = media_metadata["tagline"]
         self.description: str = media_metadata["overview"]
         self.runtime: int = media_metadata["runtime"]
-        self.cast: list[dict] = media_metadata["credits"]["cast"][:10]
+        self.cast: List[dict] = media_metadata["credits"]["cast"][:10]
         self.crew: dict = self.get_crew(media_metadata["credits"]["crew"])
-        self.studios: list[dict] = media_metadata["production_companies"]
-        self.genres: list[dict] = media_metadata["genres"]
-        self.external_ids: dict[dict] = media_metadata["external_ids"]
+        self.studios: List[dict] = media_metadata["production_companies"]
+        self.genres: List[dict] = media_metadata["genres"]
+        self.external_ids: Dict[dict] = media_metadata["external_ids"]
 
         # Media Resources
         self.logo_path: str = self.get_logo(media_metadata)
@@ -119,8 +120,8 @@ class Movie:
         )
         self.backdrop_path: str = media_metadata["backdrop_path"]
         self.poster_path: str = media_metadata["poster_path"]
-        self.videos: list[dict] = media_metadata["videos"]["results"][:10]
-        self.reviews: list[dict] = media_metadata["reviews"]["results"][:10]
+        self.videos: List[dict] = media_metadata["videos"]["results"][:10]
+        self.reviews: List[dict] = media_metadata["reviews"]["results"][:10]
 
     def append_file(self, file_metadata):
         """Pushes a new file to the class"""
@@ -141,7 +142,7 @@ class Movie:
             logo: str = ""
         return logo
 
-    def get_crew(self, crew: list[dict]) -> dict:
+    def get_crew(self, crew: List[dict]) -> dict:
         """Finds and curates features crew members of a movie"""
         result: dict = {
             "Creator": [],
@@ -151,7 +152,7 @@ class Movie:
             "Author": [],
             "Writer": [],
         }
-        wanted_jobs: list[str] = [
+        wanted_jobs: List[str] = [
             "Creator",
             "Director",
             "Screenplay",

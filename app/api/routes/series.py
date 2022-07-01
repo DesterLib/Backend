@@ -4,13 +4,13 @@ from fastapi import Response, APIRouter
 
 
 router = APIRouter(
-    prefix="/serie",
+    prefix="/series",
     tags=["internals"],
 )
 
 
 @router.get("/{id}", response_model=dict, status_code=200)
-def serie(response: Response, id: int) -> dict:
+def series_id_route(response: Response, id: int) -> dict:
     init_time = perf_counter()
     from app.apis import mongo
 

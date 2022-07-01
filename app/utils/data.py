@@ -2,7 +2,7 @@ import regex as re
 from app import logger
 from pymongo import InsertOne
 from typing import Dict, List
-from app.models import Movie, Serie
+from app.models import Movie, Series
 
 
 def parse_filename(name: str, data_type: str):
@@ -133,6 +133,6 @@ def generate_series_metadata(tmdb, data: dict, rclone_index: int) -> List[Insert
         logger.info(
             "Successfully identified: %s    ID: %s", series_info["name"], tmdb_id
         )
-        curr_metadata: Serie = Serie(drive_meta, series_info, rclone_index)
+        curr_metadata: Series = Series(drive_meta, series_info, rclone_index)
         metadata.append(InsertOne(curr_metadata.__json__()))
     return metadata

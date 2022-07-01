@@ -1,3 +1,4 @@
+from typing import List
 from datetime import datetime
 from app.models import Episode
 from dateutil.parser import isoparse
@@ -64,11 +65,11 @@ class Season:
 
         # Episodes
         index: int = len(file_metadata["episodes"])
-        episodes: list[dict] = []
+        episodes: List[dict] = []
         for episode in file_metadata["episodes"]:
             episode_meta: Episode = Episode(episode, media_metadata, index)
             episodes.append(episode_meta.__json__())
             self.size += episode_meta.size
             index -= 1
-        self.episodes: list[dict] = sorted(episodes, key=lambda d: d["episode_number"])
+        self.episodes: List[dict] = sorted(episodes, key=lambda d: d["episode_number"])
         del episodes
