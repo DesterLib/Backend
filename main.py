@@ -81,14 +81,27 @@ async def restart_rclone():
             "Please download a suitable executable of rclone from 'rclone.org' and move it to the 'bin' folder."
         )
         quit(1)
-    rclone_process = await asyncio.create_subprocess_exec(
-        *shlex.split(
-            f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-level INFO",
-            posix=(platform not in ["win32", "cygwin", "msys"]),
-        ),
-        stdout=PIPE,
-        stderr=STDOUT,
-    )
+    try:
+        rclone_process = await asyncio.create_subprocess_exec(
+            *shlex.split(
+                f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-level INFO",
+                posix=(platform not in ["win32", "cygwin", "msys"]),
+            ),
+            stdout=PIPE,
+            stderr=STDOUT,
+        )
+    except PermissionError:
+        (await asyncio.create_subprocess_exec(
+            "chmod", "+x", rclone_bin
+        )).communicate()
+        rclone_process = await asyncio.create_subprocess_exec(
+            *shlex.split(
+                f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-level INFO",
+                posix=(platform not in ["win32", "cygwin", "msys"]),
+            ),
+            stdout=PIPE,
+            stderr=STDOUT,
+        )
     while True:
         out_line = await rclone_process.stdout.readline()
         if out_line == b"" and rclone_process.returncode == 0:
