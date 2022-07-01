@@ -50,7 +50,7 @@ def download_rclone() -> str:
             zfile.filename
             for zfile in zip_ref.infolist()
             if not zfile.filename.endswith(("txt", "1", "html"))
-            and zfile.external_attr == 32
+            and not zfile.is_dir()
         ][0]
         with zip_ref.open(zfile) as zf, open(
             f"{bin_dir}/{zfile.split('/')[-1]}", "wb"
