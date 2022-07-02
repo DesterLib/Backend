@@ -23,7 +23,7 @@ then
     npm install >> /dev/null 2>&1
     echo -e "\e[32m[INFO]: Building static files.\e[0m"
     npm run build >> /dev/null 2>&1
-    mv build ../
+    mv "./build" "../"
     rm -rf Frontend
     echo -e "\e[32m[INFO]: Successfully genereated the build files.\e[0m"
 else
