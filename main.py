@@ -35,11 +35,7 @@ if not settings.MONGODB_PASSWORD:
 
 start_time = time.time()
 
-print(sys.version_info[1])
-if int(sys.version_info[1]) > 9:
-    loop = asyncio
-else:
-    loop = asyncio.get_event_loop()
+loop = asyncio if int(sys.version_info[1]) > 9 else asyncio.get_event_loop()
 
 
 async def restart_rclone():
@@ -92,7 +88,7 @@ async def restart_rclone():
             stderr=STDOUT,
         )
     except PermissionError:
-        (await asyncio.create_subprocess_exec("chmod", "+x", rclone_bin)).communicate()
+        await (await asyncio.create_subprocess_exec("chmod", "+x", rclone_bin)).communicate()
         rclone_process = await asyncio.create_subprocess_exec(
             *shlex.split(
                 f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-level INFO",
