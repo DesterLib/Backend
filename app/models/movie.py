@@ -1,5 +1,5 @@
-from typing import Dict, List
 from datetime import datetime
+from typing import Dict, List
 from app.settings import settings
 from dateutil.parser import isoparse
 

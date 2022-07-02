@@ -41,6 +41,7 @@ if int(sys.version_info[1]) > 9:
 else:
     loop = asyncio.get_event_loop()
 
+
 async def restart_rclone():
     """Force closes any running instances of the Rclone port then starts an Rclone RC server"""
     if platform in ["win32", "cygwin", "msys"]:
@@ -91,9 +92,7 @@ async def restart_rclone():
             stderr=STDOUT,
         )
     except PermissionError:
-        (await asyncio.create_subprocess_exec(
-            "chmod", "+x", rclone_bin
-        )).communicate()
+        (await asyncio.create_subprocess_exec("chmod", "+x", rclone_bin)).communicate()
         rclone_process = await asyncio.create_subprocess_exec(
             *shlex.split(
                 f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-level INFO",
