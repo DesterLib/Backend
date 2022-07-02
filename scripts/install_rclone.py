@@ -1,6 +1,9 @@
+import logging
+logger = logging.getLogger("rclone_installer")
+
+
 def download_rclone() -> str:
     import os
-    import re
     import shutil
     import pathlib
     import zipfile
@@ -8,13 +11,16 @@ def download_rclone() -> str:
     import requests
 
     if shutil.which("rclone"):
-        print("rclone is already installed")
+        logger.warning("rclone is already installed")
         return shutil.which("rclone")
-    if platform.machine() in ("AMD64", "x86_64"):
+    os_type = platform.machine().lower()
+    if os_type in ("amd64", "x86_64"):
         architecture = "amd64"
-    elif "arm" in platform.machine():
+    elif os_type in ("aarch64", "arm64"):
         architecture = "arm64"
-    elif "386" in platform.machine():
+    elif  os_type in ("arm", "armv7l"):
+        architecture = "arm"
+    elif os_type in ("i386", "i686", "i86", "x86", "86"):
         architecture = "386"
     else:
         architecture = platform.uname()[4].lower()
@@ -25,21 +31,20 @@ def download_rclone() -> str:
     )
     if not os.path.isdir(bin_dir):
         os.mkdir(bin_dir)
-    reg = f"{platform.uname()[0].lower()}\\-{re.escape(architecture)}.*\\.zip$"
+    os_name = platform.uname()[0].lower()
+    if os.path.exists(os.path.join(bin_dir, f"rclone{'.exe' if os_name == 'windows' else ''}")):
+        logger.warning("rclone is present in the bin directory")
+        return os.path.join(bin_dir, f"rclone{'.exe' if os_name == 'windows' else ''}")
     try:
-        dl_url = [
-            x.get("browser_download_url")
-            for x in requests.get("https://api.github.com/repos/rclone/rclone/releases")
-            .json()[0]
-            .get("assets")
-            if re.findall(reg, x.get("name"))
-        ][0]
+        dl_url = f"https://downloads.rclone.org/rclone-current-{os_name}-{architecture}.zip"
+        print(f"Downloading rclone from {dl_url}")
     except BaseException:
+        logger.error("Couldn't install rclone")
         exit(
-            f"FAILED to download a suitable version for your system platform - '{platform.platform()}'\n\n Please download a suitable rclone release for your OS from 'https://github.com/rclone/rclone/releases' and extract it to '{bin_dir}' folder."
+            f"FAILED to download a suitable version for your system platform - '{platform.platform()}'\n\n Please download a suitable rclone release for your OS from 'https://rclone.org' and extract it to '{bin_dir}' folder."
         )
     file_name = dl_url.split("/")[-1]
-    print(f"Downloading '{file_name}'...")
+    logger.info(f"Downloading '{file_name}'...")
     get_response = requests.get(dl_url, stream=True)
     with open(file_name, "wb") as f:
         for chunk in get_response.iter_content(chunk_size=1024):
@@ -54,11 +59,14 @@ def download_rclone() -> str:
         with zip_ref.open(zfile) as zf, open(
             f"{bin_dir}/{zfile.split('/')[-1]}", "wb"
         ) as f:
-            print(f"Extracting '{zfile}'")
+            logger.info(f"Extracting '{zfile}'")
             shutil.copyfileobj(zf, f)
     os.remove(file_name)
     return f"{bin_dir}/{zfile.split('/')[-1]}"
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+    )
     download_rclone()

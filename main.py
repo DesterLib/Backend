@@ -1,6 +1,5 @@
 import os
 import re
-import sys
 import time
 import shlex
 import asyncio
@@ -76,11 +75,14 @@ async def restart_rclone():
     if not os.path.exists(rclone_bin):
         rclone_bin = which("rclone")
     if not rclone_bin:
-        logger.error("Couldn't find rclone executable")
-        logger.error(
-            "Please download a suitable executable of rclone from 'rclone.org' and move it to the 'bin' folder."
-        )
-        quit(1)
+        from scripts.install_rclone import download_rclone
+        rclone_bin = download_rclone()
+        if not rclone_bin:
+            logger.error("Couldn't find rclone executable")
+            logger.error(
+                "Please download a suitable executable of rclone from 'rclone.org' and move it to the 'bin' folder."
+            )
+            quit(1)
     try:
         rclone_process = await asyncio.create_subprocess_exec(
             *shlex.split(

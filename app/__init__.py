@@ -8,10 +8,10 @@ __credits__ = ["EverythingSuckz", "Elias Benbourenane", "AlkenD"]
 
 import os.path
 from os import makedirs
-from datetime import datetime, timezone
 from logging.handlers import TimedRotatingFileHandler
-from logging import DEBUG, WARNING, StreamHandler, getLogger, basicConfig
+from logging import DEBUG, WARNING, INFO,  StreamHandler, getLogger, basicConfig
 
+from .settings import settings
 
 if not os.path.isdir("logs"):
     makedirs("logs")
@@ -22,7 +22,7 @@ handler = TimedRotatingFileHandler(
 handler.namer = lambda name: name.replace(".log", "") + ".log"
 
 basicConfig(
-    level=DEBUG,
+    level=DEBUG if settings.DEVELOPMENT else INFO,
     datefmt="%Y/%m/%d %H:%M:%S",
     format="[%(asctime)s][%(name)s][%(levelname)s] ==> %(message)s",
     handlers=[
