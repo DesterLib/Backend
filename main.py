@@ -35,7 +35,10 @@ if not settings.MONGODB_PASSWORD:
 
 start_time = time.time()
 
-loop = asyncio if int(sys.version_info[1]) > 9 else asyncio.get_event_loop()
+try:
+    loop = asyncio.get_event_loop()
+except RuntimeError:
+    loop = asyncio
 
 
 async def restart_rclone():
@@ -226,7 +229,6 @@ else:
 
 loop.create_task(startup())
 loop.create_task(build_metadata())
-
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=settings.PORT, reload=False)
