@@ -76,6 +76,7 @@ async def restart_rclone():
         rclone_bin = which("rclone")
     if not rclone_bin:
         from scripts.install_rclone import download_rclone
+
         rclone_bin = download_rclone()
         if not rclone_bin:
             logger.error("Couldn't find rclone executable")
@@ -93,7 +94,9 @@ async def restart_rclone():
             stderr=STDOUT,
         )
     except PermissionError:
-        await (await asyncio.create_subprocess_exec("chmod", "+x", rclone_bin)).communicate()
+        await (
+            await asyncio.create_subprocess_exec("chmod", "+x", rclone_bin)
+        ).communicate()
         rclone_process = await asyncio.create_subprocess_exec(
             *shlex.split(
                 f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-level INFO",

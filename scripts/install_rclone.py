@@ -1,4 +1,6 @@
 import logging
+
+
 logger = logging.getLogger("rclone_installer")
 
 
@@ -18,7 +20,7 @@ def download_rclone() -> str:
         architecture = "amd64"
     elif os_type in ("aarch64", "arm64"):
         architecture = "arm64"
-    elif  os_type in ("arm", "armv7l"):
+    elif os_type in ("arm", "armv7l"):
         architecture = "arm"
     elif os_type in ("i386", "i686", "i86", "x86", "86"):
         architecture = "386"
@@ -32,11 +34,15 @@ def download_rclone() -> str:
     if not os.path.isdir(bin_dir):
         os.mkdir(bin_dir)
     os_name = platform.uname()[0].lower()
-    if os.path.exists(os.path.join(bin_dir, f"rclone{'.exe' if os_name == 'windows' else ''}")):
+    if os.path.exists(
+        os.path.join(bin_dir, f"rclone{'.exe' if os_name == 'windows' else ''}")
+    ):
         logger.warning("rclone is present in the bin directory")
         return os.path.join(bin_dir, f"rclone{'.exe' if os_name == 'windows' else ''}")
     try:
-        dl_url = f"https://downloads.rclone.org/rclone-current-{os_name}-{architecture}.zip"
+        dl_url = (
+            f"https://downloads.rclone.org/rclone-current-{os_name}-{architecture}.zip"
+        )
         print(f"Downloading rclone from {dl_url}")
     except BaseException:
         logger.error("Couldn't install rclone")

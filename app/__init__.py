@@ -8,10 +8,10 @@ __credits__ = ["EverythingSuckz", "Elias Benbourenane", "AlkenD"]
 
 import os.path
 from os import makedirs
-from logging.handlers import TimedRotatingFileHandler
-from logging import DEBUG, WARNING, INFO,  StreamHandler, getLogger, basicConfig
-
 from .settings import settings
+from logging.handlers import TimedRotatingFileHandler
+from logging import INFO, DEBUG, WARNING, StreamHandler, getLogger, basicConfig
+
 
 if not os.path.isdir("logs"):
     makedirs("logs")

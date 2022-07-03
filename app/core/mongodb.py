@@ -70,7 +70,7 @@ class MongoDB:
             "rclone": [],
         }
         for document in self.config_col.find():
-            config =  {**config, **document}
+            config = {**config, **document}
         del config["_id"]
         self.config = config
         return config
