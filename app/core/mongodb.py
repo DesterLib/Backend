@@ -140,7 +140,7 @@ class MongoDB:
         self.config["categories"] = result["categories"]
         return result["categories"]
 
-    def set_config(self, data: dict) -> int:
+    async def set_config(self, data: dict) -> int:
         """Updates the config with one supplied by the user"""
         bulk_action: list = []
         config_app: dict = data.get("app", {})
@@ -185,7 +185,7 @@ class MongoDB:
         if self.is_metadata_init is False:
             from main import rclone_setup
 
-            rclone_setup(self.config["categories"])
+            await rclone_setup(self.config["categories"])
             return 2
         return 1
 

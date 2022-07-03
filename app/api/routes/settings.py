@@ -37,7 +37,7 @@ async def settings_post(
 
     if mongo.config["app"].get("secret_key", "") == secret_key:
         data = await request.json()
-        condition = mongo.set_config(data)
+        condition = await mongo.set_config(data)
         if condition == 0:
             response.status_code = 409
             return DResponse(
