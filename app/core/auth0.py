@@ -1,34 +1,19 @@
 import re
 import jwt
 import httpx
+import logging
 import os.path
 import ujson as json
 from time import time
-from app import logger
 from fastapi import status
 from functools import wraps
+from typing import Any, Dict
 from json import JSONDecodeError
-from dataclasses import dataclass
-from typing import Any, Dict, Optional
 from fastapi.responses import UJSONResponse
 from httpx import HTTPError, InvalidURL, RequestError
 
 
-@dataclass
-class Token:
-    access_token: str
-    token_expiry: Optional[str] = None
-
-    @classmethod
-    def from_json(cls, json: Dict[str, Any]) -> "Token":
-        return cls(**json)
-
-    def to_json(self) -> Dict[str, Any]:
-        return self.__dict__()
-
-    def __dict__(self):
-        return {"access_token": self.access_token, "token_expiry": self.token_expiry}
-
+logger = logging.getLogger(__name__)
 
 class Auth0Manager:
     def __init__(
@@ -373,16 +358,8 @@ class Auth0Manager:
 
 if __name__ == "__main__":
     domain = input("Enter your domain: ")
-    if not domain:
-        domain = "among.us.auth0.com"
     global_client_id = input("Enter your global client id:> ")
-    if not global_client_id:
-        global_client_id = "6d3j9xHp1JMEr5TW591C6vuiBMQJoEIt"
     global_client_secret = input("Enter your global client secret:> ")
-    if not global_client_secret:
-        global_client_secret = (
-            "-fpIGmiiigiUx3kKl6WZhXZgr6lMLQVSdz46NEiqrwjvSdu4qE4Xx-la52grhJHq"
-        )
     api_identifier = input(
         "Enter your api url which will be used for configuring callbacks, web origins, etc:> "
     )

@@ -18,12 +18,11 @@ then
     else
         echo -e "\e[33m[WARNING]: Frontend source files already exists.\e[0m"
     fi
-    cd Frontend
     echo -e "\e[32m[INFO]: Installing dependencies.\e[0m"
-    npm install >> /dev/null 2>&1
+    npm --prefix "./Frontend" install "./Frontend" >> /dev/null 2>&1
     echo -e "\e[32m[INFO]: Building static files.\e[0m"
-    npm run build >> /dev/null 2>&1
-    mv "./build" "../"
+    npm run build --prefix "./Frontend" >> /dev/null 2>&1
+    mv "$(pwd)/Frontend/build" "$(pwd)"
     rm -rf Frontend
     echo -e "\e[32m[INFO]: Successfully genereated the build files.\e[0m"
 else
