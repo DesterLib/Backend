@@ -78,7 +78,7 @@ def generate_movie_metadata(tmdb, data: dict, rclone_index: int) -> List[InsertO
         logger.info(
             "Successfully identified: %s %s    ID: %s",
             name,
-            "year" if year else "",
+            year if year else "",
             tmdb_id,
         )
         identified_match = identified_list.get(tmdb_id)
