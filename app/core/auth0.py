@@ -15,6 +15,7 @@ from httpx import HTTPError, InvalidURL, RequestError
 
 logger = logging.getLogger(__name__)
 
+
 class Auth0Manager:
     def __init__(
         self,
