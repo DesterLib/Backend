@@ -32,6 +32,25 @@ unwanted_keys = {
 }
 
 
+@router.get("", response_model=dict, status_code=200)
+def categories_list():
+    init_time = perf_counter()
+
+    categories = mongo.config["categories"]
+    movies_categories = []
+    series_categories = []
+    for rclone_index, category in enumerate(categories):
+        category_type = category.get("type")
+        if category_type == "movies":
+            movies_categories.append(
+                {"name": category.get("name"), "rclone_index": rclone_index})
+        elif category_type == "series":
+            series_categories.append(
+                {"name": category.get("name"), "rclone_index": rclone_index})
+    result = {"movies": movies_categories, "series": series_categories}
+    return DResponse(200, "Categories list successfully retrieved.", True, result, init_time).__json__()
+
+
 @router.get("/{rclone_index}/{page}", response_model=dict, status_code=200)
 def browse(
     rclone_index: int,
@@ -50,8 +69,10 @@ def browse(
     if rclone_index == -1:
         if media_type == "series":
             col = mongo.series_col
-        else:
+        elif media_type == "movies":
             col = mongo.movies_col
+        else:
+            return DResponse(400, "Invalid media type '%s' provided." % media_type, False, None, init_time)
         rclone_indexes = []
         for key, category in rclone.items():
             if media_type == category.data.get("type", "movies"):
