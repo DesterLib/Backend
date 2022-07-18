@@ -42,7 +42,7 @@ except RuntimeError:
 
 async def restart_rclone():
     """Force closes any running instances of the Rclone port then starts an Rclone RC server"""
-    if platform in ["win32", "cygwin", "msys"]:
+    if platform in ("win32", "cygwin", "msys"):
         run(
             shlex.split(
                 f"powershell.exe Stop-Process -Id (Get-NetTCPConnection -LocalPort {settings.RCLONE_LISTEN_PORT}).OwningProcess -Force"
@@ -51,14 +51,14 @@ async def restart_rclone():
             stdout=DEVNULL,
             stderr=STDOUT,
         )
-    elif platform in ["linux", "linux2"]:
+    elif platform in ("linux", "linux2"):
         run(
             shlex.split(f"bash kill $(lsof -t -i:{settings.RCLONE_LISTEN_PORT})"),
             check=False,
             stdout=DEVNULL,
             stderr=STDOUT,
         )
-    elif platform in ["darwin"]:
+    elif platform in ("darwin"):
         run(
             shlex.split(f"kill $(lsof -t -i:{settings.RCLONE_LISTEN_PORT})"),
             check=False,
@@ -70,7 +70,7 @@ async def restart_rclone():
     if not os.path.isdir("bin"):
         os.mkdir("bin")
     rclone_bin = (
-        f"bin/rclone{'.exe' if platform in ['win32', 'cygwin', 'msys'] else ''}"
+        f"bin/rclone{'.exe' if platform in ('win32', 'cygwin', 'msys') else ''}"
     )
     if not os.path.exists(rclone_bin):
         rclone_bin = which("rclone")
@@ -88,7 +88,7 @@ async def restart_rclone():
         rclone_process = await asyncio.create_subprocess_exec(
             *shlex.split(
                 f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-level INFO",
-                posix=(platform not in ["win32", "cygwin", "msys"]),
+                posix=(platform not in ("win32", "cygwin", "msys")),
             ),
             stdout=PIPE,
             stderr=STDOUT,
@@ -100,7 +100,7 @@ async def restart_rclone():
         rclone_process = await asyncio.create_subprocess_exec(
             *shlex.split(
                 f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-level INFO",
-                posix=(platform not in ["win32", "cygwin", "msys"]),
+                posix=(platform not in ("win32", "cygwin", "msys")),
             ),
             stdout=PIPE,
             stderr=STDOUT,
