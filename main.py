@@ -18,38 +18,27 @@ from app import logger, __version__, db
 from starlette.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, UJSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
-
+import psutil
 
 START_TIME = time.time()
 
 
+
+async def kill_rclone():
+    for conn in psutil.net_connections():
+        if conn.laddr.port == settings.rclone_port:
+            try:
+                process = psutil.Process(conn.pid)
+                process.terminate()
+                process.wait(timeout=3)
+            except psutil.NoSuchProcess:
+                pass
+            except psutil.TimeoutExpired:
+                process.kill()
+
 async def restart_rclone():
     """Force closes any running instances of the Rclone port then starts an Rclone RC server"""
-    if platform in ("win32", "cygwin", "msys"):
-        run(
-            shlex.split(
-                f"powershell.exe Stop-Process -Id (Get-NetTCPConnection -LocalPort {settings.rclone_port}).OwningProcess -Force"
-            ),
-            check=False,
-            stdout=DEVNULL,
-            stderr=STDOUT,
-        )
-    elif platform in ("linux", "linux2"):
-        run(
-            shlex.split(f"bash kill $(lsof -t -i:{settings.rclone_port})"),
-            check=False,
-            stdout=DEVNULL,
-            stderr=STDOUT,
-        )
-    elif platform in ("darwin"):
-        run(
-            shlex.split(f"kill $(lsof -t -i:{settings.rclone_port})"),
-            check=False,
-            stdout=DEVNULL,
-            stderr=STDOUT,
-        )
-    else:
-        exit("Unsupported platform")
+    await kill_rclone()
     if not os.path.isdir("bin"):
         os.mkdir("bin")
     rclone_bin = (
