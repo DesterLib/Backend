@@ -1,4 +1,4 @@
-from app.apis import mongo
+from app import db
 from fastapi import APIRouter
 
 
@@ -10,4 +10,4 @@ router = APIRouter(
 
 @router.get("", response_model=dict, status_code=200)
 def auth() -> dict:
-    return mongo.config.get("auth0")
+    return db.get_config("auth0")

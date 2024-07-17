@@ -1,8 +1,8 @@
 from app import logger
 from app.core.tmdb import TMDB
-from app.apis import mongo, rclone
+from app.apis import rclone
 from pymongo import TEXT, DESCENDING
-from app.utils import generate_movie_metadata, generate_series_metadata
+from app.utils.data import generate_movie_metadata, generate_series_metadata
 
 
 def fetch_metadata():

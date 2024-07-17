@@ -1,39 +1,25 @@
 __license__ = "MIT"
 __status__ = "Development"
-__version__ = "1.0.0"
+__version__ = "1.0.0-beta"
 __email__ = "contact@dester.gq"
 __copyright__ = "Copyright 2022, Dester"
 __authors__ = ["Elias Benbourenane", "EverythingSuckz"]
 __credits__ = ["EverythingSuckz", "Elias Benbourenane", "AlkenD"]
 
-import os.path
-from os import makedirs
+from pathlib import Path
+from app.utils.setup_logger import setup_logger
+
+from app.database.mongo.mongo_con import MongoDatabase
+from app.database.sqlite.sqlite_con import SQLite
 from .settings import settings
-from logging.handlers import TimedRotatingFileHandler
-from logging import INFO, DEBUG, WARNING, StreamHandler, getLogger, basicConfig
 
+logger = setup_logger()
+    
+if settings.mongo_dns:
+    logger.info("Connecting to MongoDB...")
+    db = MongoDatabase()
+else:
+    logger.info("Using sqlite database")
+    _database_path = Path("database.db")
+    db = SQLite(_database_path)
 
-if not os.path.isdir("logs"):
-    makedirs("logs")
-
-handler = TimedRotatingFileHandler(
-    "logs/dester.log", when="m", interval=60, backupCount=5
-)
-handler.namer = lambda name: name.replace(".log", "") + ".log"
-
-basicConfig(
-    level=DEBUG if settings.DEVELOPMENT else INFO,
-    datefmt="%Y/%m/%d %H:%M:%S",
-    format="[%(asctime)s][%(name)s][%(levelname)s] ==> %(message)s",
-    handlers=[
-        StreamHandler(),
-        handler,
-    ],
-)
-getLogger("oauth2client").setLevel(WARNING)
-getLogger("googleapiclient").setLevel(WARNING)
-getLogger("waitress").setLevel(WARNING)
-getLogger("uvicorn").setLevel(WARNING)
-getLogger("httpx").setLevel(WARNING)
-logger = getLogger(__name__)
-rclone_logger = getLogger("rclone")

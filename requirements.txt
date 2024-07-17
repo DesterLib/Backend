@@ -42,4 +42,6 @@ tzlocal==5.2
 ujson==5.9.0
 urllib3==2.2.1
 uvicorn==0.29.0
-aiosqlite==0.20.0 
+aiosqlite==0.20.0
+motor==3.3.2
+pydantic-settings

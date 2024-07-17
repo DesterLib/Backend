@@ -170,3 +170,4 @@ config.json
 .vscode/
 logs/
 Frontend/
+database.db*

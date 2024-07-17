@@ -1,22 +1,20 @@
 from os import getenv
-from dotenv import load_dotenv
-from pydantic import BaseSettings
+from typing import Optional
+from pydantic import MongoDsn, Field, StrictBool
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
-load_dotenv()
 
 
 class _Settings(BaseSettings):
-    API_V1_STR: str = "/api/v1"
-    ON_HEROKU: bool = getenv("DYNO") is not None
-    PORT: int = int(getenv("PORT", "35500"))
-    DEVELOPMENT: bool = getenv("DESTER_DEV", "").lower() == "true"
-
-    RCLONE_LISTEN_PORT: int = int(getenv("RCLONE_LISTEN_PORT", "35530"))
-
-    MONGODB_DOMAIN: str = getenv("MONGODB_DOMAIN")
-    MONGODB_USERNAME: str = getenv("MONGODB_USERNAME")
-    MONGODB_PASSWORD: str = getenv("MONGODB_PASSWORD")
-
+    model_config = SettingsConfigDict(env_file='.env', env_prefix='dester_')
+    
+    api_v1_str: str = Field("/api/v1")
+    on_heroku: bool = StrictBool(getenv("DYNO") is not None)
+    port: int = Field(35500)
+    dev: bool = Field(False)
+    rclone_port: int = Field(35530)
+    
+    
+    mongo_dns: MongoDsn | None = Field(None) # 3.11
 
 settings = _Settings()

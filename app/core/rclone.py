@@ -1,3 +1,4 @@
+from enum import Enum
 import requests
 import regex as re
 import ujson as json
@@ -72,52 +73,52 @@ def build_config(config) -> list:
                 rclone_conf.append(f"[{safe_fs}]\ntype = alias\nremote = {fs_path}")
     return rclone_conf
 
+class RcRoute(Enum):
+    mkdir = "operations/mkdir"
+    purge = "operations/purge"
+    deleteFile = "operations/deletefile"
+    createPublicLink = "operations/publiclink"
+    stats = "core/stats"
+    bwlimit = "core/bwlimit"
+    moveDir = "sync/move"
+    moveFile = "operations/movefile"
+    copyDir = "sync/copy"
+    copyFile = "operations/copyfile"
+    cleanUpRemote = "operations/cleanup"
+    noopAuth = "rc/noopauth"
+    getRcloneVersion = "core/version"
+    getRcloneMemStats = "core/memstats"
+    getOptions = "options/get"
+    getProviders = "config/providers"
+    getConfigDump = "config/dump"
+    getRunningJobs = "job/list"
+    getStatusForJob = "job/status"
+    getConfigForRemote = "config/get"
+    createConfig = "config/create"
+    updateConfig = "config/update"
+    getFsInfo = "operations/fsinfo"
+    listRemotes = "config/listremotes"
+    getFilesList = "operations/list"
+    getAbout = "operations/about"
+    deleteConfig = "config/delete"
+    stopJob = "job/stop"
+    backendCommand = "backend/command"
+    coreCommand = "core/command"
+    transferred = "core/transferred"
+    getSize = "operations/size"
+    getFileInfo = "operations/stat"
+    statsDelete = "core/stats-delete"
+    statsReset = "core/stats-reset"
 
-class RCloneAPI:
-    def __init__(self, data: dict, index: int, port=35530):
-        self.data: dict = data
-        self.index: int = index
-        self.id: str = data.get("id") or data.get("drive_id") or ""
+class RCRemote:
+    def __init__(
+        self, 
+        id: str = "",
+        port=35530
+    ) -> None:
+        self.id: str = id
         self.fs: str = "".join(c for c in self.id if c.isalnum()) + ":"
-        self.provider: str = data.get("provider") or "gdrive"
         self.RCLONE_RC_URL: str = f"http://localhost:{port}"
-        self.RCLONE: dict = {
-            "mkdir": "operations/mkdir",
-            "purge": "operations/purge",
-            "deleteFile": "operations/deletefile",
-            "createPublicLink": "operations/publiclink",
-            "stats": "core/stats",
-            "bwlimit": "core/bwlimit",
-            "moveDir": "sync/move",
-            "moveFile": "operations/movefile",
-            "copyDir": "sync/copy",
-            "copyFile": "operations/copyfile",
-            "cleanUpRemote": "operations/cleanup",
-            "noopAuth": "rc/noopauth",
-            "getRcloneVersion": "core/version",
-            "getRcloneMemStats": "core/memstats",
-            "getOptions": "options/get",
-            "getProviders": "config/providers",
-            "getConfigDump": "config/dump",
-            "getRunningJobs": "job/list",
-            "getStatusForJob": "job/status",
-            "getConfigForRemote": "config/get",
-            "createConfig": "config/create",
-            "updateConfig": "config/update",
-            "getFsInfo": "operations/fsinfo",
-            "listRemotes": "config/listremotes",
-            "getFilesList": "operations/list",
-            "getAbout": "operations/about",
-            "deleteConfig": "config/delete",
-            "stopJob": "job/stop",
-            "backendCommand": "backend/command",
-            "coreCommand": "core/command",
-            "transferred": "core/transferred",
-            "getSize": "operations/size",
-            "getFileInfo": "operations/stat",
-            "statsDelete": "core/stats-delete",
-            "statsReset": "core/stats-reset",
-        }
         self.fs_conf: dict = self.rc_conf()
 
     def rc_ls(self, options: Optional[dict] = None) -> list:
@@ -315,10 +316,10 @@ class RCloneAPI:
         ).json()
         return result["item"]["Size"]
 
-    def stream(self, path: str):
+    def stream(self, path: str) -> str:
         """Generates the stream URL for a file"""
         stream_url = (
-            f"http://localhost:{settings.RCLONE_LISTEN_PORT}/[{self.fs}]/{path}"
+            f"http://localhost:{settings.rclone_port}/[{self.fs}]/{path}"
         )
         return stream_url
 

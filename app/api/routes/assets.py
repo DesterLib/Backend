@@ -33,7 +33,7 @@ async def image_path(
     status_code=200,
 )
 async def image_path(
-    file_id: str = Path(title := "File ID of the thumbnail that needs to be generated"),
+    file_id: str = Path(title = "File ID of the thumbnail that needs to be generated"),
     rclone_index: int = 0,
 ):
     init_time = perf_counter()

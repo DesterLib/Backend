@@ -12,7 +12,6 @@ router = APIRouter(
 @router.get("/{id}", response_model=dict, status_code=200)
 def series_id_route(response: Response, id: int) -> dict:
     init_time = perf_counter()
-    from app.apis import mongo
 
     results = list(mongo.series_col.find({"tmdb_id": id}, {"_id": 0}))
     if len(results) > 0:

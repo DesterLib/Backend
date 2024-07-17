@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import re
 import time
 import shlex
@@ -9,35 +10,17 @@ from sys import platform
 from fastapi import FastAPI
 from app.api import main_router
 from app.settings import settings
-from app.apis import mongo, rclone
+from app.apis import rclone
 from app.utils import time_formatter
-from app.core.rclone import RCloneAPI
-from datetime import datetime, timezone
-from app.core.cron import fetch_metadata
 from fastapi.staticfiles import StaticFiles
 from subprocess import PIPE, STDOUT, DEVNULL, run
-from app import logger, __version__, rclone_logger
+from app import logger, __version__, db
 from starlette.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, UJSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 
-if not settings.MONGODB_DOMAIN:
-    logger.error("No MongoDB domain found! Exiting.")
-    exit()
-if not settings.MONGODB_USERNAME:
-    logger.error("No MongoDB username found! Exiting.")
-    exit()
-if not settings.MONGODB_PASSWORD:
-    logger.error("No MongoDB password found! Exiting.")
-    exit()
-
-start_time = time.time()
-
-try:
-    loop = asyncio.get_event_loop()
-except RuntimeError:
-    loop = asyncio
+START_TIME = time.time()
 
 
 async def restart_rclone():
@@ -45,7 +28,7 @@ async def restart_rclone():
     if platform in ("win32", "cygwin", "msys"):
         run(
             shlex.split(
-                f"powershell.exe Stop-Process -Id (Get-NetTCPConnection -LocalPort {settings.RCLONE_LISTEN_PORT}).OwningProcess -Force"
+                f"powershell.exe Stop-Process -Id (Get-NetTCPConnection -LocalPort {settings.rclone_port}).OwningProcess -Force"
             ),
             check=False,
             stdout=DEVNULL,
@@ -53,14 +36,14 @@ async def restart_rclone():
         )
     elif platform in ("linux", "linux2"):
         run(
-            shlex.split(f"bash kill $(lsof -t -i:{settings.RCLONE_LISTEN_PORT})"),
+            shlex.split(f"bash kill $(lsof -t -i:{settings.rclone_port})"),
             check=False,
             stdout=DEVNULL,
             stderr=STDOUT,
         )
     elif platform in ("darwin"):
         run(
-            shlex.split(f"kill $(lsof -t -i:{settings.RCLONE_LISTEN_PORT})"),
+            shlex.split(f"kill $(lsof -t -i:{settings.rclone_port})"),
             check=False,
             stdout=DEVNULL,
             stderr=STDOUT,
@@ -87,7 +70,7 @@ async def restart_rclone():
     try:
         rclone_process = await asyncio.create_subprocess_exec(
             *shlex.split(
-                f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-level INFO",
+                f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.rclone_port} --config rclone.conf --log-level INFO",
                 posix=(platform not in ("win32", "cygwin", "msys")),
             ),
             stdout=PIPE,
@@ -99,7 +82,7 @@ async def restart_rclone():
         ).communicate()
         rclone_process = await asyncio.create_subprocess_exec(
             *shlex.split(
-                f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.RCLONE_LISTEN_PORT} --config rclone.conf --log-level INFO",
+                f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.rclone_port} --config rclone.conf --log-level INFO",
                 posix=(platform not in ("win32", "cygwin", "msys")),
             ),
             stdout=PIPE,
@@ -116,77 +99,102 @@ async def restart_rclone():
             await asyncio.sleep(1)
             break
     logger.info("Started rclone")
-    loop.create_task(log_rclone(rclone_process))
+    asyncio.create_task(log_rclone(rclone_process))
 
 
 async def log_rclone(rclone_process: asyncio.subprocess.Process):
+    rclone_logger = logger.getChild("rclone")
     rclone_logger.info("Starting rclone logger")
     while True:
-        out_line = await rclone_process.stdout.readline()
-        if out_line == b"" and rclone_process.returncode == 0:
-            err = await rclone_process.stderr.readline()
-            logger.error("An error occurred with rclone subprocess")
-            logger.error(err.decode())
+        try:
+            out_line = await rclone_process.stdout.readline()
+            if out_line == b"":
+                if rclone_process.returncode == 1:
+                    err = await rclone_process.stderr.readline()
+                    logger.error("An error occurred with rclone subprocess")
+                    logger.error(err.decode())
+                    break
+                elif rclone_process.returncode == 0:
+                    logger.warning("Rclone subprocess has ended gracefully")
+                    break
+                else:
+                    rclone_logger.error("parse error: empty line")
+                    continue
+            match = re.match(
+                r"(?:[\d\/])+ (?:[\d:]+) (?P<level>\w+) ? ? :? (?P<message>.*)$",
+                out_line.decode(),
+                flags=2,
+            )
+            data = match.groupdict()
+            levels = {
+                "CRITICAL": 50,
+                "FATAL": 50,
+                "ERROR": 40,
+                "WARNING": 30,
+                "WARN": 30,
+                "INFO": 20,
+                "DEBUG": 10,
+            }
+            rclone_logger.log(
+                levels.get(data.get("levels", "INFO").upper()), data.get("message")
+            )
+        except Exception as e:
+            rclone_logger.error(e)
             break
-        match = re.match(
-            r"(?:[\d\/])+ (?:[\d:]+) (?P<level>\w+) ? ? :? (?P<message>.*)$",
-            out_line.decode(),
-            flags=2,
-        )
-        data = match.groupdict()
-        levels = {
-            "CRITICAL": 50,
-            "FATAL": 50,
-            "ERROR": 40,
-            "WARNING": 30,
-            "WARN": 30,
-            "INFO": 20,
-            "DEBUG": 10,
-        }
-        rclone_logger.log(
-            levels.get(data.get("levels", "INFO").upper()), data.get("message")
-        )
 
 
-async def rclone_setup(categories: list):
+# async def rclone_setup(categories: list):
+async def rclone_setup():
     """Initializes the rclone.conf file"""
-    rclone_conf = ""
-    for item in mongo.config["rclone"]:
-        rclone_conf += f"\n\n{item}"
-    with open("rclone.conf", "w+", encoding="utf-8") as w:
-        w.write(rclone_conf)
-
+    rclone_conf = await db.get_config("rclone.conf")
+    if not os.path.exists("rclone.conf"):
+        logger.error("rclone.conf not found")
+        if not rclone_conf:
+            logger.error("rclone.conf not found in database")
+            exit(1)
+        rclone_conf_str = "\n\n".join(rclone_conf.split("\n"))
+        logger.error("writing rclone.conf from database")
+        with open("rclone.conf", "w+", encoding="utf-8") as w:
+            w.write(rclone_conf_str)
+    else:
+        logger.warning("rclone.conf already exists")
+        logger.info("Syncing rclone.conf with database")
+        rclone_conf = open("rclone.conf", "r", encoding="utf-8").read()
+        await db.set_config("rclone.conf", rclone_conf)
     await restart_rclone()
+    # for i, category in enumerate(categories):
+    #     rclone[i] = RCloneAPI(category, i)
 
-    for i, category in enumerate(categories):
-        rclone[i] = RCloneAPI(category, i)
-
-
-async def build_metadata():
-    while True:
-        trigger = mongo.get_next_build_time()
-        sleep_seconds = abs(datetime.now(tz=timezone.utc) - trigger).total_seconds()
-        logger.info("Next run on %s", trigger.strftime("%d/%m/%Y, %H:%M:%S"))
-        await asyncio.sleep(sleep_seconds)
-        fetch_metadata()
+# async def build_metadata():
+#     while True:
+#         trigger = mongo.get_next_build_time()
+#         sleep_seconds = abs(datetime.now(tz=timezone.utc) - trigger).total_seconds()
+#         logger.info("Next run on %s", trigger.strftime("%d/%m/%Y, %H:%M:%S"))
+#         await asyncio.sleep(sleep_seconds)
+#         fetch_metadata()
 
 
 async def startup():
     """Initializes MongoDB and Rclone instances"""
     logger.info("Starting up...")
 
+    logger.info("Initializing database...")
+    await db.init()
     logger.debug("Initializing core modules...")
-
-    if mongo.get_is_config_init() is True:
-        categories = mongo.get_categories()
-        await rclone_setup(categories)
-        logger.debug("Done.")
-    else:
-        logger.warning("The site's configuration is not set up")
+    await rclone_setup()
+    # if mongo.get_is_config_init() is True:
+    #     categories = mongo.get_categories()
+    #     logger.debug("Done.")
+    # else:
+    #     logger.warning("The site's configuration is not set up")
         # logic for first time setup
 
 
-app = FastAPI(title="Dester", openapi_url=f"{settings.API_V1_STR}/openapi.json")
+app = FastAPI(
+    title="Dester",
+    openapi_url=f"{settings.api_v1_str}/openapi.json",
+    on_startup=[startup],
+)
 
 
 @app.exception_handler(StarletteHTTPException)
@@ -218,7 +226,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(main_router, prefix=settings.API_V1_STR)
+app.include_router(main_router, prefix=settings.api_v1_str)
 if os.path.exists("build/index.html"):
     app.mount("/", StaticFiles(directory="build/", html=True), name="static")
 else:
@@ -228,12 +236,22 @@ else:
             "ok": True,
             "message": "Backend is working.",
             "version": __version__,
-            "uptime": time_formatter(time.time() - start_time),
+            "uptime": time_formatter(time.time() - START_TIME),
         },
     )
+    
+    app.add_api_route(
+        "/favicon.ico",
+        lambda: FileResponse("favicon.ico", media_type="image/x-icon"),
+    )
 
-loop.create_task(startup())
-loop.create_task(build_metadata())
+# import asyncio
+
+# async def main():
+#     await startup()
+# asyncio.create_task(startup())
+# loop.create_task(build_metadata())
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=settings.PORT, reload=False)
+    uvicorn.run("main:app", host="0.0.0.0", port=settings.port, reload=False)
+

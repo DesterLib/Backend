@@ -1,4 +1,4 @@
-from app.apis import mongo
+from app import db
 from time import perf_counter
 
 
@@ -39,6 +39,6 @@ class DResponse:
         self.ok: bool = ok
         self.result = result
         self.time_taken: float = perf_counter() - init_time
-        title: str = mongo.config["app"].get("title", "Dester")
+        title: str = db.get_config("app_title")
         self.title: str = title
-        self.description: str = mongo.config["app"].get("description", "Dester")
+        self.description: str = db.get_config("app_description")

@@ -116,7 +116,7 @@ class Movie:
         self.logo_path: str = self.get_logo(media_metadata)
         self.homepage: str = media_metadata["homepage"]
         self.thumbnail_path: str = (
-            f"{settings.API_V1_STR}/assets/thumbnail/{rclone_index}/{self.id}"
+            f"{settings.api_v1_str}/assets/thumbnail/{rclone_index}/{self.id}"
         )
         self.backdrop_path: str = media_metadata["backdrop_path"]
         self.poster_path: str = media_metadata["poster_path"]

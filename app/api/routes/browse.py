@@ -2,7 +2,7 @@ from typing import Optional
 from fastapi import APIRouter
 from time import perf_counter
 from app.models import DResponse
-from app.apis import mongo, rclone
+from app import db
 
 
 router = APIRouter(
@@ -36,7 +36,7 @@ unwanted_keys = {
 def categories_list():
     init_time = perf_counter()
 
-    categories = mongo.config["categories"]
+    categories = db.get_config
     movies_categories = []
     series_categories = []
     for rclone_index, category in enumerate(categories):
