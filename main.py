@@ -19,10 +19,9 @@ from starlette.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, UJSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 import psutil
+import stat
 
 START_TIME = time.time()
-
-
 
 async def kill_rclone():
     for conn in psutil.net_connections():
@@ -66,9 +65,7 @@ async def restart_rclone():
             stderr=STDOUT,
         )
     except PermissionError:
-        await (
-            await asyncio.create_subprocess_exec("chmod", "+x", rclone_bin)
-        ).communicate()
+        os.chmod(rclone_bin, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
         rclone_process = await asyncio.create_subprocess_exec(
             *shlex.split(
                 f"{rclone_bin} rcd --rc-no-auth --rc-serve --rc-addr localhost:{settings.rclone_port} --config rclone.conf --log-level INFO",
