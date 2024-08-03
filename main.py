@@ -94,40 +94,50 @@ async def log_rclone(rclone_process: asyncio.subprocess.Process):
     while True:
         try:
             out_line = await rclone_process.stdout.readline()
-            if out_line == b"":
-                if rclone_process.returncode == 1:
-                    err = await rclone_process.stderr.readline()
-                    logger.error("An error occurred with rclone subprocess")
-                    logger.error(err.decode())
+            if not out_line:
+                if rclone_process.returncode is not None:
+                    if rclone_process.returncode == 1:
+                        err = await rclone_process.stderr.read()
+                        logger.error("An error occurred with rclone subprocess")
+                        logger.error(err.decode().strip())
+                    elif rclone_process.returncode == 0:
+                        logger.warning("Rclone subprocess has ended gracefully")
+                    else:
+                        logger.error(f"Rclone subprocess ended with return code {rclone_process.returncode}")
                     break
-                elif rclone_process.returncode == 0:
-                    logger.warning("Rclone subprocess has ended gracefully")
-                    break
-                else:
-                    rclone_logger.error("parse error: empty line")
-                    continue
+                await asyncio.sleep(0.1)  # prevent busy waiting
+                continue
+
+            out_line = out_line.decode().strip()
+            if not out_line:
+                continue
+
             match = re.match(
                 r"(?:[\d\/])+ (?:[\d:]+) (?P<level>\w+) ? ? :? (?P<message>.*)$",
-                out_line.decode(),
-                flags=2,
+                out_line,
+                flags=re.IGNORECASE,
             )
-            data = match.groupdict()
-            levels = {
-                "CRITICAL": 50,
-                "FATAL": 50,
-                "ERROR": 40,
-                "WARNING": 30,
-                "WARN": 30,
-                "INFO": 20,
-                "DEBUG": 10,
-            }
-            rclone_logger.log(
-                levels.get(data.get("levels", "INFO").upper()), data.get("message")
-            )
+            if match:
+                data = match.groupdict()
+                levels = {
+                    "CRITICAL": 50,
+                    "FATAL": 50,
+                    "ERROR": 40,
+                    "WARNING": 30,
+                    "WARN": 30,
+                    "INFO": 20,
+                    "DEBUG": 10,
+                }
+                level = levels.get(data.get("level", "INFO").upper(), 20)
+                rclone_logger.log(level, data.get("message"))
+            else:
+                rclone_logger.warning(f"Unmatched log line: {out_line}")
+
         except Exception as e:
-            rclone_logger.error(e)
+            rclone_logger.error(f"Error in rclone logger: {str(e)}")
             break
 
+    rclone_logger.info("Rclone logger has stopped")
 
 # async def rclone_setup(categories: list):
 async def rclone_setup():
@@ -176,10 +186,18 @@ async def startup():
         # logic for first time setup
 
 
+async def shutdown():
+    """Closes the MongoDB connection"""
+    logger.info("Shutting down...")
+    await db.disconnect()
+    await kill_rclone()
+    logger.info("Done.")
+
 app = FastAPI(
     title="Dester",
     openapi_url=f"{settings.api_v1_str}/openapi.json",
     on_startup=[startup],
+    on_shutdown=[shutdown],
 )
 
 
@@ -228,7 +246,7 @@ else:
     
     app.add_api_route(
         "/favicon.ico",
-        lambda: FileResponse("favicon.ico", media_type="image/x-icon"),
+        lambda: None,
     )
 
 # import asyncio

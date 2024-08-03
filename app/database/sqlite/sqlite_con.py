@@ -30,7 +30,7 @@ class SQLite(Database):
         await self.connect()
 
     async def _close(self):
-        await self.conn.close()
+        await Tortoise.close_connections()
     
     async def disconnect(self):
         """Disconnect from the SQLite database"""
